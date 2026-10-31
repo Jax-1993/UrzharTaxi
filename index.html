@@ -4,18 +4,66 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Urzhar Taxi</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <style>
-body{font-family:Arial;background:#f1f5f9;margin:0;color:#172033}
-header{background:#123c2b;color:white;text-align:center;padding:25px}
-main{max-width:450px;margin:25px auto;padding:15px}
-.card{background:white;padding:22px;border-radius:15px}
-input,button{box-sizing:border-box;width:100%;padding:14px;margin:9px 0;border-radius:8px;font-size:16px}
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f1f5f9;
+ color:#172033;
+}
+header{
+ background:#123c2b;
+ color:white;
+ text-align:center;
+ padding:20px;
+}
+main{
+ max-width:650px;
+ margin:auto;
+ padding:15px;
+}
+.card{
+ background:white;
+ padding:18px;
+ border-radius:14px;
+ margin-bottom:15px;
+}
+input,button{
+ width:100%;
+ padding:13px;
+ margin:6px 0;
+ border-radius:8px;
+ font-size:16px;
+}
 input{border:1px solid #ccc}
-button{background:#16834f;color:white;border:0;font-weight:bold}
-#result{padding:10px;margin-top:10px}
+button{
+ border:0;
+ background:#16834f;
+ color:white;
+ font-weight:bold;
+}
+button:disabled{opacity:.6}
+.secondary{background:#315b9b}
+#map{
+ height:380px;
+ width:100%;
+ border-radius:12px;
+}
+.info{
+ background:#edf7ef;
+ padding:12px;
+ border-radius:8px;
+ margin-top:10px;
+ line-height:1.7;
+}
 </style>
 </head>
+
 <body>
 
 <header>
@@ -24,51 +72,218 @@ button{background:#16834f;color:white;border:0;font-weight:bold}
 </header>
 
 <main>
+
 <div class="card">
-<h2>Такси шақыру</h2>
+<h3>📍 Қай жерден шығасыз?</h3>
+<input id="fromSearch"
+placeholder="Ауыл немесе мекенжай жазыңыз">
+<button onclick="searchPlace('from')">
+Бастапқы мекенжайды табу
+</button>
 
-<form id="orderForm">
-<input id="name" placeholder="Аты-жөніңіз" required>
-<input id="phone" type="tel" placeholder="Телефон нөміріңіз" required>
-<input id="from" placeholder="Қай ауылдан?" required>
-<input id="to" placeholder="Қай ауылға?" required>
-
-<button type="submit">Тапсырыс беру</button>
-</form>
-
-<div id="result"></div>
+<h3>🏁 Қай жерге барасыз?</h3>
+<input id="toSearch"
+placeholder="Баратын мекенжайды жазыңыз">
+<button onclick="searchPlace('to')">
+Баратын мекенжайды табу
+</button>
 </div>
+
+<div class="card">
+<h3>🗺️ Картадан таңдаңыз</h3>
+<p id="mode">Алдымен шығатын орынды таңдаңыз.</p>
+
+<button class="secondary"
+onclick="setMode('from')">
+Қай жерден?
+</button>
+
+<button class="secondary"
+onclick="setMode('to')">
+Қай жерге?
+</button>
+
+<div id="map"></div>
+
+<div class="info" id="result">
+Маршрут әлі таңдалған жоқ.
+</div>
+</div>
+
 </main>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-const SUPABASE_URL = "https://hjjxizifomgogpimvlnv.supabase.co";
-const SUPABASE_KEY = "PUBLISHABLE_KEY_ОСЫ_ЖЕРГЕ";
+const map = L.map('map').setView([47.09,81.63],10);
 
-const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+L.tileLayer(
+'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+{
+ attribution:'© OpenStreetMap'
+}
+).addTo(map);
 
-document.getElementById("orderForm").addEventListener("submit", async function(e) {
-  e.preventDefault();
+let mode='from';
+let fromMarker=null;
+let toMarker=null;
+let routeLine=null;
 
-  const result = document.getElementById("result");
-  result.textContent = "Тапсырыс жіберілуде...";
+let fromPoint=null;
+let toPoint=null;
 
-  const order = {
-    passenger_name: document.getElementById("name").value.trim(),
-    passenger_phone: document.getElementById("phone").value.trim(),
-    pickup_village: document.getElementById("from").value.trim(),
-    destination_village: document.getElementById("to").value.trim()
-  };
+// Мысал тарифтері
+const BASE_FARE=500;
+const PRICE_PER_KM=100;
 
-  const { error } = await db.from("taxi_orders").insert(order);
+function setMode(value){
+ mode=value;
 
-  if (error) {
-    result.textContent = "Қате: " + error.message;
-  } else {
-    result.textContent = "Тапсырысыңыз қабылданды!";
-    document.getElementById("orderForm").reset();
-  }
+ document.getElementById('mode').textContent =
+ value==='from'
+ ? 'Картадан шығатын орынды таңдаңыз.'
+ : 'Картадан баратын орынды таңдаңыз.';
+}
+
+map.on('click',function(e){
+ setPoint(e.latlng.lat,e.latlng.lng,mode);
 });
-</script>
 
+function setPoint(lat,lon,type){
+ const point=L.latLng(lat,lon);
+
+ if(type==='from'){
+  fromPoint=point;
+
+  if(fromMarker) map.removeLayer(fromMarker);
+
+  fromMarker=L.marker(point)
+  .addTo(map)
+  .bindPopup('Бастапқы орын')
+  .openPopup();
+
+ }else{
+  toPoint=point;
+
+  if(toMarker) map.removeLayer(toMarker);
+
+  toMarker=L.marker(point)
+  .addTo(map)
+  .bindPopup('Баратын орын')
+  .openPopup();
+ }
+
+ calculateRoute();
+}
+
+async function searchPlace(type){
+
+ const input=document.getElementById(
+ type==='from'?'fromSearch':'toSearch'
+ );
+
+ const query=input.value.trim();
+
+ if(!query){
+  alert('Мекенжайды енгізіңіз');
+  return;
+ }
+
+ const result=document.getElementById('result');
+
+ result.textContent='Мекенжай ізделуде...';
+
+ try{
+
+  const url=
+  'https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=kz&q='
+  +encodeURIComponent(query+' Қазақстан');
+
+  const response=await fetch(url);
+
+  if(!response.ok) throw new Error('Іздеу қызметі қолжетімсіз');
+
+  const data=await response.json();
+
+  if(!data.length){
+   result.textContent='Мекенжай табылмады. Басқаша жазып көріңіз.';
+   return;
+  }
+
+  const place=data[0];
+
+  const lat=Number(place.lat);
+  const lon=Number(place.lon);
+
+  setPoint(lat,lon,type);
+
+  map.setView([lat,lon],14);
+
+ }catch(error){
+  result.textContent='Іздеу қатесі: '+error.message;
+ }
+}
+
+async function calculateRoute(){
+
+ if(!fromPoint || !toPoint) return;
+
+ const result=document.getElementById('result');
+
+ result.textContent='Автомобиль жолы есептелуде...';
+
+ try{
+
+  const url=
+  'https://router.project-osrm.org/route/v1/driving/'
+  +fromPoint.lng+','+fromPoint.lat+';'
+  +toPoint.lng+','+toPoint.lat
+  +'?overview=full&geometries=geojson';
+
+  const response=await fetch(url);
+
+  if(!response.ok) throw new Error('Маршрут серверіне қосылмады');
+
+  const data=await response.json();
+
+  if(data.code!=='Ok' || !data.routes.length){
+   throw new Error('Автомобиль маршруты табылмады');
+  }
+
+  const route=data.routes[0];
+
+  const km=route.distance/1000;
+
+  const fare=Math.ceil(BASE_FARE+km*PRICE_PER_KM);
+
+  if(routeLine) map.removeLayer(routeLine);
+
+  routeLine=L.geoJSON(route.geometry,{
+   style:{
+    color:'#16834f',
+    weight:6
+   }
+  }).addTo(map);
+
+  map.fitBounds(routeLine.getBounds(),{
+   padding:[25,25]
+  });
+
+  result.innerHTML=
+  '<b>Маршрут дайын!</b><br>'+
+  'Қашықтық: '+km.toFixed(1)+' км<br>'+
+  'Бастапқы төлем: '+BASE_FARE+' ₸<br>'+
+  '1 км бағасы: '+PRICE_PER_KM+' ₸<br>'+
+  '<hr>'+
+  '<b>Болжамды жолақы: '+fare.toLocaleString('ru-RU')+' ₸</b>';
+
+ }catch(error){
+
+  result.textContent='Маршрут қатесі: '+error.message;
+
+ }
+}
+
+</script>
 </body>
 </html>
