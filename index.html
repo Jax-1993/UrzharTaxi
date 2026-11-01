@@ -6,622 +6,609 @@
 <title>Үржар Taxi</title>
 
 <link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
 *{box-sizing:border-box}
 body{
  margin:0;
  font-family:Arial,sans-serif;
- color:#18243a;
+ background:#f2f5fa;
+ color:#172033;
 }
-#map{
- position:fixed;
- top:0;left:0;right:0;bottom:0;
- z-index:1;
- background:#e8edf3;
-}
-.header{
- position:fixed;
- z-index:500;
- top:12px;left:12px;right:12px;
- padding:14px 16px;
- background:white;
- border-radius:20px;
+header{
+ background:#101d35;
+ color:white;
+ padding:15px 18px;
  display:flex;
  justify-content:space-between;
  align-items:center;
- box-shadow:0 5px 22px #0002;
 }
-.logo{
- font-size:22px;
- font-weight:900;
- color:#1769ff;
+.logo{font-size:22px;font-weight:800}
+.logo span{color:#ffd43b}
+.badge{
+ background:#243b60;
+ padding:7px 11px;
+ border-radius:20px;
+ font-size:12px;
 }
-.logo span{color:#ffb900}
-.tag{font-size:11px;color:#8892a3;margin-top:4px}
-.gps{
- border:0;
- background:#edf3ff;
- color:#1769ff;
+.page{display:none}
+.page.active{display:block}
+#map{
+ width:100%;
+ height:calc(100vh - 190px);
+ min-height:390px;
+ z-index:1;
+}
+.map-box{position:relative}
+.map-hint{
+ position:absolute;
+ top:12px;
+ left:12px;
+ right:12px;
+ z-index:500;
+ background:white;
  border-radius:13px;
  padding:12px;
- font-size:21px;
-}
-.hint{
- position:fixed;
- z-index:450;
- top:88px;
- left:50%;
- transform:translateX(-50%);
- background:#17243a;
- color:white;
- padding:12px 17px;
- border-radius:30px;
+ box-shadow:0 3px 15px #0002;
  font-size:13px;
- white-space:nowrap;
- box-shadow:0 4px 15px #0003;
+ text-align:center;
 }
-.panel{
- position:fixed;
- z-index:600;
- bottom:0;left:0;right:0;
+.bottom{
  background:white;
- border-radius:25px 25px 0 0;
- padding:14px 17px 22px;
- box-shadow:0 -5px 25px #0002;
- max-height:78vh;
- overflow-y:auto;
- transition:transform .3s ease;
+ padding:14px;
+ border-radius:20px 20px 0 0;
+ box-shadow:0 -4px 18px #0002;
 }
-.panel.closed{
- transform:translateY(110%);
- pointer-events:none;
-}
-.handle{
- width:42px;height:5px;
- background:#dce2eb;
- border-radius:8px;
- margin:0 auto 15px;
-}
-.title{
- font-size:20px;
- font-weight:900;
- margin-bottom:13px;
-}
-.address{
+.address-row{
  display:flex;
  align-items:center;
- gap:10px;
- background:#f4f6fa;
- border:1px solid #e9edf3;
- border-radius:13px;
- padding:12px;
+ gap:9px;
  margin-bottom:9px;
 }
 .dot{
- width:13px;height:13px;
- border-radius:50%;
+ width:13px;height:13px;border-radius:50%;
  flex-shrink:0;
 }
-.green{background:#19b66a}
-.red{background:#ed4545}
-.address input{
+.green{background:#17b96b}
+.red{background:#ed4d4d}
+input{
  width:100%;
- border:0;
- outline:0;
- background:transparent;
- font-size:14px;
- color:#26344b;
+ border:1px solid #dce2eb;
+ border-radius:11px;
+ padding:13px;
+ font-size:16px;
+ outline:none;
+ min-width:0;
 }
-.address button{
- border:0;
- background:#eaf1ff;
- color:#1769ff;
- padding:9px 11px;
- border-radius:9px;
-}
-.note{
- font-size:12px;
- color:#7c8798;
- margin:10px 2px;
- line-height:1.5;
-}
-.route{
- display:flex;
- justify-content:space-between;
- background:linear-gradient(110deg,#edf4ff,#f5f1ff);
- border-radius:15px;
- padding:14px 10px;
- margin:13px 0;
-}
-.route small{font-size:11px;color:#7b8798}
-.route strong{
- display:block;
- font-size:18px;
- color:#1769ff;
- margin-top:5px;
-}
-.cars{
- display:grid;
- grid-template-columns:repeat(3,1fr);
- gap:8px;
- margin:12px 0;
-}
-.car{
- border:2px solid #e8edf4;
- border-radius:15px;
- padding:12px 3px;
- text-align:center;
+input:focus{border-color:#3578ed}
+.address-wrap{position:relative;flex:1}
+.suggestions{
+ position:absolute;
+ left:0;right:0;top:100%;
  background:white;
+ z-index:1000;
+ box-shadow:0 5px 15px #0002;
+ border-radius:10px;
+ overflow:hidden;
+}
+.suggestion{
+ padding:12px;
+ border-bottom:1px solid #eee;
+ font-size:14px;
  cursor:pointer;
 }
-.car.active{
- border-color:#1769ff;
- background:#edf4ff;
+button{
+ border:0;
+ border-radius:12px;
+ padding:14px;
+ font-size:16px;
+ font-weight:bold;
+ cursor:pointer;
 }
-.car .emoji{font-size:27px}
-.car b{display:block;font-size:13px;margin:6px 0}
-.car small{font-size:10px;color:#778397}
-.payments{
- display:flex;
- gap:10px;
- margin:10px 0;
+.primary{
+ width:100%;
+ background:#ffd43b;
+ color:#172033;
+ margin-top:8px;
 }
-.pay{
- flex:1;
- border:2px solid #e8edf4;
+.secondary{
+ background:#e9eef6;
+ color:#26344d;
+}
+.gps{
+ position:absolute;
+ right:14px;
+ bottom:15px;
+ z-index:500;
  background:white;
- border-radius:12px;
- padding:13px 5px;
- font-weight:bold;
+ width:48px;height:48px;
+ border-radius:50%;
+ box-shadow:0 2px 10px #0003;
+ font-size:22px;
 }
-.pay.active{
- border-color:#1769ff;
- background:#edf4ff;
+.info{
+ text-align:center;
+ color:#68758a;
+ font-size:12px;
+ margin-top:7px;
 }
-.order{
- width:100%;
- border:0;
- border-radius:15px;
- padding:17px;
- margin-top:9px;
- background:linear-gradient(110deg,#1263f1,#6394ff);
- color:white;
- font-size:17px;
- font-weight:900;
- box-shadow:0 5px 15px #1769ff40;
-}
-.order:disabled{opacity:.5}
-.cancel{
- width:100%;
- padding:13px;
- margin-top:9px;
- border:0;
- border-radius:12px;
- background:#fff0f0;
- color:#e33;
- font-weight:bold;
-}
-.marker{
- width:38px;height:38px;
- border-radius:50% 50% 50% 0;
- transform:rotate(-45deg);
- border:3px solid white;
+#page2{padding:17px}
+.topline{
  display:flex;
  align-items:center;
- justify-content:center;
- color:white;
- font-weight:900;
- box-shadow:0 3px 9px #0005;
+ gap:12px;
+ margin-bottom:17px;
 }
-.marker span{transform:rotate(45deg)}
-.marker.a{background:#16b86a}
-.marker.b{background:#ed4141}
+.topline h2{margin:0;font-size:21px}
+.route-card{
+ background:white;
+ padding:15px;
+ border-radius:15px;
+ margin-bottom:15px;
+ box-shadow:0 3px 12px #0001;
+}
+.route-line{
+ font-size:14px;
+ line-height:1.7;
+}
+.route-stats{
+ display:flex;
+ justify-content:space-around;
+ margin-top:12px;
+ padding-top:10px;
+ border-top:1px solid #eee;
+ font-weight:bold;
+}
+.car-card{
+ display:flex;
+ align-items:center;
+ gap:12px;
+ background:white;
+ padding:12px;
+ border:2px solid transparent;
+ border-radius:15px;
+ margin-bottom:11px;
+ box-shadow:0 3px 12px #0001;
+ cursor:pointer;
+}
+.car-card.selected{border-color:#3578ed;background:#f2f7ff}
+.car-img{
+ width:115px;
+ height:75px;
+ object-fit:cover;
+ border-radius:10px;
+ background:#edf0f5;
+}
+.car-info{flex:1;min-width:0}
+.car-info h3{margin:0 0 5px;font-size:16px}
+.car-info p{margin:0;color:#718096;font-size:12px}
+.price{font-weight:800;font-size:17px;white-space:nowrap}
+.payment{
+ background:white;
+ padding:15px;
+ border-radius:14px;
+ margin:14px 0;
+}
+.pay-options{display:flex;gap:10px;margin-top:10px}
+.pay-options button{flex:1}
+.pay-options button.selected{
+ background:#e4efff;
+ border:2px solid #3578ed;
+}
+.order-btn{
+ background:#ffd43b;
+ width:100%;
+ padding:17px;
+ font-size:17px;
+}
+.back{padding:10px 13px}
+.note{
+ color:#788397;
+ font-size:11px;
+ text-align:center;
+ margin-top:10px;
+}
+.marker-label{
+ background:white;
+ border:0;
+ font-weight:bold;
+ box-shadow:0 2px 7px #0003;
+}
+@media(max-width:380px){
+ .car-img{width:90px;height:65px}
+ .price{font-size:15px}
+}
 </style>
 </head>
 
 <body>
 
-<div id="map"></div>
+<header>
+ <div class="logo">🚕 ҮРЖАР <span>TAXI</span></div>
+ <div class="badge">● Онлайн қызмет</div>
+</header>
 
-<div class="header">
- <div>
-  <div class="logo">🚕 ҮРЖАР <span>TAXI</span></div>
-  <div class="tag">Жылдам • Ыңғайлы • Сенімді</div>
- </div>
- <button class="gps" onclick="useGPS()">📍</button>
-</div>
-
-<div class="hint" id="hint">
- 🟢 Бастапқы орынды таңдаңыз
-</div>
-
-<div class="panel closed" id="panel">
- <div class="handle"></div>
-
- <div class="title">🚕 Қайда барамыз?</div>
-
- <div class="address">
-  <span class="dot green"></span>
-  <input id="from" readonly placeholder="Бастапқы орын">
-  <button onclick="resetPoints()">↺</button>
+<!-- БІРІНШІ БЕТ: КАРТА -->
+<section id="page1" class="page active">
+ <div class="map-box">
+  <div class="map-hint" id="hint">
+   📍 Алдымен қай жерден мінетініңізді таңдаңыз
+  </div>
+  <div id="map"></div>
+  <button class="gps" onclick="myLocation()">⌖</button>
  </div>
 
- <div class="address">
-  <span class="dot red"></span>
-  <input id="to" readonly placeholder="Баратын жер">
-  <button onclick="clearDestination()">✕</button>
- </div>
-
- <div class="note" id="status">
-  Картадан екі орынды белгілеңіз.
- </div>
-
- <div id="booking" style="display:none">
-
-  <div class="route">
-   <div>
-    <small>Қашықтық</small>
-    <strong id="distance">—</strong>
-   </div>
-   <div>
-    <small>Уақыт</small>
-    <strong id="duration">—</strong>
-   </div>
-   <div>
-    <small>Бағасы</small>
-    <strong id="price">—</strong>
+ <div class="bottom">
+  <div class="address-row">
+   <span class="dot green"></span>
+   <div class="address-wrap">
+    <input id="from" placeholder="Қай жерден аламыз?">
+    <div id="suggestFrom" class="suggestions"></div>
    </div>
   </div>
 
-  <div class="title">Көлік таңдаңыз</div>
-
-  <div class="cars">
-   <div class="car active" onclick="chooseCar('econom',this)">
-    <div class="emoji">🚕</div>
-    <b>Эконом</b>
-    <small>500 + 100 ₸/км</small>
-   </div>
-
-   <div class="car" onclick="chooseCar('comfort',this)">
-    <div class="emoji">🚘</div>
-    <b>Комфорт</b>
-    <small>700 + 140 ₸/км</small>
-   </div>
-
-   <div class="car" onclick="chooseCar('plus',this)">
-    <div class="emoji">🚙</div>
-    <b>Комфорт+</b>
-    <small>1000 + 180 ₸/км</small>
+  <div class="address-row">
+   <span class="dot red"></span>
+   <div class="address-wrap">
+    <input id="to" placeholder="Қайда барамыз?">
+    <div id="suggestTo" class="suggestions"></div>
    </div>
   </div>
 
-  <div class="title">Төлем тәсілі</div>
-
-  <div class="payments">
-   <button class="pay active"
-   onclick="choosePay('cash',this)">💵 Қолма-қол</button>
-
-   <button class="pay"
-   onclick="choosePay('card',this)">💳 Карта</button>
-  </div>
-
-  <button class="order" id="orderBtn"
-  onclick="placeOrder()">ТАПСЫРЫС БЕРУ</button>
-
-  <button class="cancel" id="cancelBtn"
-  style="display:none" onclick="cancelOrder()">
-   Тапсырыстан бас тарту
+  <button class="primary" onclick="continueToCars()">
+   Жалғастыру →
   </button>
-
-  <div class="note">
-   Бұл сынақ нұсқасы. Нақты жүргізушіні шақыру және банк картасымен төлем кейін қосылады.
-  </div>
-
+  <div class="info">Мекенжайды жазыңыз немесе картадан таңдаңыз</div>
  </div>
-</div>
+</section>
+
+<!-- ЕКІНШІ БЕТ: КӨЛІК ТАҢДАУ -->
+<section id="page2" class="page">
+
+ <div class="topline">
+  <button class="secondary back" onclick="backToMap()">←</button>
+  <h2>Көлігіңізді таңдаңыз</h2>
+ </div>
+
+ <div class="route-card">
+  <div class="route-line">
+   🟢 <b>Қайдан:</b> <span id="showFrom">—</span><br>
+   🔴 <b>Қайда:</b> <span id="showTo">—</span>
+  </div>
+  <div class="route-stats">
+   <span>📏 <span id="distance">—</span> км</span>
+   <span>⏱ <span id="duration">—</span> мин</span>
+  </div>
+ </div>
+
+ <h3>🚘 Тарифтер</h3>
+
+ <div class="car-card selected" onclick="selectCar('economy',this)">
+  <img class="car-img"
+  src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&auto=format&fit=crop"
+  alt="Эконом санатындағы автокөлік">
+  <div class="car-info">
+   <h3>Эконом</h3>
+   <p>Күнделікті сапарға</p>
+  </div>
+  <div class="price" id="priceEconomy">— ₸</div>
+ </div>
+
+ <div class="car-card" onclick="selectCar('comfort',this)">
+  <img class="car-img"
+  src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&auto=format&fit=crop"
+  alt="Комфорт автокөлігі">
+  <div class="car-info">
+   <h3>Комфорт</h3>
+   <p>Жайлы әрі кең</p>
+  </div>
+  <div class="price" id="priceComfort">— ₸</div>
+ </div>
+
+ <div class="car-card" onclick="selectCar('plus',this)">
+  <img class="car-img"
+  src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=400&auto=format&fit=crop"
+  alt="Премиум автокөлік">
+  <div class="car-info">
+   <h3>Комфорт+</h3>
+   <p>Жоғары жайлылық</p>
+  </div>
+  <div class="price" id="pricePlus">— ₸</div>
+ </div>
+
+ <div class="payment">
+  <b>💳 Төлем түрі</b>
+  <div class="pay-options">
+   <button class="selected" onclick="selectPayment('Қолма-қол',this)">
+    💵 Қолма-қол
+   </button>
+   <button onclick="selectPayment('Картамен (әзірге қолжетімсіз)',this)">
+    💳 Картамен
+   </button>
+  </div>
+ </div>
+
+ <button class="order-btn" onclick="makeOrder()">
+  Тапсырыс беру
+ </button>
+
+ <div class="note">
+  Бағалар алдын ала есептеледі. Нақты қызмет пен жүргізушіге қосылу әзірге іске қосылмаған.
+ </div>
+</section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-(function(){
+let map;
+let pointA=null;
+let pointB=null;
+let markerA=null;
+let markerB=null;
+let routeLayer=null;
+let distanceKm=0;
+let durationMin=0;
+let selectedCar="economy";
+let payment="Қолма-қол";
+let selecting="A";
 
-if(typeof L === 'undefined'){
- document.getElementById('hint').textContent =
- 'Карта жүктелмеді. Интернетті тексеріңіз.';
- return;
-}
-
-var map = L.map('map').setView([47.09,81.63],14);
-
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
- maxZoom:19,
- attribution:'© OpenStreetMap'
-}).addTo(map);
-
-var start = null;
-var end = null;
-var startMarker = null;
-var endMarker = null;
-var routeLine = null;
-var km = 0;
-var selectedCar = 'econom';
-var selectedPay = 'cash';
-var orderActive = false;
-
-var tariffs = {
- econom:{base:500,perKm:100},
- comfort:{base:700,perKm:140},
- plus:{base:1000,perKm:180}
+const prices={
+ economy:{base:500,km:100},
+ comfort:{base:700,km:140},
+ plus:{base:1000,km:180}
 };
 
-function showHint(text){
- document.getElementById('hint').textContent=text;
-}
+function initMap(){
+ map=L.map('map').setView([47.09,81.63],14);
 
-function openPanel(){
- document.getElementById('panel').classList.remove('closed');
-}
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+  maxZoom:19,
+  attribution:'© OpenStreetMap'
+ }).addTo(map);
 
-function closePanel(){
- document.getElementById('panel').classList.add('closed');
-}
-
-function makeIcon(letter,kind){
- return L.divIcon({
-  className:'',
-  html:'<div class="marker '+kind+'"><span>'+letter+'</span></div>',
-  iconSize:[38,38],
-  iconAnchor:[19,38]
+ map.on('click',async function(e){
+  if(!pointA || (pointA && pointB)){
+   setPoint('A',e.latlng);
+  }else{
+   setPoint('B',e.latlng);
+  }
  });
 }
 
-function removeLayer(layer){
- if(layer && map.hasLayer(layer)){
-  map.removeLayer(layer);
+function setPoint(type,latlng,address){
+ const name=address || 'Картадан таңдалған орын';
+
+ if(type==='A'){
+  pointA=latlng;
+  document.getElementById('from').value=name;
+
+  if(markerA)map.removeLayer(markerA);
+
+  markerA=L.marker(latlng).addTo(map)
+   .bindPopup('🟢 A — Басталу нүктесі');
+
+  selecting='B';
+  document.getElementById('hint').innerText=
+   '🔴 Енді баратын жеріңізді таңдаңыз';
+ }else{
+  pointB=latlng;
+  document.getElementById('to').value=name;
+
+  if(markerB)map.removeLayer(markerB);
+
+  markerB=L.marker(latlng).addTo(map)
+   .bindPopup('🔴 B — Баратын жер');
+
+  document.getElementById('hint').innerText=
+   '✅ Екі нүкте таңдалды. Жалғастыруға болады';
+ }
+ if(pointA && pointB)drawRoute();
+}
+
+async function reverseAddress(latlng){
+ try{
+  const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+
+  latlng.lat+'&lon='+latlng.lng;
+
+  const r=await fetch(url);
+  const d=await r.json();
+  return d.display_name || 'Картадан таңдалған орын';
+ }catch(e){
+  return 'Картадан таңдалған орын';
  }
 }
 
-function resetPoints(){
- if(orderActive) return;
+async function searchAddress(text,inputType){
+ const box=document.getElementById(
+  inputType==='A'?'suggestFrom':'suggestTo'
+ );
+ box.innerHTML='';
 
- removeLayer(startMarker);
- removeLayer(endMarker);
- removeLayer(routeLine);
-
- start = null;
- end = null;
- startMarker = null;
- endMarker = null;
- routeLine = null;
- km = 0;
-
- document.getElementById('from').value='';
- document.getElementById('to').value='';
- document.getElementById('booking').style.display='none';
-
- closePanel();
- showHint('🟢 Бастапқы орынды таңдаңыз');
-}
-
-function clearDestination(){
- if(orderActive) return;
-
- removeLayer(endMarker);
- removeLayer(routeLine);
-
- end = null;
- endMarker = null;
- routeLine = null;
- km = 0;
-
- document.getElementById('to').value='';
- document.getElementById('booking').style.display='none';
-
- showHint('🔴 Баратын жерді таңдаңыз');
-}
-
-map.on('click',function(event){
-
- if(orderActive) return;
-
- if(!start){
-  start = event.latlng;
-  startMarker = L.marker(start,{icon:makeIcon('A','a')}).addTo(map);
-
-  document.getElementById('from').value='Бастапқы орын таңдалды';
-  showHint('🔴 Енді баратын жерді таңдаңыз');
-  return;
- }
-
- if(!end){
-  end = event.latlng;
-  endMarker = L.marker(end,{icon:makeIcon('B','b')}).addTo(map);
-
-  document.getElementById('to').value='Баратын жер таңдалды';
-
-  openPanel();
-  showHint('✅ Екі орын белгіленді');
-
-  getRoute();
-  return;
- }
-
- resetPoints();
-
- start = event.latlng;
- startMarker = L.marker(start,{icon:makeIcon('A','a')}).addTo(map);
- document.getElementById('from').value='Бастапқы орын таңдалды';
-
- showHint('🔴 Енді баратын жерді таңдаңыз');
-});
-
-async function getRoute(){
-
- var status = document.getElementById('status');
- status.textContent='Маршрут есептелуде...';
-
- var url =
- 'https://router.project-osrm.org/route/v1/driving/' +
- start.lng+','+start.lat+';'+end.lng+','+end.lat+
- '?overview=full&geometries=geojson';
+ if(text.trim().length<3)return;
 
  try{
+  const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q='+
+  encodeURIComponent(text+' Үржар');
 
-  var response = await fetch(url);
-  if(!response.ok) throw new Error('Маршрут сервері');
+  const r=await fetch(url);
+  const data=await r.json();
 
-  var data = await response.json();
+  data.forEach(place=>{
+   const div=document.createElement('div');
+   div.className='suggestion';
+   div.textContent=place.display_name;
 
-  if(!data.routes || data.routes.length===0){
-   status.textContent='Бұл бағытқа жол табылмады. Басқа орын таңдаңыз.';
+   div.onclick=()=>{
+    const pos=L.latLng(
+     Number(place.lat),Number(place.lon)
+    );
+    setPoint(inputType,pos,place.display_name);
+    box.innerHTML='';
+    map.setView(pos,16);
+   };
+   box.appendChild(div);
+  });
+ }catch(e){
+  box.innerHTML='';
+ }
+}
+
+function setupSearch(id,type){
+ const input=document.getElementById(id);
+ let timer;
+
+ input.addEventListener('input',()=>{
+  clearTimeout(timer);
+  timer=setTimeout(()=>{
+   searchAddress(input.value,type);
+  },650);
+ });
+}
+
+function drawRoute(){
+ if(!pointA || !pointB)return;
+
+ if(routeLayer)map.removeLayer(routeLayer);
+
+ const url='https://router.project-osrm.org/route/v1/driving/'+
+ pointA.lng+','+pointA.lat+';'+
+ pointB.lng+','+pointB.lat+
+ '?overview=full&geometries=geojson';
+
+ fetch(url)
+ .then(r=>r.json())
+ .then(data=>{
+  if(!data.routes || !data.routes.length){
+   distanceKm=0;
+   durationMin=0;
+   alert('Бұл екі нүктенің арасында жол табылмады. Басқа нүкте таңдаңыз.');
    return;
   }
 
-  var result = data.routes[0];
+  const route=data.routes[0];
+  distanceKm=route.distance/1000;
+  durationMin=route.duration/60;
 
-  km = result.distance / 1000;
-
-  removeLayer(routeLine);
-
-  routeLine = L.geoJSON(result.geometry,{
-   style:{
-    color:'#1769ff',
-    weight:6,
-    opacity:0.9
-   }
+  routeLayer=L.geoJSON(route.geometry,{
+   style:{color:'#2878ed',weight:6,opacity:0.85}
   }).addTo(map);
 
-  map.fitBounds(routeLine.getBounds(),{
-   padding:[70,70]
-  });
+  map.fitBounds(routeLayer.getBounds(),{padding:[40,40]});
+ })
+ .catch(()=>{
+  alert('Бағытты есептеу мүмкін болмады. Интернетті тексеріңіз.');
+ });
+}
 
-  document.getElementById('distance').textContent=km.toFixed(1)+' км';
-  document.getElementById('duration').textContent=
-   Math.round(result.duration/60)+' мин';
+function continueToCars(){
+ const from=document.getElementById('from').value.trim();
+ const to=document.getElementById('to').value.trim();
 
-  document.getElementById('booking').style.display='block';
+ if(!from || !to || !pointA || !pointB){
+  alert('Алдымен екі мекенжайды да таңдау керек.');
+  return;
+ }
 
-  updatePrice();
+ if(!distanceKm){
+  alert('Жол қашықтығы әлі есептеліп жатыр. Сәл күтіңіз.');
+  return;
+ }
 
-  status.textContent='Маршрут дайын! Көлік таңдаңыз.';
+ document.getElementById('showFrom').textContent=from;
+ document.getElementById('showTo').textContent=to;
+ document.getElementById('distance').textContent=distanceKm.toFixed(1);
+ document.getElementById('duration').textContent=Math.ceil(durationMin);
 
- }catch(error){
+ calculatePrices();
 
-  status.textContent='Маршрут есептелмеді. Интернетті тексеріңіз немесе басқа орын таңдаңыз.';
+ document.getElementById('page1').classList.remove('active');
+ document.getElementById('page2').classList.add('active');
+ window.scrollTo(0,0);
+}
+
+function calculatePrices(){
+ for(const key in prices){
+  const price=Math.round(
+   prices[key].base+distanceKm*prices[key].km
+  );
+  document.getElementById(
+   key==='plus'?'pricePlus':
+   key==='comfort'?'priceComfort':'priceEconomy'
+  ).textContent=price.toLocaleString('ru-RU')+' ₸';
  }
 }
 
-function updatePrice(){
+function selectCar(type,element){
+ selectedCar=type;
+ document.querySelectorAll('.car-card').forEach(card=>{
+  card.classList.remove('selected');
+ });
+ element.classList.add('selected');
+}
 
- var tariff = tariffs[selectedCar];
+function selectPayment(type,element){
+ if(type!=='Қолма-қол'){
+  alert('Картамен төлеу әзірге қосылмаған.');
+  return;
+ }
+ payment=type;
+ document.querySelectorAll('.pay-options button').forEach(btn=>{
+  btn.classList.remove('selected');
+ });
+ element.classList.add('selected');
+}
 
- var amount = Math.round(
-  tariff.base + km * tariff.perKm
+function makeOrder(){
+ const tariff={
+  economy:'Эконом',
+  comfort:'Комфорт',
+  plus:'Комфорт+'
+ };
+
+ const amount=Math.round(
+  prices[selectedCar].base+
+  distanceKm*prices[selectedCar].km
  );
 
- document.getElementById('price').textContent=
-  amount.toLocaleString('kk-KZ')+' ₸';
+ alert(
+  'Тапсырыс мәліметтері\\n\\n'+
+  'Бағыт: '+document.getElementById('from').value+
+  ' → '+document.getElementById('to').value+
+  '\\nКөлік: '+tariff[selectedCar]+
+  '\\nҚашықтық: '+distanceKm.toFixed(1)+' км'+
+  '\\nБағасы: '+amount.toLocaleString('ru-RU')+' ₸'+
+  '\\nТөлем: '+payment+
+  '\\n\\nБұл әзірге сынақ режимі. Жүргізушіге тапсырыс жіберілмейді.'
+ );
 }
 
-window.chooseCar = function(name,element){
+function backToMap(){
+ document.getElementById('page2').classList.remove('active');
+ document.getElementById('page1').classList.add('active');
+ setTimeout(()=>map.invalidateSize(),200);
+}
 
- selectedCar = name;
-
- var cars = document.querySelectorAll('.car');
-
- for(var i=0;i<cars.length;i++){
-  cars[i].classList.remove('active');
- }
-
- element.classList.add('active');
-
- updatePrice();
-};
-
-window.choosePay = function(name,element){
-
- selectedPay = name;
-
- var buttons = document.querySelectorAll('.pay');
-
- for(var i=0;i<buttons.length;i++){
-  buttons[i].classList.remove('active');
- }
-
- element.classList.add('active');
-};
-
-window.useGPS = function(){
-
+function myLocation(){
  if(!navigator.geolocation){
-  alert('GPS қолжетімсіз.');
+  alert('Бұл браузер GPS қызметін қолдамайды.');
   return;
  }
 
- navigator.geolocation.getCurrentPosition(function(position){
-
-  var point = L.latLng(
-   position.coords.latitude,
-   position.coords.longitude
+ navigator.geolocation.getCurrentPosition(pos=>{
+  const loc=L.latLng(
+   pos.coords.latitude,pos.coords.longitude
   );
-
-  map.setView(point,17);
-
-  if(!start){
-   start = point;
-   startMarker = L.marker(start,{icon:makeIcon('A','a')}).addTo(map);
-
-   document.getElementById('from').value='Менің орналасқан жерім';
-
-   showHint('🔴 Енді баратын жерді таңдаңыз');
-  }
-
- },function(){
-  alert('Телефоннан GPS рұқсатын қосыңыз.');
+  map.setView(loc,16);
+  setPoint('A',loc,'Менің орналасқан жерім');
+ },()=>{
+  alert('Орналасқан жерді анықтау мүмкін болмады. GPS рұқсатын тексеріңіз.');
  });
-};
+}
 
-window.resetPoints = resetPoints;
-window.clearDestination = clearDestination;
-
-window.placeOrder = function(){
-
- if(!start || !end || !km){
-  alert('Алдымен екі орынды белгілеп, маршрутты есептеңіз.');
-  return;
- }
-
- if(selectedPay==='card'){
-  alert('Картамен төлем әзірге қосылмаған. Қолма-қол төлемді таңдаңыз.');
-  return;
- }
-
- orderActive = true;
-
- document.getElementById('orderBtn').disabled=true;
- document.getElementById('orderBtn').textContent='ТАПСЫРЫС ҚАБЫЛДАНДЫ';
-
- document.getElementById('cancelBtn').style.display='block';
-
- document.getElementById('status').textContent=
- 'Сынақ тапсырысы қабылданды. Нақты жүргізуші жүйесі әлі қосылмаған.';
-};
-
-window.cancelOrder = function(){
-
- orderActive = false;
-
- document.getElementById('orderBtn').disabled=false;
- document.getElementById('orderBtn').textContent='ТАПСЫРЫС БЕРУ';
-
- document.getElementById('cancelBtn').style.display='none';
-
- document.getElementById('status').textContent='Тапсырыс тоқтатылды.';
-};
-
-})();
+initMap();
+setupSearch('from','A');
+setupSearch('to','B');
 </script>
 
 </body>
