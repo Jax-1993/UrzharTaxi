@@ -5,19 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Үржар Taxi</title>
 
-<link rel="stylesheet"
-href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
 <style>
 *{box-sizing:border-box}
-body{
- margin:0;font-family:Arial,sans-serif;
- background:#f2f5fa;color:#172033;
-}
-header{
- background:#101d35;color:white;padding:15px 18px;
- display:flex;justify-content:space-between;align-items:center;
-}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f5fa;color:#172033}
+header{background:#101d35;color:white;padding:15px 18px;display:flex;justify-content:space-between;align-items:center}
 .logo{font-size:22px;font-weight:800}
 .logo span{color:#ffd43b}
 .badge{background:#243b60;padding:7px 11px;border-radius:20px;font-size:12px}
@@ -25,73 +18,36 @@ header{
 .page.active{display:block}
 #map{width:100%;height:calc(100vh - 190px);min-height:390px;z-index:1}
 .map-box{position:relative}
-.map-hint{
- position:absolute;top:12px;left:12px;right:12px;z-index:500;
- background:white;border-radius:13px;padding:12px;
- box-shadow:0 3px 15px #0002;font-size:13px;text-align:center;
-}
-.bottom{
- background:white;padding:14px;border-radius:20px 20px 0 0;
- box-shadow:0 -4px 18px #0002;
-}
+.map-hint{position:absolute;top:12px;left:12px;right:12px;z-index:500;background:white;border-radius:13px;padding:12px;box-shadow:0 3px 15px #0002;font-size:13px;text-align:center}
+.bottom{background:white;padding:14px;border-radius:20px 20px 0 0;box-shadow:0 -4px 18px #0002}
 .address-row{display:flex;align-items:center;gap:9px;margin-bottom:9px}
 .dot{width:13px;height:13px;border-radius:50%;flex-shrink:0}
 .green{background:#17b96b}
 .red{background:#ed4d4d}
-input{
- width:100%;border:1px solid #dce2eb;border-radius:11px;
- padding:13px;font-size:16px;outline:none;min-width:0;
-}
+input{width:100%;border:1px solid #dce2eb;border-radius:11px;padding:13px;font-size:16px;outline:none;min-width:0}
 input:focus{border-color:#3578ed}
 .address-wrap{position:relative;flex:1}
-.suggestions{
- position:absolute;left:0;right:0;top:100%;background:white;
- z-index:1000;box-shadow:0 5px 15px #0002;border-radius:10px;
- overflow:hidden;
-}
+.suggestions{position:absolute;left:0;right:0;top:100%;background:white;z-index:1000;box-shadow:0 5px 15px #0002;border-radius:10px;overflow:hidden}
 .suggestion{padding:12px;border-bottom:1px solid #eee;font-size:14px}
-button{
- border:0;border-radius:12px;padding:14px;
- font-size:16px;font-weight:bold;cursor:pointer;
-}
+button{border:0;border-radius:12px;padding:14px;font-size:16px;font-weight:bold;cursor:pointer}
 button:disabled{opacity:.6;cursor:not-allowed}
 .primary{width:100%;background:#ffd43b;color:#172033;margin-top:8px}
 .secondary{background:#e9eef6;color:#26344d}
-.gps{
- position:absolute;right:14px;bottom:15px;z-index:500;
- background:white;width:48px;height:48px;border-radius:50%;
- box-shadow:0 2px 10px #0003;font-size:22px;
-}
+.gps{position:absolute;right:14px;bottom:15px;z-index:500;background:white;width:48px;height:48px;border-radius:50%;box-shadow:0 2px 10px #0003;font-size:22px}
 .info{text-align:center;color:#68758a;font-size:12px;margin-top:7px}
 #page2{padding:17px}
 .topline{display:flex;align-items:center;gap:12px;margin-bottom:17px}
 .topline h2{margin:0;font-size:21px}
-.route-card{
- background:white;padding:15px;border-radius:15px;
- margin-bottom:15px;box-shadow:0 3px 12px #0001;
-}
+.route-card,.payment,.passenger,.status-card,.drivers-card{background:white;padding:15px;border-radius:15px;margin-bottom:15px;box-shadow:0 3px 12px #0001}
 .route-line{font-size:14px;line-height:1.7;overflow-wrap:anywhere}
-.route-stats{
- display:flex;justify-content:space-around;margin-top:12px;
- padding-top:10px;border-top:1px solid #eee;font-weight:bold;
-}
-.car-card{
- display:flex;align-items:center;gap:12px;background:white;
- padding:12px;border:2px solid transparent;border-radius:15px;
- margin-bottom:11px;box-shadow:0 3px 12px #0001;cursor:pointer;
-}
+.route-stats{display:flex;justify-content:space-around;margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-weight:bold}
+.car-card{display:flex;align-items:center;gap:12px;background:white;padding:12px;border:2px solid transparent;border-radius:15px;margin-bottom:11px;box-shadow:0 3px 12px #0001;cursor:pointer}
 .car-card.selected{border-color:#3578ed;background:#f2f7ff}
-.car-img{
- width:105px;height:70px;object-fit:cover;
- border-radius:10px;background:#edf0f5;
-}
+.car-img{width:105px;height:70px;object-fit:cover;border-radius:10px;background:#edf0f5}
 .car-info{flex:1;min-width:0}
 .car-info h3{margin:0 0 5px;font-size:16px}
 .car-info p{margin:0;color:#718096;font-size:12px}
 .price{font-weight:800;font-size:16px;white-space:nowrap}
-.payment,.passenger{
- background:white;padding:15px;border-radius:14px;margin:14px 0;
-}
 .pay-options{display:flex;gap:10px;margin-top:10px}
 .pay-options button{flex:1}
 .pay-options button.selected{background:#e4efff;border:2px solid #3578ed}
@@ -99,6 +55,13 @@ button:disabled{opacity:.6;cursor:not-allowed}
 .order-btn{background:#ffd43b;width:100%;padding:17px;font-size:17px}
 .back{padding:10px 13px}
 .note{color:#788397;font-size:11px;text-align:center;margin-top:10px}
+.driver-item{padding:12px;border:1px solid #e4e9f1;border-radius:12px;margin-top:10px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.driver-status{font-size:12px;color:#15975c;font-weight:bold}
+.status-pill{display:inline-block;background:#fff3c4;color:#806000;padding:7px 12px;border-radius:20px;font-size:13px;font-weight:bold}
+.status-steps{margin-top:15px}
+.status-step{padding:10px 0;border-bottom:1px solid #eee;font-size:14px;color:#8791a2}
+.status-step.active{color:#15975c;font-weight:bold}
+.coordinates{font-size:11px;color:#7b8798;margin-top:5px}
 @media(max-width:380px){
  .car-img{width:85px;height:60px}
  .price{font-size:14px}
@@ -116,9 +79,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
 
 <section id="page1" class="page active">
  <div class="map-box">
-  <div class="map-hint" id="hint">
-   📍 Алдымен қай жерден мінетініңізді таңдаңыз
-  </div>
+  <div class="map-hint" id="hint">📍 Алдымен қай жерден мінетініңізді таңдаңыз</div>
   <div id="map"></div>
   <button class="gps" onclick="myLocation()">⌖</button>
  </div>
@@ -140,9 +101,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
    </div>
   </div>
 
-  <button class="primary" onclick="continueToCars()">
-   Жалғастыру →
-  </button>
+  <button class="primary" onclick="continueToCars()">Жалғастыру →</button>
   <div class="info">Мекенжайды жазыңыз немесе картадан таңдаңыз</div>
  </div>
 </section>
@@ -157,6 +116,7 @@ button:disabled{opacity:.6;cursor:not-allowed}
   <div class="route-line">
    🟢 <b>Қайдан:</b> <span id="showFrom">—</span><br>
    🔴 <b>Қайда:</b> <span id="showTo">—</span>
+   <div class="coordinates" id="routeCoordinates"></div>
   </div>
   <div class="route-stats">
    <span>📏 <span id="distance">—</span> км</span>
@@ -167,25 +127,19 @@ button:disabled{opacity:.6;cursor:not-allowed}
  <h3>🚘 Тарифтер</h3>
 
  <div class="car-card selected" onclick="selectCar('economy',this)">
-  <img class="car-img"
-  src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&auto=format&fit=crop"
-  alt="Эконом көлігі">
+  <img class="car-img" src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=400&auto=format&fit=crop" alt="Эконом">
   <div class="car-info"><h3>Эконом</h3><p>Күнделікті сапарға</p></div>
   <div class="price" id="priceEconomy">— ₸</div>
  </div>
 
  <div class="car-card" onclick="selectCar('comfort',this)">
-  <img class="car-img"
-  src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&auto=format&fit=crop"
-  alt="Комфорт көлігі">
+  <img class="car-img" src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=400&auto=format&fit=crop" alt="Комфорт">
   <div class="car-info"><h3>Комфорт</h3><p>Жайлы әрі кең</p></div>
   <div class="price" id="priceComfort">— ₸</div>
  </div>
 
  <div class="car-card" onclick="selectCar('plus',this)">
-  <img class="car-img"
-  src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=400&auto=format&fit=crop"
-  alt="Комфорт плюс көлігі">
+  <img class="car-img" src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=400&auto=format&fit=crop" alt="Комфорт+">
   <div class="car-info"><h3>Комфорт+</h3><p>Жоғары жайлылық</p></div>
   <div class="price" id="pricePlus">— ₸</div>
  </div>
@@ -193,31 +147,68 @@ button:disabled{opacity:.6;cursor:not-allowed}
  <div class="payment">
   <b>💳 Төлем түрі</b>
   <div class="pay-options">
-   <button class="selected" onclick="selectPayment('Қолма-қол',this)">
-    💵 Қолма-қол
-   </button>
-   <button onclick="selectPayment('Картамен',this)">
-    💳 Картамен
-   </button>
+   <button class="selected" onclick="selectPayment('Қолма-қол',this)">💵 Қолма-қол</button>
+   <button onclick="selectPayment('Картамен',this)">💳 Картамен</button>
   </div>
  </div>
 
  <div class="passenger">
   <b>👤 Жолаушы мәліметтері</b>
-  <input id="passengerName" type="text" maxlength="60"
-   placeholder="Аты-жөніңіз">
-  <input id="passengerPhone" type="tel" maxlength="20"
-   placeholder="Телефон нөміріңіз">
+  <input id="passengerName" type="text" maxlength="60" placeholder="Аты-жөніңіз">
+  <input id="passengerPhone" type="tel" maxlength="20" placeholder="Телефон нөміріңіз">
  </div>
 
- <button class="order-btn" id="orderButton" onclick="makeOrder()">
-  🚕 Тапсырыс беру
- </button>
+ <div class="drivers-card">
+  <h3>🚖 Жүргізушілер</h3>
+  <p style="font-size:13px;color:#718096">
+   Тапсырыс диспетчерге түскен соң, бос жүргізуші тағайындалады.
+  </p>
+  <div class="driver-item">
+   <div>
+    <b>Жүргізушілер тізімі</b>
+    <div style="font-size:12px;color:#718096;margin-top:5px">
+     Жүйеге тіркелген жүргізушілер осы жерде көрсетіледі.
+    </div>
+   </div>
+   <span class="driver-status">● Жүйе дайын</span>
+  </div>
+ </div>
+
+ <button class="order-btn" id="orderButton" onclick="makeOrder()">🚕 Тапсырыс беру</button>
 
  <div class="note">
   Тапсырыс диспетчерге Telegram арқылы жіберіледі.
-  Жүргізуші растағанша сапар расталған болып саналмайды.
  </div>
+</section>
+
+<section id="page3" class="page" style="padding:17px">
+ <div class="topline">
+  <h2>📋 Тапсырыс мәртебесі</h2>
+ </div>
+
+ <div class="status-card">
+  <h3>🚕 Тапсырысыңыз қабылданды</h3>
+  <p>Тапсырыс диспетчерге жіберілді.</p>
+  <div class="status-pill" id="orderStatus">Диспетчер күтілуде</div>
+
+  <div class="status-steps">
+   <div class="status-step active">✓ Тапсырыс жіберілді</div>
+   <div class="status-step">○ Жүргізуші ізделуде</div>
+   <div class="status-step">○ Жүргізуші қабылдады</div>
+   <div class="status-step">○ Жүргізуші жолда</div>
+   <div class="status-step">○ Сапар аяқталды</div>
+  </div>
+ </div>
+
+ <div class="route-card">
+  <b>Бағыт:</b>
+  <p id="statusRoute" class="route-line"></p>
+  <b>Бағасы:</b>
+  <p id="statusPrice"></p>
+ </div>
+
+ <button class="primary" onclick="newOrder()">Жаңа тапсырыс беру</button>
+ <p class="note">Жүргізуші тағайындалған соң диспетчер сізбен байланысады.</p>
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -230,6 +221,8 @@ let distanceKm=0,durationMin=0;
 let selectedCar="economy";
 let payment="Қолма-қол";
 let routeRequest=0;
+let reverseRequestA=0,reverseRequestB=0;
+let reverseTimer=null;
 
 const prices={
  economy:{base:500,km:100},
@@ -260,15 +253,62 @@ function initMap(){
  });
 }
 
-function setPoint(type,latlng,address){
- const name=address || 'Картадан таңдалған орын';
+function coordinatesText(pos){
+ return pos.lat.toFixed(6)+', '+pos.lng.toFixed(6);
+}
 
+async function reverseGeocode(type,latlng){
+ const requestId=type==='A'?++reverseRequestA:++reverseRequestB;
+ const input=document.getElementById(type==='A'?'from':'to');
+
+ input.value='📍 Мекенжай анықталуда...';
+
+ // Nominatim сұраныстарын бір-бірінен алшақ жіберу
+ await new Promise(resolve=>setTimeout(resolve,1100));
+
+ try{
+  const url='https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat='+
+   latlng.lat+'&lon='+latlng.lng+'&zoom=18&addressdetails=1';
+
+  const response=await fetch(url);
+  if(!response.ok)throw new Error('Address lookup failed');
+
+  const data=await response.json();
+
+  if(type==='A' && requestId!==reverseRequestA)return;
+  if(type==='B' && requestId!==reverseRequestB)return;
+
+  const a=data.address||{};
+  const street=a.road||a.pedestrian||a.residential||a.street||'';
+  const house=a.house_number||'';
+  const village=a.village||a.town||a.city||a.municipality||a.suburb||'Үржар';
+  let label='';
+
+  if(street)label=street;
+  if(house)label+=' '+house;
+  if(village)label+=(label?', ':'')+village;
+
+  if(!label)label=data.display_name||'Картадан таңдалған орын';
+
+  input.value=label+' ('+coordinatesText(latlng)+')';
+
+ }catch(error){
+  if(type==='A' && requestId!==reverseRequestA)return;
+  if(type==='B' && requestId!==reverseRequestB)return;
+
+  input.value='Картадан таңдалған орын ('+coordinatesText(latlng)+')';
+ }
+}
+
+function setPoint(type,latlng,address){
  if(type==='A'){
   pointA=latlng;
   pointB=null;
   distanceKm=0;
   durationMin=0;
   routeRequest++;
+  reverseRequestA++;
+  reverseRequestB++;
 
   if(markerA)map.removeLayer(markerA);
   if(markerB)map.removeLayer(markerB);
@@ -278,13 +318,13 @@ function setPoint(type,latlng,address){
   routeLayer=null;
 
   document.getElementById('to').value='';
-  document.getElementById('from').value=name;
+  document.getElementById('from').value=address||'Мекенжай анықталуда...';
 
-  markerA=L.marker(latlng).addTo(map)
-   .bindPopup('🟢 A — Басталу нүктесі');
+  markerA=L.marker(latlng).addTo(map).bindPopup('🟢 A — Басталу нүктесі');
 
-  document.getElementById('hint').innerText=
-   '🔴 Енді баратын жеріңізді таңдаңыз';
+  document.getElementById('hint').innerText='🔴 Енді баратын жеріңізді таңдаңыз';
+
+  if(!address)reverseGeocode('A',latlng);
 
  }else{
   if(!pointA){
@@ -293,24 +333,24 @@ function setPoint(type,latlng,address){
   }
 
   pointB=latlng;
-  document.getElementById('to').value=name;
+  reverseRequestB++;
+
+  document.getElementById('to').value=address||'Мекенжай анықталуда...';
 
   if(markerB)map.removeLayer(markerB);
 
-  markerB=L.marker(latlng).addTo(map)
-   .bindPopup('🔴 B — Баратын жер');
+  markerB=L.marker(latlng).addTo(map).bindPopup('🔴 B — Баратын жер');
 
-  document.getElementById('hint').innerText=
-   '✅ Екі нүкте таңдалды. Бағыт есептелуде...';
+  document.getElementById('hint').innerText='✅ Екі нүкте таңдалды. Бағыт есептелуде...';
+
+  if(!address)reverseGeocode('B',latlng);
 
   drawRoute();
  }
 }
 
 async function searchAddress(text,type){
- const box=document.getElementById(
-  type==='A'?'suggestFrom':'suggestTo'
- );
+ const box=document.getElementById(type==='A'?'suggestFrom':'suggestTo');
  box.innerHTML='';
 
  if(text.trim().length<3)return;
@@ -329,9 +369,9 @@ async function searchAddress(text,type){
 
    div.onclick=()=>{
     const pos=L.latLng(Number(place.lat),Number(place.lon));
-    setPoint(type,pos,place.display_name);
+    setPoint(type,pos,place.display_name+' ('+coordinatesText(pos)+')');
     box.innerHTML='';
-    map.setView(pos,16);
+    map.setView(pos,17);
    };
 
    box.appendChild(div);
@@ -347,7 +387,7 @@ function setupSearch(id,type){
 
  input.addEventListener('input',()=>{
   clearTimeout(timer);
-  timer=setTimeout(()=>searchAddress(input.value,type),650);
+  timer=setTimeout(()=>searchAddress(input.value,type),700);
  });
 }
 
@@ -362,8 +402,7 @@ function drawRoute(){
  durationMin=0;
 
  const url='https://router.project-osrm.org/route/v1/driving/'+
- pointA.lng+','+pointA.lat+';'+
- pointB.lng+','+pointB.lat+
+ pointA.lng+','+pointA.lat+';'+pointB.lng+','+pointB.lat+
  '?overview=full&geometries=geojson';
 
  fetch(url)
@@ -373,8 +412,7 @@ function drawRoute(){
 
   if(!data.routes || !data.routes.length){
    alert('Бұл екі нүктенің арасында жол табылмады.');
-   document.getElementById('hint').innerText=
-    'Басқа нүктелерді таңдап көріңіз';
+   document.getElementById('hint').innerText='Басқа нүктелерді таңдап көріңіз';
    return;
   }
 
@@ -388,8 +426,7 @@ function drawRoute(){
 
   map.fitBounds(routeLayer.getBounds(),{padding:[40,40]});
 
-  document.getElementById('hint').innerText=
-   '✅ Бағыт есептелді. Жалғастыруға болады';
+  document.getElementById('hint').innerText='✅ Бағыт есептелді. Жалғастыруға болады';
  })
  .catch(()=>{
   if(requestId===routeRequest){
@@ -407,6 +444,11 @@ function continueToCars(){
   return;
  }
 
+ if(from.includes('анықталуда')||to.includes('анықталуда')){
+  alert('Мекенжай анықталып жатыр. Бірнеше секунд күтіңіз.');
+  return;
+ }
+
  if(!distanceKm){
   alert('Жол қашықтығы әлі есептеліп жатыр. Сәл күтіңіз.');
   return;
@@ -416,6 +458,8 @@ function continueToCars(){
  document.getElementById('showTo').textContent=to;
  document.getElementById('distance').textContent=distanceKm.toFixed(1);
  document.getElementById('duration').textContent=Math.ceil(durationMin);
+ document.getElementById('routeCoordinates').textContent=
+  'A: '+coordinatesText(pointA)+' | B: '+coordinatesText(pointB);
 
  calculatePrices();
 
@@ -426,127 +470,4 @@ function continueToCars(){
 
 function calculatePrices(){
  for(const key in prices){
-  const amount=Math.round(prices[key].base+distanceKm*prices[key].km);
-  const id=key==='plus'?'pricePlus':
-   key==='comfort'?'priceComfort':'priceEconomy';
-
-  document.getElementById(id).textContent=
-   amount.toLocaleString('ru-RU')+' ₸';
- }
-}
-
-function selectCar(type,element){
- selectedCar=type;
- document.querySelectorAll('.car-card').forEach(card=>{
-  card.classList.remove('selected');
- });
- element.classList.add('selected');
-}
-
-function selectPayment(type,element){
- if(type!=='Қолма-қол'){
-  alert('Картамен төлеу әзірге қолжетімсіз.');
-  return;
- }
-
- payment=type;
- document.querySelectorAll('.pay-options button').forEach(btn=>{
-  btn.classList.remove('selected');
- });
- element.classList.add('selected');
-}
-
-async function makeOrder(){
- const name=document.getElementById('passengerName').value.trim();
- const phone=document.getElementById('passengerPhone').value.trim();
- const from=document.getElementById('from').value.trim();
- const to=document.getElementById('to').value.trim();
-
- if(!name){
-  alert('Аты-жөніңізді енгізіңіз.');
-  return;
- }
-
- if(!/^[+0-9()\-\s]{7,20}$/.test(phone)){
-  alert('Телефон нөмірін дұрыс енгізіңіз.');
-  return;
- }
-
- if(!from || !to || !distanceKm){
-  alert('Бағыт толық таңдалмаған.');
-  return;
- }
-
- const amount=Math.round(
-  prices[selectedCar].base+distanceKm*prices[selectedCar].km
- );
-
- const button=document.getElementById('orderButton');
- button.disabled=true;
- button.textContent='⏳ Тапсырыс жіберілуде...';
-
- try{
-  const response=await fetch('/api/order',{
-   method:'POST',
-   headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({
-    name:name,
-    phone:phone,
-    from:from,
-    to:to,
-    car:carNames[selectedCar],
-    distance:distanceKm.toFixed(1),
-    price:amount,
-    payment:payment
-   })
-  });
-
-  const result=await response.json();
-
-  if(!response.ok || !result.success){
-   throw new Error(result.error || 'Тапсырыс жіберілмеді.');
-  }
-
-  alert(
-   '✅ Тапсырысыңыз диспетчерге жіберілді!\n\n'+
-   '🚕 Көлік: '+carNames[selectedCar]+'\n'+
-   '💰 Бағасы: '+amount.toLocaleString('ru-RU')+' ₸\n\n'+
-   'Диспетчер сізбен телефон арқылы байланысады.'
-  );
-
- }catch(error){
-  alert('Тапсырыс жіберілмеді: '+error.message);
- }finally{
-  button.disabled=false;
-  button.textContent='🚕 Тапсырыс беру';
- }
-}
-
-function backToMap(){
- document.getElementById('page2').classList.remove('active');
- document.getElementById('page1').classList.add('active');
- setTimeout(()=>map.invalidateSize(),200);
-}
-
-function myLocation(){
- if(!navigator.geolocation){
-  alert('Бұл браузер GPS қызметін қолдамайды.');
-  return;
- }
-
- navigator.geolocation.getCurrentPosition(pos=>{
-  const loc=L.latLng(pos.coords.latitude,pos.coords.longitude);
-  map.setView(loc,16);
-  setPoint('A',loc,'Менің орналасқан жерім');
- },()=>{
-  alert('GPS рұқсатын тексеріңіз.');
- });
-}
-
-initMap();
-setupSearch('from','A');
-setupSearch('to','B');
-</script>
-
-</body>
-</html>
+  const amount=Math.round(prices[key].base+distanceKm*prices[key
