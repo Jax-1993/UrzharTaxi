@@ -28,13 +28,13 @@ header{
 header h2{margin:0;font-size:22px}
 header p{margin:5px 0 0;color:#30d69a;font-size:12px}
 
-.page{display:none}
+.page{display:none;min-height:calc(100vh - 65px)}
 .page.active{display:block}
 
 .map-area{
- height:38vh;
- min-height:240px;
- max-height:390px;
+ height:52vh;
+ min-height:320px;
+ max-height:540px;
 }
 
 #map{
@@ -45,35 +45,35 @@ header p{margin:5px 0 0;color:#30d69a;font-size:12px}
 
 .panel{
  background:#172438;
- padding:13px;
+ padding:15px;
  border-radius:20px 20px 0 0;
  position:relative;
 }
 
 .title{
- font-size:18px;
+ font-size:19px;
  font-weight:bold;
- margin-bottom:7px;
+ margin-bottom:9px;
 }
 
 .hint{
  color:#b9c6d8;
- font-size:12px;
- margin-bottom:8px;
- line-height:1.4;
+ font-size:13px;
+ margin-bottom:10px;
+ line-height:1.5;
 }
 
 .input-wrap{position:relative}
 
 input{
  width:100%;
- padding:12px;
- margin:4px 0;
+ padding:14px;
+ margin:5px 0;
  border:1px solid #34465e;
  border-radius:11px;
  background:#101b2b;
  color:white;
- font-size:14px;
+ font-size:15px;
  outline:none;
 }
 
@@ -93,7 +93,7 @@ input{
 button{
  border:0;
  border-radius:12px;
- padding:13px;
+ padding:14px;
  font-size:15px;
  font-weight:bold;
  cursor:pointer;
@@ -103,18 +103,16 @@ button{
  width:100%;
  background:#18c98b;
  color:#06251c;
- margin-top:10px;
+ margin-top:12px;
 }
 
-.continue-btn{
- display:none;
-}
+.continue-btn{display:none}
 
 .gps-btn{
  width:100%;
  background:#263c59;
  color:white;
- margin-bottom:5px;
+ margin-bottom:7px;
 }
 
 .car{
@@ -124,7 +122,7 @@ button{
  padding:10px;
  border:2px solid transparent;
  border-radius:14px;
- margin:12px 0;
+ margin:13px 0;
  cursor:pointer;
 }
 
@@ -148,7 +146,7 @@ button{
 
 .price{
  color:#35dfa5;
- font-size:18px;
+ font-size:19px;
  font-weight:bold;
 }
 
@@ -158,6 +156,7 @@ button{
  padding:14px;
  margin:12px 0;
  line-height:1.8;
+ overflow-wrap:anywhere;
 }
 
 .payment{
@@ -182,9 +181,9 @@ button{
 }
 
 .small{
- font-size:11px;
+ font-size:12px;
  color:#aebdd0;
- line-height:1.4;
+ line-height:1.5;
 }
 
 .status{
@@ -196,17 +195,22 @@ button{
 
 .leaflet-container{z-index:1}
 
+@media(max-width:600px){
+ .map-area{
+  height:52vh;
+  min-height:320px;
+ }
+ .car img{
+  width:105px;
+  height:85px;
+ }
+}
+
 @media(max-height:700px){
  .map-area{
-  height:32vh;
-  min-height:210px;
+  height:48vh;
+  min-height:290px;
  }
- .panel{padding:10px}
- .title{margin-bottom:5px}
- .hint{margin-bottom:5px}
- input{padding:10px}
- .gps-btn{padding:11px}
- .main-btn{padding:12px}
 }
 </style>
 </head>
@@ -253,8 +257,7 @@ button{
    Алдымен мінетін жерді, содан кейін баратын жерді белгілеңіз.
   </div>
 
-  <button
-   id="continueBtn"
+  <button id="continueBtn"
    class="main-btn continue-btn"
    onclick="continueToCars()">
    ЖАЛҒАСТЫРУ →
@@ -291,11 +294,11 @@ button{
 
    <img
     src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=500&auto=format&fit=crop"
-    alt="Комфорт көлігі">
+    alt="Бизнес көлігі">
 
    <div class="car-info">
-    <h3>Комфорт</h3>
-    <p>Кең әрі жайлы седан</p>
+    <h3>Бизнес</h3>
+    <p>Кең әрі жайлы көлік</p>
     <div class="price" id="priceComfort">— ₸</div>
    </div>
   </div>
@@ -314,6 +317,33 @@ button{
    </div>
   </div>
 
+  <button class="main-btn" onclick="continueToDetails()">
+   ЖАЛҒАСТЫРУ →
+  </button>
+
+  <button class="gps-btn" onclick="backToMap()">
+   ← Картаға қайту
+  </button>
+
+ </div>
+</section>
+
+<!-- 3-БЕТ: ЖОЛАУШЫ АҚПАРАТЫ -->
+<section id="page3" class="page">
+
+ <div class="panel" style="border-radius:0">
+
+  <div class="title">👤 Жолаушы туралы ақпарат</div>
+
+  <div class="summary" id="passengerSummary"></div>
+
+  <input id="name"
+   placeholder="Аты-жөніңіз">
+
+  <input id="phone"
+   type="tel"
+   placeholder="Телефон нөміріңіз">
+
   <h3>Төлем түрі</h3>
 
   <div class="payment">
@@ -331,25 +361,20 @@ button{
    Картамен төлеу әзірге қолжетімсіз.
   </p>
 
-  <h3>Жолаушы туралы ақпарат</h3>
-
-  <input id="name" placeholder="Атыңыз">
-  <input id="phone" type="tel" placeholder="Телефон нөміріңіз">
-
   <button class="main-btn" id="orderBtn"
    onclick="makeOrder()">
    🚕 ТАПСЫРЫС БЕРУ
   </button>
 
-  <button class="gps-btn" onclick="backToMap()">
-   ← Картаға қайту
+  <button class="gps-btn" onclick="showPage('page2')">
+   ← Көлік таңдауға қайту
   </button>
 
  </div>
 </section>
 
-<!-- 3-БЕТ: ТАПСЫРЫС -->
-<section id="page3" class="page">
+<!-- 4-БЕТ: ТАПСЫРЫС РАСТАУ -->
+<section id="page4" class="page">
 
  <div class="status">
 
@@ -396,13 +421,13 @@ let prices={
 let currentPrices={};
 
 function updateContinueButton(){
+
  const button=document.getElementById('continueBtn');
 
- if(startPoint && endPoint && routeReady){
-  button.style.display='block';
- }else{
-  button.style.display='none';
- }
+ button.style.display=
+  startPoint && endPoint && routeReady
+   ? 'block'
+   : 'none';
 }
 
 function showPage(id){
@@ -412,6 +437,8 @@ function showPage(id){
  });
 
  document.getElementById(id).classList.add('active');
+
+ window.scrollTo(0,0);
 
  if(id==='page1' && map){
   setTimeout(()=>map.invalidateSize(true),300);
@@ -534,6 +561,7 @@ async function setPoint(type,latlng,address){
   const success=await getRoute();
 
   if(success){
+
    document.getElementById('mapTitle').textContent=
     'Бағыт дайын!';
 
@@ -541,6 +569,7 @@ async function setPoint(type,latlng,address){
     'Енді жалғастыру батырмасын басыңыз.';
 
   }else{
+
    document.getElementById('mapTitle').textContent=
     'Бағытты есептеу мүмкін болмады';
 
@@ -613,7 +642,6 @@ function setupSearch(inputId,suggestId,type){
    }
 
    distanceKm=0;
-
   }
 
   updateContinueButton();
@@ -667,9 +695,7 @@ function setupSearch(inputId,suggestId,type){
     });
 
    }catch(e){
-
     box.innerHTML='';
-
    }
 
   },900);
@@ -718,9 +744,7 @@ async function getRoute(){
   const data=await res.json();
 
   if(data.code!=='Ok'||!data.routes.length){
-
    return false;
-
   }
 
   const route=data.routes[0];
@@ -751,7 +775,6 @@ async function getRoute(){
  }catch(e){
 
   return false;
-
  }
 }
 
@@ -759,11 +782,9 @@ function calculatePrices(){
 
  for(const key in prices){
 
-  const amount=Math.round(
+  currentPrices[key]=Math.round(
    prices[key].base+distanceKm*prices[key].km
   );
-
-  currentPrices[key]=amount;
 
  }
 
@@ -777,12 +798,11 @@ function calculatePrices(){
   currentPrices.plus+' ₸';
 }
 
-async function continueToCars(){
+function continueToCars(){
 
  if(!startPoint||!endPoint||!routeReady){
 
   alert('Алдымен екі мекенжайды белгілеп, бағытты есептеңіз.');
-
   return;
  }
 
@@ -807,6 +827,22 @@ function selectCar(car){
  });
 
  document.getElementById(car).classList.add('selected');
+}
+
+function continueToDetails(){
+
+ if(!currentPrices[selectedCar]){
+  alert('Алдымен көлікті таңдаңыз.');
+  return;
+ }
+
+ document.getElementById('passengerSummary').innerHTML=
+
+  `🚘 Көлік: ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Комфорт+'}<br>
+   📏 Қашықтық: ${distanceKm.toFixed(1)} км<br>
+   💰 Бағасы: ${currentPrices[selectedCar]} ₸`;
+
+ showPage('page3');
 }
 
 function selectPayment(value){
@@ -837,21 +873,19 @@ async function makeOrder(){
 
  if(!name||!phone){
 
-  alert('Атыңыз бен телефон нөміріңізді енгізіңіз.');
-
+  alert('Аты-жөніңіз бен телефон нөміріңізді енгізіңіз.');
   return;
  }
 
  if(!startPoint||!endPoint||!routeReady){
 
   alert('Бағыт дұрыс таңдалмаған. Картаға қайтыңыз.');
-
   return;
  }
 
  const carNames={
   economy:'Эконом',
-  comfort:'Комфорт',
+  comfort:'Бизнес',
   plus:'Комфорт+'
  };
 
@@ -865,7 +899,7 @@ async function makeOrder(){
 
   car:carNames[selectedCar],
 
-  distance:distanceKm.toFixed(1)+' км',
+  distance:distanceKm.toFixed(1),
 
   price:currentPrices[selectedCar],
 
@@ -901,7 +935,6 @@ async function makeOrder(){
    throw new Error(
     result.error||'Тапсырысты жіберу мүмкін болмады.'
    );
-
   }
 
   document.getElementById('finalSummary').innerHTML=
@@ -913,7 +946,7 @@ async function makeOrder(){
     💰 ${currentPrices[selectedCar]} ₸<br>
     💵 ${payment}`;
 
-  showPage('page3');
+  showPage('page4');
 
  }catch(error){
 
