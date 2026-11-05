@@ -20,7 +20,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Жүргізуші сессиясын тексеру
     const cookies = (req.headers.cookie || "")
       .split(";")
       .map(item => item.trim());
@@ -51,8 +50,11 @@ export default async function handler(req, res) {
 
     const [driverId, expires, signature] = parts;
 
+    const uuidPattern =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
     if (
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(driverId) ||
+      !uuidPattern.test(driverId) ||
       !/^\d+$/.test(expires) ||
       Number(expires) < Date.now()
     ) {
@@ -84,7 +86,7 @@ export default async function handler(req, res) {
 
     if (
       typeof orderId !== "string" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(orderId)
+      !uuidPattern.test(orderId)
     ) {
       return res.status(400).json({
         success: false,
@@ -113,48 +115,47 @@ export default async function handler(req, res) {
     if (!drivers.length) {
       return res.status(403).json({
         success: false,
-        message: "Аккаунт белсенді емес"
+        message: "Жүргізуші аккаунты белсенді емес"
       });
     }
 
-    // Тек осы жүргізушіге бекітілген сапар аяқталады
-    const updateResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/orders?id=eq.${orderId}&driver_id=eq.${driverId}&status=eq.accepted`,
+    // Сапарды аяқтау және 10% комиссияны
+    // бір дерекқор транзакциясында тіркеу
+    const completeResponse = await fetch(
+      `${SUPABASE_URL}/rest/v1/rpc/complete_taxi_order`,
       {
-        method: "PATCH",
-        headers: {
-          ...headers,
-          Prefer: "return=representation"
-        },
+        method: "POST",
+        headers,
         body: JSON.stringify({
-          status: "completed"
+          p_order_id: orderId,
+          p_driver_id: driverId
         })
       }
     );
 
-    if (!updateResponse.ok) {
+    const result = await completeResponse.json();
+
+    if (!completeResponse.ok) {
+      if (completeResponse.status === 400 ||
+          completeResponse.status === 409) {
+        return res.status(409).json({
+          success: false,
+          message: "Сапар табылмады немесе бұрын аяқталған"
+        });
+      }
+
+      console.error("Supabase completion error:", result);
+
       throw new Error("Сапарды аяқтау қатесі");
     }
 
-    const updatedOrders = await updateResponse.json();
-
-    if (!updatedOrders.length) {
-      return res.status(409).json({
-        success: false,
-        message: "Сапар табылмады немесе бұрын аяқталған"
-      });
-    }
-
-    const order = updatedOrders[0];
-    const price = Number(order.price);
-
     return res.status(200).json({
       success: true,
-      message: "Сапар сәтті аяқталды!",
-      orderId: order.id,
-      price,
-      commission: Math.round(price * 0.10),
-      driverEarning: price - Math.round(price * 0.10)
+      message: "Сапар аяқталды! Комиссия есепке тіркелді.",
+      orderId: result.order_id,
+      price: Number(result.price),
+      commission: Number(result.commission),
+      driverEarning: Number(result.driver_earning)
     });
 
   } catch (error) {
