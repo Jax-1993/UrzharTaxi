@@ -1,4 +1,3 @@
-
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -100,9 +99,10 @@ export default async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    // Жүргізушінің белсенділігін тексеру
+    // Жүргізушінің бар екенін тексеру
+    // is_active бағаны қолданылмайды
     const driverResponse = await fetch(
-      `${SUPABASE_URL}/rest/v1/drivers?id=eq.${driverId}&is_active=eq.true&select=id`,
+      `${SUPABASE_URL}/rest/v1/drivers?id=eq.${driverId}&select=id`,
       { headers }
     );
 
@@ -115,12 +115,11 @@ export default async function handler(req, res) {
     if (!drivers.length) {
       return res.status(403).json({
         success: false,
-        message: "Жүргізуші аккаунты белсенді емес"
+        message: "Жүргізуші аккаунты табылмады"
       });
     }
 
-    // Сапарды аяқтау және 10% комиссияны
-    // бір дерекқор транзакциясында тіркеу
+    // Сапарды аяқтау және комиссияны есептеу
     const completeResponse = await fetch(
       `${SUPABASE_URL}/rest/v1/rpc/complete_taxi_order`,
       {
@@ -136,17 +135,15 @@ export default async function handler(req, res) {
     const result = await completeResponse.json();
 
     if (!completeResponse.ok) {
-      if (completeResponse.status === 400 ||
-          completeResponse.status === 409) {
-        return res.status(409).json({
-          success: false,
-          message: "Сапар табылмады немесе бұрын аяқталған"
-        });
-      }
-
       console.error("Supabase completion error:", result);
 
-      throw new Error("Сапарды аяқтау қатесі");
+      return res.status(409).json({
+        success: false,
+        message:
+          result.message ||
+          result.details ||
+          "Сапарды аяқтау мүмкін болмады"
+      });
     }
 
     return res.status(200).json({
