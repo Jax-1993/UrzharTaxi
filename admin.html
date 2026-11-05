@@ -14,6 +14,7 @@ h1{color:#ffcc00;margin:0}
 .subtitle,.small{color:#aebbd0}
 input{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
 button{border:0;border-radius:10px;padding:13px 17px;font-weight:bold;font-size:15px;cursor:pointer;margin:5px 4px 5px 0}
+button:disabled{opacity:.5;cursor:not-allowed}
 .primary{background:#ffcc00;color:#171717}
 .approve{background:#19b875;color:white}
 .reject{background:#e34b59;color:white}
@@ -28,7 +29,7 @@ button{border:0;border-radius:10px;padding:13px 17px;font-weight:bold;font-size:
 .pending{color:#ffcc00}
 .approved{color:#19d995}
 .rejected{color:#ff7b85}
-.password-box{background:#142b27;border:1px solid #19b875;border-radius:12px;padding:16px;margin-top:15px}
+.password-box{background:#142b27;border:1px solid #19b875;border-radius:12px;padding:16px;margin:15px 0}
 .password-value{font-size:20px;font-weight:bold;overflow-wrap:anywhere;color:#ffdf70;margin:12px 0}
 .hidden{display:none}
 </style>
@@ -52,7 +53,12 @@ button{border:0;border-radius:10px;padding:13px 17px;font-weight:bold;font-size:
 <div class="panel">
 <h2>📋 Жүргізушілер өтінімдері</h2>
 <button class="refresh" id="refreshButton">🔄 Жаңарту</button>
+
 <div id="listMessage" class="message"></div>
+
+<!-- Құпиясөз панелі өтінімдер тізімінен бөлек -->
+<div id="credentialPanel"></div>
+
 <div id="applications"></div>
 </div>
 </section>
@@ -65,6 +71,7 @@ const applicationsPanel=document.getElementById("applicationsPanel");
 const loginMessage=document.getElementById("loginMessage");
 const listMessage=document.getElementById("listMessage");
 const applicationsBox=document.getElementById("applications");
+const credentialPanel=document.getElementById("credentialPanel");
 
 function esc(v){
 return String(v??"").replace(/[&<>"']/g,c=>({
@@ -84,7 +91,11 @@ applicationsPanel.classList.remove("hidden");
 
 async function login(){
 const password=document.getElementById("password").value;
-if(!password){loginMessage.textContent="Құпиясөзді енгізіңіз";return;}
+
+if(!password){
+loginMessage.textContent="Құпиясөзді енгізіңіз";
+return;
+}
 
 loginMessage.textContent="Тексерілуде...";
 
@@ -95,6 +106,7 @@ credentials:"same-origin",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({password})
 });
+
 const d=await r.json();
 
 if(!r.ok||!d.success){
@@ -105,21 +117,28 @@ return;
 document.getElementById("password").value="";
 showApplications();
 await loadApplications();
+
 }catch(e){
 loginMessage.textContent="Сервермен байланыс жоқ";
 }
 }
 
 function showTemporaryPassword(data){
+credentialPanel.innerHTML="";
+
 const box=document.createElement("div");
 box.className="password-box";
 
-const phone=box.ownerDocument.createElement("div");
-phone.textContent="Жүргізуші телефоны: "+(data.phone||"");
+const heading=document.createElement("h3");
+heading.textContent="✅ Жүргізуші аккаунты жасалды";
+box.appendChild(heading);
+
+const phone=document.createElement("div");
+phone.textContent="Жүргізуші телефоны: "+data.phone;
 box.appendChild(phone);
 
 const title=document.createElement("p");
-title.textContent="Жүргізушінің уақытша құпиясөзі:";
+title.textContent="Уақытша құпиясөз:";
 box.appendChild(title);
 
 const value=document.createElement("div");
@@ -130,6 +149,7 @@ box.appendChild(value);
 const copy=document.createElement("button");
 copy.className="copy";
 copy.textContent="📋 Құпиясөзді көшіру";
+
 copy.addEventListener("click",async()=>{
 try{
 await navigator.clipboard.writeText(data.temporary_password);
@@ -138,14 +158,16 @@ copy.textContent="✅ Көшірілді";
 copy.textContent="Көшіру мүмкін болмады";
 }
 });
+
 box.appendChild(copy);
 
 const warning=document.createElement("p");
 warning.className="small";
-warning.textContent="Бұл құпиясөз қайта көрсетілмейді. Жүргізушіге қауіпсіз жеке арнамен жеткізіңіз.";
+warning.textContent=
+"Маңызды: бұл құпиясөз тек осы экранда көрсетіледі. Оны жүргізушіге қауіпсіз жеке арнамен жеткізіңіз.";
 box.appendChild(warning);
 
-applicationsBox.prepend(box);
+credentialPanel.appendChild(box);
 }
 
 async function loadApplications(){
@@ -157,6 +179,7 @@ const r=await fetch("/api/admin-applications",{
 credentials:"same-origin",
 cache:"no-store"
 });
+
 const d=await r.json();
 
 if(r.status===401){
@@ -171,6 +194,7 @@ return;
 }
 
 const items=d.applications||[];
+
 listMessage.textContent="Барлық өтінім саны: "+items.length;
 
 if(!items.length){
@@ -181,8 +205,10 @@ return;
 items.forEach(item=>{
 const card=document.createElement("div");
 card.className="application";
+card.dataset.phone=item.phone||"";
 
-const photo=typeof item.photo_url==="string"&&/^https:\/\//i.test(item.photo_url)
+const photo=
+typeof item.photo_url==="string"&&/^https:\/\//i.test(item.photo_url)
 ?'<img class="car-photo" src="'+esc(item.photo_url)+'" alt="Көлік фотосы">'
 :'<p class="small">Көлік фотосы қолжетімсіз</p>';
 
@@ -214,6 +240,7 @@ ${item.status==="pending"?
 `<button class="approve" data-id="${esc(item.id)}" data-status="approved">✅ Мақұлдау</button>
 <button class="reject" data-id="${esc(item.id)}" data-status="rejected">❌ Қабылдамау</button>`:""}
 `;
+
 applicationsBox.appendChild(card);
 });
 
@@ -223,8 +250,14 @@ listMessage.textContent="Жүктеу кезінде қате пайда бол�
 }
 
 async function updateApplication(id,status,button){
-const question=status==="approved"?"Жүргізушіні мақұлдап, аккаунтын жасаймыз ба?":"Өтінімді қабылдамаймыз ба?";
+const question=status==="approved"
+?"Жүргізушіні мақұлдап, аккаунтын жасаймыз ба?"
+:"Өтінімді қабылдамаймыз ба?";
+
 if(!confirm(question))return;
+
+const card=button.closest(".application");
+const driverPhone=card?.dataset.phone||"";
 
 button.disabled=true;
 listMessage.textContent="Өтінім өңделуде...";
@@ -236,6 +269,7 @@ credentials:"same-origin",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({id,status})
 });
+
 const d=await r.json();
 
 if(r.status===401){
@@ -251,8 +285,14 @@ return;
 }
 
 if(status==="approved"){
+if(!d.temporary_password){
+listMessage.textContent="Аккаунт жасалды, бірақ уақытша құпиясөз серверден келмеді. Әкімшіге хабарласыңыз.";
+button.disabled=false;
+return;
+}
+
 showTemporaryPassword({
-phone:button.closest(".application").querySelector(".details").textContent,
+phone:driverPhone,
 temporary_password:d.temporary_password
 });
 }
@@ -266,15 +306,26 @@ button.disabled=false;
 }
 }
 
-document.getElementById("loginButton").addEventListener("click",login);
-document.getElementById("refreshButton").addEventListener("click",loadApplications);
-document.getElementById("password").addEventListener("keydown",e=>{
+document.getElementById("loginButton")
+.addEventListener("click",login);
+
+document.getElementById("refreshButton")
+.addEventListener("click",loadApplications);
+
+document.getElementById("password")
+.addEventListener("keydown",e=>{
 if(e.key==="Enter")login();
 });
 
 applicationsBox.addEventListener("click",e=>{
 const button=e.target.closest("button[data-id]");
-if(button)updateApplication(button.dataset.id,button.dataset.status,button);
+if(button){
+updateApplication(
+button.dataset.id,
+button.dataset.status,
+button
+);
+}
 });
 </script>
 </body>
