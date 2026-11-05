@@ -1,7 +1,11 @@
 
+import crypto from "crypto";
+
 function verifyAdmin(req, password) {
   const cookie = req.headers.cookie || "";
-  const match = cookie.match(/(?:^|;\s*)urzhar_admin_session=([^;]+)/);
+  const match = cookie.match(
+    /(?:^|;\s*)urzhar_admin_session=([^;]+)/
+  );
 
   if (!match) return false;
 
@@ -15,6 +19,10 @@ function verifyAdmin(req, password) {
     return false;
   }
 
+  if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) {
+    return false;
+  }
+
   const expectedSignature = crypto
     .createHmac("sha256", password)
     .update("urzhar-admin:" + expires)
@@ -23,7 +31,232 @@ function verifyAdmin(req, password) {
   const received = Buffer.from(receivedSignature, "hex");
   const expected = Buffer.from(expectedSignature, "hex");
 
-  if (received.length !== expected.length) return false;
+  return received.length === expected.length &&
+    crypto.timingSafeEqual(received, expected);
+}
 
-  return crypto.timingSafeEqual(received, expected);
+async function supabase(path, options = {}) {
+  const url = process.env.SUPABASE_URL.replace(/\/$/, "");
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  const response = await fetch(`${url}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: key,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+
+  const body = await response.text();
+  let data = null;
+
+  try {
+    data = body ? JSON.parse(body) : null;
+  } catch {
+    data = body;
+  }
+
+  if (!response.ok) {
+    console.error("Supabase error:", data);
+    throw new Error("Дерекқор қатесі");
+  }
+
+  return data;
+}
+
+function getWeek(dateValue) {
+  const date = new Date(
+    new Date(dateValue).getTime() + 5 * 60 * 60 * 1000
+  );
+
+  const day = date.getUTCDay();
+  const offset = (day + 6) % 7;
+
+  const monday = Date.UTC(
+    date.getUTCFullYear(),
+    date.getUTCMonth(),
+    date.getUTCDate() - offset
+  );
+
+  const start = new Date(monday - 5 * 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 7 * 86400000);
+
+  return {
+    week_start: start.toISOString(),
+    week_end: end.toISOString()
+  };
+}
+
+export default async function handler(req, res) {
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "no-store");
+
+  const password = process.env.ADMIN_PASSWORD;
+
+  if (
+    !password ||
+    !process.env.SUPABASE_URL ||
+    !process.env.SUPABASE_SERVICE_ROLE_KEY
+  ) {
+    return res.status(500).json({
+      success: false,
+      message: "Сервер баптаулары толық емес"
+    });
+  }
+
+  if (!verifyAdmin(req, password)) {
+    return res.status(401).json({
+      success: false,
+      message: "Әкімші жүйесіне қайта кіріңіз"
+    });
+  }
+
+  try {
+    if (req.method === "GET") {
+      const [commissions, drivers] = await Promise.all([
+        supabase(
+          "driver_commissions?select=id,driver_id,order_id,ride_price,commission_amount,status,created_at,paid_at&order=created_at.desc&limit=5000"
+        ),
+        supabase("drivers?select=id,full_name,phone")
+      ]);
+
+      const driverMap = new Map(
+        drivers.map(d => [d.id, d])
+      );
+
+      const groups = new Map();
+
+      for (const row of commissions) {
+        const week = getWeek(row.created_at);
+        const key = row.driver_id + "_" + week.week_start;
+
+        if (!groups.has(key)) {
+          const driver = driverMap.get(row.driver_id) || {};
+
+          groups.set(key, {
+            driver_id: row.driver_id,
+            driver_name: driver.full_name || "Белгісіз жүргізуші",
+            driver_phone: driver.phone || "",
+            ...week,
+            rides_count: 0,
+            gross_total: 0,
+            commission_total: 0,
+            unpaid_total: 0,
+            paid_total: 0
+          });
+        }
+
+        const group = groups.get(key);
+        const price = Number(row.ride_price || 0);
+        const commission = Number(row.commission_amount || 0);
+
+        group.rides_count++;
+        group.gross_total += price;
+        group.commission_total += commission;
+
+        if (row.status === "paid") {
+          group.paid_total += commission;
+        } else {
+          group.unpaid_total += commission;
+        }
+      }
+
+      const result = Array.from(groups.values())
+        .map(g => ({
+          ...g,
+          gross_total: Number(g.gross_total.toFixed(2)),
+          commission_total: Number(g.commission_total.toFixed(2)),
+          unpaid_total: Number(g.unpaid_total.toFixed(2)),
+          paid_total: Number(g.paid_total.toFixed(2))
+        }))
+        .sort((a, b) =>
+          b.week_start.localeCompare(a.week_start)
+        );
+
+      return res.status(200).json({
+        success: true,
+        commissions: result
+      });
+    }
+
+    if (req.method === "POST") {
+      const {
+        driver_id,
+        week_start,
+        week_end
+      } = req.body || {};
+
+      const start = Date.parse(week_start);
+      const end = Date.parse(week_end);
+
+      if (
+        typeof driver_id !== "string" ||
+        !/^[0-9a-f-]{36}$/i.test(driver_id) ||
+        !Number.isFinite(start) ||
+        !Number.isFinite(end) ||
+        end <= start ||
+        end - start > 7 * 86400000 + 1000
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Апта деректері қате"
+        });
+      }
+
+      const query =
+        `driver_id=eq.${encodeURIComponent(driver_id)}` +
+        `&status=eq.unpaid` +
+        `&created_at=gte.${encodeURIComponent(week_start)}` +
+        `&created_at=lt.${encodeURIComponent(week_end)}`;
+
+      const updated = await supabase(
+        `driver_commissions?${query}`,
+        {
+          method: "PATCH",
+          headers: {
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({
+            status: "paid",
+            paid_at: new Date().toISOString()
+          })
+        }
+      );
+
+      if (!updated || updated.length === 0) {
+        return res.status(409).json({
+          success: false,
+          message: "Төленбеген комиссия табылмады"
+        });
+      }
+
+      const total = updated.reduce(
+        (sum, row) =>
+          sum + Number(row.commission_amount || 0),
+        0
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Комиссия төленді деп белгіленді",
+        rides_count: updated.length,
+        commission_paid: Number(total.toFixed(2))
+      });
+    }
+
+    return res.status(405).json({
+      success: false,
+      message: "GET немесе POST қолданыңыз"
+    });
+
+  } catch (error) {
+    console.error("Admin commissions error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Комиссия есебінде сервер қатесі"
+    });
+  }
 }
