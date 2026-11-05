@@ -1,13 +1,12 @@
 export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({
+      success: false,
       error: "Тек POST сұранысы қабылданады"
     });
   }
 
   const {
-    email,
-    password,
     full_name,
     phone,
     car_brand,
@@ -18,14 +17,16 @@ export default async function handler(req, res) {
   } = req.body || {};
 
   if (
-    !email || !password || password.length < 8 ||
-    !full_name || !phone ||
-    !car_brand || !car_model ||
-    !car_number ||
+    !full_name?.trim() ||
+    !phone?.trim() ||
+    !car_brand?.trim() ||
+    !car_model?.trim() ||
+    !car_number?.trim() ||
     !["economy", "comfort", "comfort_plus"].includes(car_class)
   ) {
     return res.status(400).json({
-      error: "Мәліметтер толық емес немесе қате"
+      success: false,
+      error: "Барлық қажетті мәліметтерді толтырыңыз"
     });
   }
 
@@ -34,66 +35,59 @@ export default async function handler(req, res) {
 
   if (!url || !key) {
     return res.status(500).json({
+      success: false,
       error: "Сервер баптауы толық емес"
     });
   }
 
   try {
-    const signup = await fetch(`${url}/auth/v1/signup`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: key,
-        Authorization: `Bearer ${key}`
-      },
-      body: JSON.stringify({
-        email,
-        password
-      })
-    });
+    const response = await fetch(
+      `${url}/rest/v1/driver_applications`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: key,
+          Authorization: `Bearer ${key}`,
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify({
+          full_name: full_name.trim(),
+          phone: phone.trim(),
+          car_brand: car_brand.trim(),
+          car_model: car_model.trim(),
+          car_year: car_year ? Number(car_year) : null,
+          car_number: car_number.trim().toUpperCase(),
+          car_class,
+          status: "pending"
+        })
+      }
+    );
 
-    const authData = await signup.json();
+    if (!response.ok) {
+      const error = await response.json();
 
-    if (!signup.ok || !authData.user?.id) {
+      if (error.code === "23505") {
+        return res.status(409).json({
+          success: false,
+          error: "Бұл телефон нөмірімен өтінім бұрын жіберілген"
+        });
+      }
+
       return res.status(400).json({
-        error: authData.msg || authData.message || "Тіркелу сәтсіз аяқталды"
-      });
-    }
-
-    const profile = await fetch(`${url}/rest/v1/drivers`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        apikey: key,
-        Authorization: `Bearer ${key}`,
-        Prefer: "return=minimal"
-      },
-      body: JSON.stringify({
-        id: authData.user.id,
-        full_name,
-        phone,
-        car_brand,
-        car_model,
-        car_year: car_year ? Number(car_year) : null,
-        car_number,
-        car_class,
-        status: "pending"
-      })
-    });
-
-    if (!profile.ok) {
-      return res.status(400).json({
-        error: "Аккаунт ашылды, бірақ жүргізуші профилі сақталмады"
+        success: false,
+        error: "Өтінімді сақтау мүмкін болмады"
       });
     }
 
     return res.status(201).json({
       success: true,
-      message: "Тіркелу қабылданды. Әкімші мақұлдауын күтіңіз."
+      message: "Өтінім қабылданды. Әкімші тексеруін күтіңіз."
     });
 
   } catch (error) {
     return res.status(500).json({
+      success: false,
       error: "Сервер қатесі"
     });
   }
