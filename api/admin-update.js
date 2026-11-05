@@ -1,4 +1,8 @@
+
 import crypto from "crypto";
+import { promisify } from "util";
+
+const scrypt = promisify(crypto.scrypt);
 
 function verifyAdmin(req, password) {
   const cookie = req.headers.cookie || "";
@@ -10,24 +14,31 @@ function verifyAdmin(req, password) {
   if (parts.length !== 2) return false;
 
   const expires = Number(parts[0]);
-
-  if (!Number.isFinite(expires) || expires <= Date.now()) {
-    return false;
-  }
+  if (!Number.isFinite(expires) || expires <= Date.now()) return false;
 
   const expected = crypto
     .createHmac("sha256", password)
     .update("urzhar-admin:" + expires)
     .digest("hex");
 
-  const receivedBuffer = Buffer.from(parts[1], "hex");
+  const received = Buffer.from(parts[1], "hex");
   const expectedBuffer = Buffer.from(expected, "hex");
 
-  if (receivedBuffer.length !== expectedBuffer.length) {
-    return false;
-  }
+  if (received.length !== expectedBuffer.length) return false;
 
-  return crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
+  return crypto.timingSafeEqual(received, expectedBuffer);
+}
+
+async function createPasswordHash(password) {
+  const salt = crypto.randomBytes(16).toString("hex");
+
+  const derivedKey = await scrypt(password, salt, 64, {
+    N: 16384,
+    r: 8,
+    p: 1
+  });
+
+  return `scrypt$${salt}$${derivedKey.toString("hex")}`;
 }
 
 export default async function handler(req, res) {
@@ -42,18 +53,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const password = process.env.ADMIN_PASSWORD;
-    const url = process.env.SUPABASE_URL;
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (!password || !url || !key) {
+    if (!adminPassword || !supabaseUrl || !serviceKey) {
       return res.status(500).json({
         success: false,
         message: "Сервер баптаулары толық емес"
       });
     }
 
-    if (!verifyAdmin(req, password)) {
+    if (!verifyAdmin(req, adminPassword)) {
       return res.status(401).json({
         success: false,
         message: "Әкімші рұқсаты қажет"
@@ -79,28 +90,81 @@ export default async function handler(req, res) {
       });
     }
 
-    const cleanUrl = url.replace(/\/$/, "");
+    const cleanUrl = supabaseUrl.replace(/\/$/, "");
 
+    const headers = {
+      apikey: serviceKey,
+      Authorization: `Bearer ${serviceKey}`,
+      "Content-Type": "application/json"
+    };
+
+    // Жүргізушіні мақұлдау және аккаунтын жасау
+    if (status === "approved") {
+      const temporaryPassword = crypto
+        .randomBytes(9)
+        .toString("base64url");
+
+      const passwordHash = await createPasswordHash(temporaryPassword);
+
+      const response = await fetch(
+        `${cleanUrl}/rest/v1/rpc/approve_driver_application`,
+        {
+          method: "POST",
+          headers,
+          body: JSON.stringify({
+            p_application_id: id,
+            p_password_hash: passwordHash
+          })
+        }
+      );
+
+      if (!response.ok) {
+        console.error("Driver approval error:", await response.text());
+
+        return res.status(502).json({
+          success: false,
+          message: "Жүргізушіні мақұлдау немесе аккаунт жасау мүмкін болмады"
+        });
+      }
+
+      const result = await response.json();
+
+      if (!result || !result.success || !result.driver_id) {
+        return res.status(502).json({
+          success: false,
+          message: "Аккаунт жасау нәтижесі дұрыс емес"
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Жүргізуші мақұлданды. Аккаунт жасалды.",
+        temporary_password: temporaryPassword,
+        driver_id: result.driver_id
+      });
+    }
+
+    // Өтінімді қабылдамау
     const response = await fetch(
       `${cleanUrl}/rest/v1/driver_applications?id=eq.${id}&status=eq.pending`,
       {
         method: "PATCH",
         headers: {
-          apikey: key,
-          Authorization: `Bearer ${key}`,
-          "Content-Type": "application/json",
+          ...headers,
           Prefer: "return=representation"
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({
+          status: "rejected"
+        })
       }
     );
 
     if (!response.ok) {
-      console.error("Supabase update:", await response.text());
+      console.error("Driver rejection error:", await response.text());
 
       return res.status(502).json({
         success: false,
-        message: "Өтінімді жаңарту мүмкін болмады"
+        message: "Өтінімді қабылдамау мүмкін болмады"
       });
     }
 
@@ -115,10 +179,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       success: true,
-      message: status === "approved"
-        ? "Жүргізуші мақұлданды"
-        : "Өтінім қабылданбады",
-      application: updated[0]
+      message: "Өтінім қабылданбады"
     });
 
   } catch (error) {
