@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 body{margin:0;padding:18px;background:#101522;color:#fff;font-family:Arial,sans-serif}
 .container{max-width:850px;margin:auto}
-header,.panel,.application{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
+header,.panel,.application,.commission-card{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
 h1{color:#ffcc00;margin:0}
 .subtitle,.small{color:#aebbd0}
 input{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
@@ -20,6 +20,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .reject{background:#e34b59;color:white}
 .refresh{background:#405575;color:white}
 .copy{background:#ffcc00;color:#171717}
+.paid{background:#19b875;color:white}
 .message{color:#ffcc00;margin:12px 0}
 .details{line-height:1.8;color:#e1e8f3}
 .application{background:#26344d}
@@ -32,6 +33,22 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .password-box{background:#142b27;border:1px solid #19b875;border-radius:12px;padding:16px;margin:15px 0}
 .password-value{font-size:20px;font-weight:bold;overflow-wrap:anywhere;color:#ffdf70;margin:12px 0}
 .hidden{display:none}
+.commission-card{background:#26344d;border:1px solid #405575}
+.commission-card h3{color:#ffcc00;margin-top:0}
+.money-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
+.money-item{background:#172237;padding:13px;border-radius:10px}
+.money-item span{display:block;color:#aebbd0;font-size:13px;margin-bottom:7px}
+.money-item strong{font-size:18px;overflow-wrap:anywhere}
+.unpaid{color:#ffcc00}
+.received{color:#19d995}
+.week{color:#aebbd0;font-size:14px;line-height:1.6}
+.commission-note{color:#aebbd0;font-size:13px;line-height:1.5}
+@media(max-width:480px){
+body{padding:10px}
+header,.panel,.application,.commission-card{padding:15px}
+.money-grid{grid-template-columns:1fr 1fr}
+.money-item strong{font-size:16px}
+}
 </style>
 </head>
 <body>
@@ -50,19 +67,24 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </section>
 
 <section id="applicationsPanel" class="hidden">
+
 <div class="panel">
 <h2>📋 Жүргізушілер өтінімдері</h2>
 <button class="refresh" id="refreshButton">🔄 Жаңарту</button>
-
 <div id="listMessage" class="message"></div>
-
-<!-- Құпиясөз панелі өтінімдер тізімінен бөлек -->
 <div id="credentialPanel"></div>
-
 <div id="applications"></div>
 </div>
-</section>
 
+<div class="panel">
+<h2>💰 Апталық комиссиялар</h2>
+<div class="small">Әр жүргізушіден орындалған тапсырыстардың 10% комиссия есептеледі.</div>
+<button class="refresh" id="refreshCommissionsButton">🔄 Комиссияларды жаңарту</button>
+<div id="commissionMessage" class="message"></div>
+<div id="commissions"></div>
+</div>
+
+</section>
 </div>
 
 <script>
@@ -72,11 +94,18 @@ const loginMessage=document.getElementById("loginMessage");
 const listMessage=document.getElementById("listMessage");
 const applicationsBox=document.getElementById("applications");
 const credentialPanel=document.getElementById("credentialPanel");
+const commissionMessage=document.getElementById("commissionMessage");
+const commissionsBox=document.getElementById("commissions");
 
 function esc(v){
 return String(v??"").replace(/[&<>"']/g,c=>({
 "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
 })[c]);
+}
+
+function money(v){
+const n=Number(v||0);
+return (Number.isFinite(n)?n:0).toLocaleString("kk-KZ")+" ₸";
 }
 
 function showLogin(){
@@ -116,7 +145,11 @@ return;
 
 document.getElementById("password").value="";
 showApplications();
-await loadApplications();
+
+await Promise.all([
+loadApplications(),
+loadCommissions()
+]);
 
 }catch(e){
 loginMessage.textContent="Сервермен байланыс жоқ";
@@ -249,6 +282,159 @@ listMessage.textContent="Жүктеу кезінде қате пайда бол�
 }
 }
 
+async function loadCommissions(){
+commissionMessage.textContent="Комиссиялар жүктелуде...";
+commissionsBox.innerHTML="";
+
+try{
+const r=await fetch("/api/admin-commissions",{
+method:"GET",
+credentials:"same-origin",
+cache:"no-store"
+});
+
+const d=await r.json();
+
+if(r.status===401){
+showLogin();
+loginMessage.textContent="Әкімші жүйесіне қайта кіріңіз";
+return;
+}
+
+if(!r.ok||!d.success){
+commissionMessage.textContent=d.message||"Комиссияларды алу мүмкін болмады";
+return;
+}
+
+const items=d.commissions||[];
+
+if(!items.length){
+commissionMessage.textContent="Әзірге есептелген комиссия жоқ";
+return;
+}
+
+commissionMessage.textContent="Апталық есептер саны: "+items.length;
+
+items.forEach(item=>{
+const card=document.createElement("div");
+card.className="commission-card";
+
+const unpaid=Number(item.unpaid_total||0);
+const paid=Number(item.paid_total||0);
+const driverName=item.driver_name||"Жүргізуші";
+const weekStart=item.week_start||"";
+const weekEnd=item.week_end||"";
+
+card.innerHTML=`
+<h3>🚘 ${esc(driverName)}</h3>
+<div class="details">
+<b>Телефон:</b> ${esc(item.driver_phone||"—")}<br>
+<b>Тапсырыс саны:</b> ${esc(item.rides_count||0)}
+</div>
+<div class="week">
+📅 Апта: ${esc(weekStart)} — ${esc(weekEnd)}
+</div>
+
+<div class="money-grid">
+<div class="money-item">
+<span>Жалпы тапсырыс сомасы</span>
+<strong>${money(item.gross_total)}</strong>
+</div>
+<div class="money-item">
+<span>Біздің 10% комиссия</span>
+<strong>${money(item.commission_total)}</strong>
+</div>
+<div class="money-item">
+<span>Төленген комиссия</span>
+<strong class="received">${money(paid)}</strong>
+</div>
+<div class="money-item">
+<span>Төленбеген комиссия</span>
+<strong class="unpaid">${money(unpaid)}</strong>
+</div>
+</div>
+
+${unpaid>0?
+`<button class="paid"
+data-driver-id="${esc(item.driver_id)}"
+data-week-start="${esc(weekStart)}"
+data-week-end="${esc(weekEnd)}">
+✅ Төленді деп белгілеу
+</button>`:
+'<div class="status received">✅ Комиссия толық төленген</div>'}
+
+<p class="commission-note">
+Бұл батырманы жүргізушіден комиссия ақшасы нақты алынғаннан кейін ғана басыңыз.
+</p>
+`;
+
+commissionsBox.appendChild(card);
+});
+
+}catch(e){
+commissionMessage.textContent="Комиссияларды жүктеу кезінде қате";
+}
+}
+
+async function markCommissionPaid(button){
+const driverId=button.dataset.driverId;
+const weekStart=button.dataset.weekStart;
+const weekEnd=button.dataset.weekEnd;
+
+if(!driverId||!weekStart||!weekEnd){
+commissionMessage.textContent="Есеп деректері толық емес";
+return;
+}
+
+const confirmed=confirm(
+"Осы жүргізушіден осы аптаның 10% комиссия ақшасын нақты алдыңыз ба?\n\nТек ақша қолыңызға түскен болса ғана растаңыз."
+);
+
+if(!confirmed)return;
+
+button.disabled=true;
+button.textContent="Өңделуде...";
+
+try{
+const r=await fetch("/api/admin-commissions",{
+method:"POST",
+credentials:"same-origin",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+driver_id:driverId,
+week_start:weekStart,
+week_end:weekEnd
+})
+});
+
+const d=await r.json();
+
+if(r.status===401){
+showLogin();
+loginMessage.textContent="Әкімші жүйесіне қайта кіріңіз";
+return;
+}
+
+if(!r.ok||!d.success){
+commissionMessage.textContent=d.message||"Комиссияны белгілеу мүмкін болмады";
+button.disabled=false;
+button.textContent="✅ Төленді деп белгілеу";
+return;
+}
+
+commissionMessage.textContent=
+"✅ Төлем белгіленді. Қабылданған комиссия: "+
+money(d.commission_paid);
+
+await loadCommissions();
+
+}catch(e){
+commissionMessage.textContent="Сервермен байланыс қатесі";
+button.disabled=false;
+button.textContent="✅ Төленді деп белгілеу";
+}
+}
+
 async function updateApplication(id,status,button){
 const question=status==="approved"
 ?"Жүргізушіні мақұлдап, аккаунтын жасаймыз ба?"
@@ -312,6 +498,9 @@ document.getElementById("loginButton")
 document.getElementById("refreshButton")
 .addEventListener("click",loadApplications);
 
+document.getElementById("refreshCommissionsButton")
+.addEventListener("click",loadCommissions);
+
 document.getElementById("password")
 .addEventListener("keydown",e=>{
 if(e.key==="Enter")login();
@@ -325,6 +514,13 @@ button.dataset.id,
 button.dataset.status,
 button
 );
+}
+});
+
+commissionsBox.addEventListener("click",e=>{
+const button=e.target.closest("button[data-driver-id]");
+if(button){
+markCommissionPaid(button);
 }
 });
 </script>
