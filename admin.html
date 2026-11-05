@@ -1,0 +1,322 @@
+
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ҮРЖАР TAXI — Әкімші</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:20px;
+  background:#101522;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+.container{max-width:850px;margin:auto}
+header{
+  padding:22px;
+  background:#202b40;
+  border-radius:18px;
+  margin-bottom:20px;
+}
+h1{margin:0;color:#ffcc00}
+.subtitle{color:#b9c4d8;margin-top:8px}
+.panel{
+  background:#202b40;
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:16px;
+}
+input{
+  width:100%;
+  padding:15px;
+  border:1px solid #52617b;
+  border-radius:10px;
+  background:#111a2a;
+  color:white;
+  font-size:16px;
+  margin:10px 0;
+}
+button{
+  border:0;
+  border-radius:10px;
+  padding:13px 18px;
+  font-size:15px;
+  font-weight:bold;
+  cursor:pointer;
+  margin:5px 4px 5px 0;
+}
+.primary{background:#ffcc00;color:#171717}
+.approve{background:#19b875;color:white}
+.reject{background:#e34b59;color:white}
+.refresh{background:#405575;color:white}
+.message{margin:12px 0;color:#ffcc00}
+.application{
+  background:#26344d;
+  padding:18px;
+  border-radius:14px;
+  margin:14px 0;
+  overflow:hidden;
+}
+.application h3{margin:0 0 12px;color:#ffcc00}
+.details{line-height:1.8;color:#e1e8f3}
+.car-photo{
+  width:100%;
+  max-height:300px;
+  object-fit:contain;
+  background:#111a2a;
+  border-radius:12px;
+  margin-top:12px;
+}
+.status{font-weight:bold;margin:12px 0}
+.pending{color:#ffcc00}
+.approved{color:#19d995}
+.rejected{color:#ff7b85}
+.hidden{display:none}
+.small{font-size:13px;color:#aab7cc}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🚕 ҮРЖАР TAXI</h1>
+  <div class="subtitle">Әкімші кабинеті • Жүргізушілер өтінімдері</div>
+</header>
+
+<section id="loginPanel" class="panel">
+  <h2>🔐 Әкімші жүйесіне кіру</h2>
+  <p class="small">Әкімші құпиясөзін енгізіңіз.</p>
+  <input id="password" type="password" placeholder="Құпиясөз">
+  <button class="primary" id="loginButton">Кіру</button>
+  <div id="loginMessage" class="message"></div>
+</section>
+
+<section id="applicationsPanel" class="hidden">
+  <div class="panel">
+    <h2>📋 Жүргізушілер өтінімдері</h2>
+    <button class="refresh" id="refreshButton">🔄 Жаңарту</button>
+    <div id="listMessage" class="message"></div>
+    <div id="applications"></div>
+  </div>
+</section>
+
+</div>
+
+<script>
+const loginPanel = document.getElementById("loginPanel");
+const applicationsPanel = document.getElementById("applicationsPanel");
+const loginMessage = document.getElementById("loginMessage");
+const listMessage = document.getElementById("listMessage");
+const applicationsBox = document.getElementById("applications");
+
+function escapeHtml(value){
+  return String(value ?? "").replace(/[&<>"']/g, char => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[char]);
+}
+
+function carClassName(value){
+  const names = {
+    economy:"Эконом",
+    comfort:"Комфорт",
+    comfort_plus:"Комфорт+"
+  };
+  return names[value] || value || "Көрсетілмеген";
+}
+
+function statusName(value){
+  const names = {
+    pending:"⏳ Күтуде",
+    approved:"✅ Мақұлданды",
+    rejected:"❌ Қабылданбады"
+  };
+  return names[value] || value;
+}
+
+function showLogin(){
+  loginPanel.classList.remove("hidden");
+  applicationsPanel.classList.add("hidden");
+}
+
+function showApplications(){
+  loginPanel.classList.add("hidden");
+  applicationsPanel.classList.remove("hidden");
+}
+
+async function login(){
+  const password = document.getElementById("password").value;
+
+  if(!password){
+    loginMessage.textContent = "Құпиясөзді енгізіңіз.";
+    return;
+  }
+
+  loginMessage.textContent = "Тексерілуде...";
+
+  try{
+    const response = await fetch("/api/admin-login",{
+      method:"POST",
+      credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password})
+    });
+
+    const data = await response.json();
+
+    if(!response.ok || !data.success){
+      loginMessage.textContent = data.message || "Кіру мүмкін болмады.";
+      return;
+    }
+
+    document.getElementById("password").value = "";
+    showApplications();
+    await loadApplications();
+
+  }catch(error){
+    loginMessage.textContent = "Сервермен байланыс жоқ.";
+  }
+}
+
+async function loadApplications(){
+  listMessage.textContent = "Өтінімдер жүктелуде...";
+  applicationsBox.innerHTML = "";
+
+  try{
+    const response = await fetch("/api/admin-applications",{
+      method:"GET",
+      credentials:"same-origin",
+      cache:"no-store"
+    });
+
+    const data = await response.json();
+
+    if(response.status === 401){
+      showLogin();
+      loginMessage.textContent = "Сессия аяқталды. Қайта кіріңіз.";
+      return;
+    }
+
+    if(!response.ok || !data.success){
+      listMessage.textContent = data.message || "Өтінімдерді алу мүмкін болмады.";
+      return;
+    }
+
+    const items = data.applications || [];
+
+    listMessage.textContent = "Барлық өтінім саны: " + items.length;
+
+    if(items.length === 0){
+      applicationsBox.innerHTML =
+        '<div class="application">Әзірге өтінім жоқ.</div>';
+      return;
+    }
+
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "application";
+
+      const photo = typeof item.photo_url === "string" &&
+        /^https:\/\//i.test(item.photo_url)
+        ? '<img class="car-photo" src="' +
+          escapeHtml(item.photo_url) +
+          '" alt="Көлік фотосы" loading="lazy">'
+        : '<p class="small">Көлік фотосы әзірге қолжетімсіз.</p>';
+
+      const date = item.created_at
+        ? new Date(item.created_at).toLocaleString("kk-KZ")
+        : "Көрсетілмеген";
+
+      card.innerHTML = `
+        <h3>🚘 ${escapeHtml(item.full_name)}</h3>
+        <div class="details">
+          <b>Телефон:</b> ${escapeHtml(item.phone)}<br>
+          <b>Көлік:</b> ${escapeHtml(item.car_brand)} ${escapeHtml(item.car_model)}<br>
+          <b>Шыққан жылы:</b> ${escapeHtml(item.car_year || "Көрсетілмеген")}<br>
+          <b>Мемлекеттік нөмір:</b> ${escapeHtml(item.car_number)}<br>
+          <b>Санаты:</b> ${escapeHtml(carClassName(item.car_class))}<br>
+          <b>Өтінім уақыты:</b> ${escapeHtml(date)}
+        </div>
+        ${photo}
+        <div class="status ${escapeHtml(item.status)}">
+          ${escapeHtml(statusName(item.status))}
+        </div>
+        ${
+          item.status === "pending"
+          ? `<button class="approve" data-id="${escapeHtml(item.id)}" data-status="approved">✅ Мақұлдау</button>
+             <button class="reject" data-id="${escapeHtml(item.id)}" data-status="rejected">❌ Қабылдамау</button>`
+          : ""
+        }
+      `;
+
+      applicationsBox.appendChild(card);
+    });
+
+  }catch(error){
+    listMessage.textContent = "Қате пайда болды. Қайта жаңартып көріңіз.";
+  }
+}
+
+async function updateApplication(id,status){
+  const question = status === "approved"
+    ? "Бұл жүргізушіні мақұлдайсыз ба?"
+    : "Бұл өтінімді қабылдамайсыз ба?";
+
+  if(!confirm(question)) return;
+
+  listMessage.textContent = "Өтінім жаңартылуда...";
+
+  try{
+    const response = await fetch("/api/admin-update",{
+      method:"POST",
+      credentials:"same-origin",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({id,status})
+    });
+
+    const data = await response.json();
+
+    if(response.status === 401){
+      showLogin();
+      loginMessage.textContent = "Қайта кіру қажет.";
+      return;
+    }
+
+    if(!response.ok || !data.success){
+      listMessage.textContent = data.message || "Жаңарту сәтсіз.";
+      return;
+    }
+
+    listMessage.textContent = data.message;
+    await loadApplications();
+
+  }catch(error){
+    listMessage.textContent = "Сервермен байланыс қатесі.";
+  }
+}
+
+document.getElementById("loginButton").addEventListener("click",login);
+document.getElementById("refreshButton").addEventListener("click",loadApplications);
+
+document.getElementById("password").addEventListener("keydown",event=>{
+  if(event.key === "Enter") login();
+});
+
+applicationsBox.addEventListener("click",event=>{
+  const button = event.target.closest("button[data-id]");
+  if(!button) return;
+
+  updateApplication(button.dataset.id,button.dataset.status);
+});
+
+// Бұрын кірген әкімшінің сессиясын тексеру
+loadApplications();
+</script>
+</body>
+</html>
