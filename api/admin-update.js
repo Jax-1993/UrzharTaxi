@@ -98,7 +98,6 @@ export default async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    // Жүргізушіні мақұлдау және аккаунтын жасау
     if (status === "approved") {
       const temporaryPassword = crypto
         .randomBytes(9)
@@ -118,21 +117,36 @@ export default async function handler(req, res) {
         }
       );
 
+      const responseText = await response.text();
+
       if (!response.ok) {
-        console.error("Driver approval error:", await response.text());
+        console.error("Driver approval error:", responseText);
 
         return res.status(502).json({
           success: false,
-          message: "Жүргізушіні мақұлдау немесе аккаунт жасау мүмкін болмады"
+          message: "Мақұлдау қатесі: " + responseText.slice(0, 700)
         });
       }
 
-      const result = await response.json();
+      let result;
 
-      if (!result || !result.success || !result.driver_id) {
+      try {
+        result = JSON.parse(responseText);
+      } catch {
         return res.status(502).json({
           success: false,
-          message: "Аккаунт жасау нәтижесі дұрыс емес"
+          message: "Сервер нәтижесін оқу мүмкін болмады: " +
+            responseText.slice(0, 500)
+        });
+      }
+
+      if (!result || !result.success || !result.driver_id) {
+        console.error("Unexpected approval result:", result);
+
+        return res.status(502).json({
+          success: false,
+          message: "Аккаунт нәтижесі дұрыс емес: " +
+            JSON.stringify(result).slice(0, 500)
         });
       }
 
@@ -144,7 +158,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Өтінімді қабылдамау
     const response = await fetch(
       `${cleanUrl}/rest/v1/driver_applications?id=eq.${id}&status=eq.pending`,
       {
@@ -160,11 +173,12 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      console.error("Driver rejection error:", await response.text());
+      const errorText = await response.text();
 
       return res.status(502).json({
         success: false,
-        message: "Өтінімді қабылдамау мүмкін болмады"
+        message: "Өтінімді қабылдамау қатесі: " +
+          errorText.slice(0, 500)
       });
     }
 
@@ -187,7 +201,7 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: "Сервер қатесі"
+      message: "Сервер қатесі: " + error.message
     });
   }
 }
