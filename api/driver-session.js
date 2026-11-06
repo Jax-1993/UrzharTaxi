@@ -78,9 +78,8 @@ export default async function handler(req, res) {
     const cleanUrl = supabaseUrl.replace(/\/$/, "");
 
     const response = await fetch(
-      `${cleanUrl}/rest/v1/drivers?id=eq.${encodeURIComponent(driverId)}&select=id,full_name,phone,car_brand,car_model,car_number,car_class,is_active&limit=1`,
+      `${cleanUrl}/rest/v1/drivers?id=eq.${encodeURIComponent(driverId)}&select=id,full_name,phone,car_brand,car_model,car_number,car_class&limit=1`,
       {
-        method: "GET",
         headers: {
           apikey: serviceKey,
           Authorization: `Bearer ${serviceKey}`,
@@ -90,6 +89,7 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
+      console.error("Driver session DB error:", response.status);
       return res.status(502).json({
         success: false,
         message: "Дерекқормен байланыс қатесі"
@@ -99,24 +99,16 @@ export default async function handler(req, res) {
     const drivers = await response.json();
     const driver = drivers[0];
 
-    if (!driver || !driver.is_active) {
+    if (!driver) {
       return res.status(401).json({
         success: false,
-        message: "Жүргізуші аккаунты белсенді емес"
+        message: "Жүргізуші табылмады"
       });
     }
 
     return res.status(200).json({
       success: true,
-      driver: {
-        id: driver.id,
-        full_name: driver.full_name,
-        phone: driver.phone,
-        car_brand: driver.car_brand,
-        car_model: driver.car_model,
-        car_number: driver.car_number,
-        car_class: driver.car_class
-      }
+      driver
     });
 
   } catch (error) {
