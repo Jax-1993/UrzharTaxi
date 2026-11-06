@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 body{margin:0;padding:18px;background:#101522;color:#fff;font-family:Arial,sans-serif}
 .container{max-width:850px;margin:auto}
-header,.panel,.application,.commission-card{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
+header,.panel,.application,.commission-card,.history-card{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
 h1{color:#ffcc00;margin:0}
 .subtitle,.small{color:#aebbd0}
 input{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
@@ -34,7 +34,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .password-value{font-size:20px;font-weight:bold;overflow-wrap:anywhere;color:#ffdf70;margin:12px 0}
 .hidden{display:none}
 .commission-card{background:#26344d;border:1px solid #405575}
-.commission-card h3{color:#ffcc00;margin-top:0}
+.commission-card h3,.history-card h3{color:#ffcc00;margin-top:0}
 .money-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:15px 0}
 .money-item{background:#172237;padding:13px;border-radius:10px}
 .money-item span{display:block;color:#aebbd0;font-size:13px;margin-bottom:7px}
@@ -43,9 +43,14 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .received{color:#19d995}
 .week{color:#aebbd0;font-size:14px;line-height:1.6}
 .commission-note{color:#aebbd0;font-size:13px;line-height:1.5}
+.history-card{background:#172b2a;border:1px solid #23775b}
+.history-card h3{color:#19d995}
+.history-date{color:#aebbd0;font-size:13px;line-height:1.6}
+.history-amount{font-size:23px;font-weight:bold;color:#19d995;margin:12px 0}
+.empty{background:#172237;padding:16px;border-radius:10px;color:#aebbd0;line-height:1.6}
 @media(max-width:480px){
 body{padding:10px}
-header,.panel,.application,.commission-card{padding:15px}
+header,.panel,.application,.commission-card,.history-card{padding:15px}
 .money-grid{grid-template-columns:1fr 1fr}
 .money-item strong{font-size:16px}
 }
@@ -84,6 +89,14 @@ header,.panel,.application,.commission-card{padding:15px}
 <div id="commissions"></div>
 </div>
 
+<div class="panel">
+<h2>💳 Төлем тарихы</h2>
+<div class="small">Нақты төленген комиссиялар және олардың төлем күндері.</div>
+<button class="refresh" id="refreshHistoryButton">🔄 Тарихты жаңарту</button>
+<div id="historyMessage" class="message"></div>
+<div id="paymentHistory"></div>
+</div>
+
 </section>
 </div>
 
@@ -96,6 +109,8 @@ const applicationsBox=document.getElementById("applications");
 const credentialPanel=document.getElementById("credentialPanel");
 const commissionMessage=document.getElementById("commissionMessage");
 const commissionsBox=document.getElementById("commissions");
+const historyMessage=document.getElementById("historyMessage");
+const historyBox=document.getElementById("paymentHistory");
 
 function esc(v){
 return String(v??"").replace(/[&<>"']/g,c=>({
@@ -106,6 +121,20 @@ return String(v??"").replace(/[&<>"']/g,c=>({
 function money(v){
 const n=Number(v||0);
 return (Number.isFinite(n)?n:0).toLocaleString("kk-KZ")+" ₸";
+}
+
+function dateText(v){
+if(!v)return "Көрсетілмеген";
+const d=new Date(v);
+if(!Number.isFinite(d.getTime()))return "Көрсетілмеген";
+return d.toLocaleString("kk-KZ",{
+timeZone:"Asia/Almaty",
+year:"numeric",
+month:"2-digit",
+day:"2-digit",
+hour:"2-digit",
+minute:"2-digit"
+});
 }
 
 function showLogin(){
@@ -265,7 +294,7 @@ card.innerHTML=`
 <b>Жылы:</b> ${esc(item.car_year||"—")}<br>
 <b>Нөмірі:</b> ${esc(item.car_number)}<br>
 <b>Санаты:</b> ${esc(names[item.car_class]||item.car_class)}<br>
-<b>Уақыты:</b> ${esc(item.created_at?new Date(item.created_at).toLocaleString("kk-KZ"):"—")}
+<b>Уақыты:</b> ${esc(item.created_at?dateText(item.created_at):"—")}
 </div>
 ${photo}
 <div class="status ${esc(item.status)}">${esc(statuses[item.status]||item.status)}</div>
@@ -285,6 +314,8 @@ listMessage.textContent="Жүктеу кезінде қате пайда бол�
 async function loadCommissions(){
 commissionMessage.textContent="Комиссиялар жүктелуде...";
 commissionsBox.innerHTML="";
+historyMessage.textContent="Төлем тарихы жүктелуде...";
+historyBox.innerHTML="";
 
 try{
 const r=await fetch("/api/admin-commissions",{
@@ -303,6 +334,7 @@ return;
 
 if(!r.ok||!d.success){
 commissionMessage.textContent=d.message||"Комиссияларды алу мүмкін болмады";
+historyMessage.textContent="Төлем тарихын алу мүмкін болмады";
 return;
 }
 
@@ -310,9 +342,7 @@ const items=d.commissions||[];
 
 if(!items.length){
 commissionMessage.textContent="Әзірге есептелген комиссия жоқ";
-return;
-}
-
+}else{
 commissionMessage.textContent="Апталық есептер саны: "+items.length;
 
 items.forEach(item=>{
@@ -332,7 +362,7 @@ card.innerHTML=`
 <b>Тапсырыс саны:</b> ${esc(item.rides_count||0)}
 </div>
 <div class="week">
-📅 Апта: ${esc(weekStart)} — ${esc(weekEnd)}
+📅 Апта: ${esc(dateText(weekStart))} — ${esc(dateText(weekEnd))}
 </div>
 
 <div class="money-grid">
@@ -370,10 +400,51 @@ data-week-end="${esc(weekEnd)}">
 
 commissionsBox.appendChild(card);
 });
+}
+
+renderPaymentHistory(d.payment_history||[]);
 
 }catch(e){
 commissionMessage.textContent="Комиссияларды жүктеу кезінде қате";
+historyMessage.textContent="Төлем тарихын жүктеу кезінде қате";
 }
+}
+
+function renderPaymentHistory(items){
+historyBox.innerHTML="";
+
+if(!items.length){
+historyMessage.textContent="Әзірге төленген комиссия тарихы жоқ";
+historyBox.innerHTML=
+'<div class="empty">Комиссия нақты төленіп, әкімші растағаннан кейін осы жерде сақталады.</div>';
+return;
+}
+
+historyMessage.textContent="Төлем жазбалары: "+items.length;
+
+items.forEach(item=>{
+const card=document.createElement("div");
+card.className="history-card";
+
+card.innerHTML=`
+<h3>✅ ${esc(item.driver_name||"Жүргізуші")}</h3>
+<div class="details">
+<b>Телефон:</b> ${esc(item.driver_phone||"—")}<br>
+<b>Сапар саны:</b> ${esc(item.rides_count||0)}
+</div>
+<div class="history-date">
+<b>Қай апта үшін:</b><br>
+${esc(dateText(item.week_start))} — ${esc(dateText(item.week_end))}
+<br><br>
+<b>Төленген күні:</b><br>
+${esc(dateText(item.paid_at))}
+</div>
+<div class="history-amount">${money(item.paid_total)}</div>
+<div class="status received">✅ Төлем қабылданды деп белгіленген</div>
+`;
+
+historyBox.appendChild(card);
+});
 }
 
 async function markCommissionPaid(button){
@@ -499,6 +570,9 @@ document.getElementById("refreshButton")
 .addEventListener("click",loadApplications);
 
 document.getElementById("refreshCommissionsButton")
+.addEventListener("click",loadCommissions);
+
+document.getElementById("refreshHistoryButton")
 .addEventListener("click",loadCommissions);
 
 document.getElementById("password")
