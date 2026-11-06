@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="kk">
 <head>
@@ -28,6 +27,9 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .secondary{background:#53647c;color:#fff}
 .status{color:#ffcc00;font-weight:bold}
 hr{border:0;border-top:1px solid #53647c;margin:14px 0}
+.history-item{background:#303d52;padding:14px;border-radius:10px;margin:10px 0}
+.history-item p{margin:7px 0;overflow-wrap:anywhere}
+.history-amount{color:#8ee6a2;font-size:20px;font-weight:bold}
 @media(max-width:380px){
  .stat strong{font-size:18px}
  button{width:100%}
@@ -73,6 +75,13 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 </div>
 
 <div class="card">
+<h3>💳 Комиссия төлемдерінің тарихы</h3>
+<div id="paymentHistory" class="muted">
+Төлем тарихы жүктелуде...
+</div>
+</div>
+
+<div class="card">
 <h3 class="section-title">🆕 Жаңа тапсырыстар</h3>
 <div id="newOrders" class="muted">Жүктелуде...</div>
 </div>
@@ -96,6 +105,39 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 <script>
 const money = n =>
   Number(n || 0).toLocaleString("kk-KZ") + " ₸";
+
+function dateText(value) {
+  if (!value) return "Көрсетілмеген";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "Көрсетілмеген";
+  }
+
+  return date.toLocaleString("kk-KZ", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "Asia/Almaty"
+  });
+}
+
+function shortDate(value) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "—";
+  }
+
+  return date.toLocaleDateString("kk-KZ", {
+    timeZone: "Asia/Almaty"
+  });
+}
 
 async function api(url, options = {}) {
   const response = await fetch(url, {
@@ -143,7 +185,51 @@ function statusText(status) {
     completed: "Аяқталды"
   };
 
-  return values[String(status || "").toLowerCase()] || status || "Белгісіз";
+  return values[String(status || "").toLowerCase()] ||
+    status ||
+    "Белгісіз";
+}
+
+function renderPaymentHistory(history) {
+  const container = document.getElementById("paymentHistory");
+  container.replaceChildren();
+
+  if (!Array.isArray(history) || history.length === 0) {
+    container.textContent = "Әзірге комиссия төлемдері тіркелмеген.";
+    return;
+  }
+
+  history.forEach(record => {
+    const item = document.createElement("div");
+    item.className = "history-item";
+
+    const amount = addText(
+      item,
+      money(record.amount),
+      "div"
+    );
+    amount.className = "history-amount";
+
+    addText(
+      item,
+      "📅 Қай апта: " +
+      shortDate(record.weekStart) +
+      " — " +
+      shortDate(record.weekEnd)
+    );
+
+    addText(
+      item,
+      "💳 Төленген күні: " + dateText(record.paidAt)
+    );
+
+    addText(
+      item,
+      "🚕 Сапар саны: " + Number(record.ridesCount || 0)
+    );
+
+    container.appendChild(item);
+  });
 }
 
 async function loadStats() {
@@ -172,20 +258,25 @@ async function loadStats() {
   if (weekly.start && weekly.end) {
     document.getElementById("week").textContent =
       "Апта: " +
-      new Date(weekly.start).toLocaleDateString("kk-KZ") +
+      shortDate(weekly.start) +
       " — " +
-      new Date(weekly.end).toLocaleDateString("kk-KZ");
+      shortDate(weekly.end);
   } else {
     document.getElementById("week").textContent = "";
   }
+
+  renderPaymentHistory(data.paymentHistory);
 }
 
 function makeOrderCard(order, type) {
   const item = document.createElement("div");
   item.className = "order";
 
-  addText(item, "📍 Қайдан: " + (order.pickup_address || "Көрсетілмеген"));
-  addText(item, "🏁 Қайда: " + (order.destination_address || "Көрсетілмеген"));
+  addText(item, "📍 Қайдан: " +
+    (order.pickup_address || "Көрсетілмеген"));
+
+  addText(item, "🏁 Қайда: " +
+    (order.destination_address || "Көрсетілмеген"));
 
   if (order.passenger_name) {
     addText(item, "👤 Жолаушы: " + order.passenger_name);
@@ -195,11 +286,18 @@ function makeOrderCard(order, type) {
     addText(item, "📞 Телефон: " + order.passenger_phone);
   }
 
-  addText(item, "🚘 Көлік класы: " + (order.car_class || "Көрсетілмеген"));
+  addText(item, "🚘 Көлік класы: " +
+    (order.car_class || "Көрсетілмеген"));
+
   addText(item, "📏 Қашықтық: " +
-    (order.distance_km ? order.distance_km + " км" : "Көрсетілмеген"));
+    (order.distance_km
+      ? order.distance_km + " км"
+      : "Көрсетілмеген"));
+
   addText(item, "💰 Бағасы: " + money(order.price));
-  addText(item, "💳 Төлем: " + (order.payment_method || "Көрсетілмеген"));
+
+  addText(item, "💳 Төлем: " +
+    (order.payment_method || "Көрсетілмеген"));
 
   const status = addText(
     item,
@@ -210,7 +308,9 @@ function makeOrderCard(order, type) {
   if (type === "new") {
     const button = document.createElement("button");
     button.textContent = "✅ Қабылдау";
-    button.addEventListener("click", () => acceptOrder(order.id, button));
+    button.addEventListener("click", () =>
+      acceptOrder(order.id, button)
+    );
     item.appendChild(button);
   }
 
@@ -222,7 +322,9 @@ function makeOrderCard(order, type) {
   ) {
     const button = document.createElement("button");
     button.textContent = "🏁 Сапарды аяқтау";
-    button.addEventListener("click", () => completeOrder(order.id, button));
+    button.addEventListener("click", () =>
+      completeOrder(order.id, button)
+    );
     item.appendChild(button);
   }
 
@@ -235,8 +337,8 @@ async function loadOrders() {
   const newContainer = document.getElementById("newOrders");
   const myContainer = document.getElementById("myOrders");
 
-  newContainer.innerHTML = "";
-  myContainer.innerHTML = "";
+  newContainer.replaceChildren();
+  myContainer.replaceChildren();
 
   const newOrders = Array.isArray(data.new_orders)
     ? data.new_orders
@@ -250,7 +352,9 @@ async function loadOrders() {
     newContainer.textContent = "Қазір жаңа тапсырыс жоқ";
   } else {
     newOrders.forEach(order => {
-      newContainer.appendChild(makeOrderCard(order, "new"));
+      newContainer.appendChild(
+        makeOrderCard(order, "new")
+      );
     });
   }
 
@@ -258,7 +362,9 @@ async function loadOrders() {
     myContainer.textContent = "Әзірге өз тапсырысыңыз жоқ";
   } else {
     myOrders.forEach(order => {
-      myContainer.appendChild(makeOrderCard(order, "mine"));
+      myContainer.appendChild(
+        makeOrderCard(order, "mine")
+      );
     });
   }
 }
@@ -277,6 +383,7 @@ async function acceptOrder(orderId, button) {
 
     showMessage("Тапсырыс қабылданды!", "success");
     await loadAll();
+
   } catch (error) {
     button.disabled = false;
     button.textContent = "✅ Қабылдау";
@@ -307,6 +414,7 @@ async function completeOrder(orderId, button) {
     );
 
     await loadAll();
+
   } catch (error) {
     button.disabled = false;
     button.textContent = "🏁 Сапарды аяқтау";
