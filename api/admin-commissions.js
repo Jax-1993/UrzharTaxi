@@ -127,14 +127,17 @@ export default async function handler(req, res) {
       );
 
       const groups = new Map();
+      const history = new Map();
 
       for (const row of commissions) {
         const week = getWeek(row.created_at);
+        const driver = driverMap.get(row.driver_id) || {};
+        const price = Number(row.ride_price || 0);
+        const commission = Number(row.commission_amount || 0);
+
         const key = row.driver_id + "_" + week.week_start;
 
         if (!groups.has(key)) {
-          const driver = driverMap.get(row.driver_id) || {};
-
           groups.set(key, {
             driver_id: row.driver_id,
             driver_name: driver.full_name || "Белгісіз жүргізуші",
@@ -149,8 +152,6 @@ export default async function handler(req, res) {
         }
 
         const group = groups.get(key);
-        const price = Number(row.ride_price || 0);
-        const commission = Number(row.commission_amount || 0);
 
         group.rides_count++;
         group.gross_total += price;
@@ -158,6 +159,30 @@ export default async function handler(req, res) {
 
         if (row.status === "paid") {
           group.paid_total += commission;
+
+          // Бір уақытта төленген жазбалар бір төлем ретінде топталады.
+          const paidAt = row.paid_at || null;
+          const historyKey =
+            row.driver_id + "_" +
+            week.week_start + "_" +
+            (paidAt || "unknown");
+
+          if (!history.has(historyKey)) {
+            history.set(historyKey, {
+              driver_id: row.driver_id,
+              driver_name: driver.full_name || "Белгісіз жүргізуші",
+              driver_phone: driver.phone || "",
+              week_start: week.week_start,
+              week_end: week.week_end,
+              paid_at: paidAt,
+              rides_count: 0,
+              paid_total: 0
+            });
+          }
+
+          const payment = history.get(historyKey);
+          payment.rides_count++;
+          payment.paid_total += commission;
         } else {
           group.unpaid_total += commission;
         }
@@ -175,9 +200,19 @@ export default async function handler(req, res) {
           b.week_start.localeCompare(a.week_start)
         );
 
+      const paymentHistory = Array.from(history.values())
+        .map(p => ({
+          ...p,
+          paid_total: Number(p.paid_total.toFixed(2))
+        }))
+        .sort((a, b) =>
+          (b.paid_at || "").localeCompare(a.paid_at || "")
+        );
+
       return res.status(200).json({
         success: true,
-        commissions: result
+        commissions: result,
+        payment_history: paymentHistory
       });
     }
 
