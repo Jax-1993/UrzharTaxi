@@ -1,3 +1,4 @@
+
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -63,9 +64,10 @@ export default async function handler(req, res) {
       });
     }
 
+    // ДҰРЫС СЕССИЯ ҚОЛТАҢБАСЫ
     const expected = crypto
       .createHmac("sha256", SERVICE_KEY)
-      .update(`${driverId}.${expires}`)
+      .update(`urzhar-driver:${driverId}:${expires}`)
       .digest("hex");
 
     const a = Buffer.from(signature, "hex");
@@ -99,8 +101,6 @@ export default async function handler(req, res) {
       "Content-Type": "application/json"
     };
 
-    // Жүргізушінің бар екенін тексеру
-    // is_active бағаны қолданылмайды
     const driverResponse = await fetch(
       `${SUPABASE_URL}/rest/v1/drivers?id=eq.${driverId}&select=id`,
       { headers }
@@ -119,7 +119,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Сапарды аяқтау және комиссияны есептеу
     const completeResponse = await fetch(
       `${SUPABASE_URL}/rest/v1/rpc/complete_taxi_order`,
       {
