@@ -9,14 +9,14 @@ function getDriverId(req, secret) {
 
   if (!match) return null;
 
-  const parts = match[1].split(".");
+  const parts = decodeURIComponent(match[1]).split(".");
   if (parts.length !== 3) return null;
 
   const [driverId, expiresText, signature] = parts;
   const expires = Number(expiresText);
 
   if (
-    !/^[0-9a-f-]{36}$/i.test(driverId) ||
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(driverId) ||
     !Number.isFinite(expires) ||
     expires <= Date.now() ||
     !/^[a-f0-9]{64}$/i.test(signature)
@@ -50,7 +50,7 @@ async function dbGet(url, key) {
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    console.error("Database error:", response.status, data?.message);
+    console.error("Database error:", response.status, data);
     throw new Error("Дерекқор қатесі");
   }
 
@@ -84,7 +84,7 @@ export default async function handler(req, res) {
     if (!driverId) {
       return res.status(401).json({
         success: false,
-        message: "Алдымен жүргізуші ретінде кіріңіз"
+        message: "Жүргізуші сессиясы расталмады. Қайта кіріңіз."
       });
     }
 
@@ -92,16 +92,16 @@ export default async function handler(req, res) {
 
     const driverUrl = new URL(`${baseUrl}/rest/v1/drivers`);
     driverUrl.searchParams.set("id", `eq.${driverId}`);
-    driverUrl.searchParams.set("select", "id,full_name,is_active");
+    driverUrl.searchParams.set("select", "id,full_name");
     driverUrl.searchParams.set("limit", "1");
 
     const drivers = await dbGet(driverUrl.toString(), serviceKey);
     const driver = drivers?.[0];
 
-    if (!driver || !driver.is_active) {
+    if (!driver) {
       return res.status(403).json({
         success: false,
-        message: "Жүргізуші аккаунты белсенді емес"
+        message: "Жүргізуші табылмады"
       });
     }
 
