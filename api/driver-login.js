@@ -8,28 +8,24 @@ const COOKIE_NAME = "urzhar_driver_session";
 const SESSION_DAYS = 7;
 
 function createSession(driverId, secret) {
-  const expires = Date.now() + SESSION_DAYS * 24 * 60 * 60 * 1000;
+  const expires = Date.now() + SESSION_DAYS * 86400000;
 
   const signature = crypto
     .createHmac("sha256", secret)
     .update(`urzhar-driver:${driverId}:${expires}`)
     .digest("hex");
 
-  return {
-    expires,
-    token: `${driverId}.${expires}.${signature}`
-  };
+  return `${driverId}.${expires}.${signature}`;
 }
 
 async function verifyPassword(password, storedHash) {
+  if (typeof storedHash !== "string") return false;
+
   const parts = storedHash.split("$");
+  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
 
-  if (parts.length !== 3 || parts[0] !== "scrypt") {
-    return false;
-  }
-
-  const salt = parts[1];
-  const storedKey = Buffer.from(parts[2], "hex");
+  const [_, salt, hash] = parts;
+  const storedKey = Buffer.from(hash, "hex");
 
   if (storedKey.length !== 64) return false;
 
@@ -75,25 +71,16 @@ export default async function handler(req, res) {
     ) {
       return res.status(400).json({
         success: false,
-        message: "Телефон мен құпиясөзді дұрыс енгізіңіз"
-      });
-    }
-
-    const cleanPhone = phone.trim();
-
-    if (cleanPhone.length > 30) {
-      return res.status(400).json({
-        success: false,
-        message: "Телефон нөмірі дұрыс емес"
+        message: "Телефон мен құпиясөзді енгізіңіз"
       });
     }
 
     const cleanUrl = supabaseUrl.replace(/\/$/, "");
+    const cleanPhone = phone.trim();
 
     const response = await fetch(
-      `${cleanUrl}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,full_name,phone,password_hash,is_active&limit=1`,
+      `${cleanUrl}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,full_name,phone,password_hash&limit=1`,
       {
-        method: "GET",
         headers: {
           apikey: serviceKey,
           Authorization: `Bearer ${serviceKey}`,
@@ -103,7 +90,7 @@ export default async function handler(req, res) {
     );
 
     if (!response.ok) {
-      console.error("Driver login database error:", response.status);
+      console.error("Driver login DB error:", response.status);
 
       return res.status(502).json({
         success: false,
@@ -114,30 +101,30 @@ export default async function handler(req, res) {
     const drivers = await response.json();
     const driver = drivers[0];
 
-    if (!driver || !driver.is_active) {
+    if (!driver || !driver.password_hash) {
       return res.status(401).json({
         success: false,
         message: "Телефон немесе құпиясөз қате"
       });
     }
 
-    const passwordIsValid = await verifyPassword(
+    const valid = await verifyPassword(
       password,
       driver.password_hash
     );
 
-    if (!passwordIsValid) {
+    if (!valid) {
       return res.status(401).json({
         success: false,
         message: "Телефон немесе құпиясөз қате"
       });
     }
 
-    const session = createSession(driver.id, serviceKey);
+    const token = createSession(driver.id, serviceKey);
 
     res.setHeader(
       "Set-Cookie",
-      `${COOKIE_NAME}=${session.token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_DAYS * 24 * 60 * 60}`
+      `${COOKIE_NAME}=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${SESSION_DAYS * 86400}`
     );
 
     return res.status(200).json({
