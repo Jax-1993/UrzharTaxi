@@ -12,7 +12,8 @@ body{margin:0;padding:18px;background:#101522;color:#fff;font-family:Arial,sans-
 header,.panel,.application,.commission-card,.history-card{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
 h1{color:#ffcc00;margin:0}
 .subtitle,.small{color:#aebbd0}
-input{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
+input,select,textarea{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
+textarea{min-height:100px;resize:vertical}
 button{border:0;border-radius:10px;padding:13px 17px;font-weight:bold;font-size:15px;cursor:pointer;margin:5px 4px 5px 0}
 button:disabled{opacity:.5;cursor:not-allowed}
 .primary{background:#ffcc00;color:#171717}
@@ -21,6 +22,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .refresh{background:#405575;color:white}
 .copy{background:#ffcc00;color:#171717}
 .paid{background:#19b875;color:white}
+.send{background:#ffcc00;color:#171717}
 .message{color:#ffcc00;margin:12px 0}
 .details{line-height:1.8;color:#e1e8f3}
 .application{background:#26344d}
@@ -48,6 +50,13 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .history-date{color:#aebbd0;font-size:13px;line-height:1.6}
 .history-amount{font-size:23px;font-weight:bold;color:#19d995;margin:12px 0}
 .empty{background:#172237;padding:16px;border-radius:10px;color:#aebbd0;line-height:1.6}
+.chat-box{background:#172237;border-radius:12px;padding:12px;max-height:430px;overflow-y:auto;margin:15px 0}
+.chat-message{padding:12px;margin:9px 0;border-radius:12px;max-width:90%;line-height:1.5;overflow-wrap:anywhere;white-space:pre-wrap}
+.chat-admin{background:#344768;margin-left:auto;border:1px solid #526b91}
+.chat-driver{background:#183c35;margin-right:auto;border:1px solid #28745e}
+.chat-meta{font-size:12px;color:#b8c5d8;margin-bottom:6px}
+.chat-content{color:white}
+.chat-compose{background:#172237;padding:12px;border-radius:12px}
 @media(max-width:480px){
 body{padding:10px}
 header,.panel,.application,.commission-card,.history-card{padding:15px}
@@ -82,6 +91,24 @@ header,.panel,.application,.commission-card,.history-card{padding:15px}
 </div>
 
 <div class="panel">
+<h2>💬 Жүргізушілермен жеке хат</h2>
+<div class="small">Әр жүргізушімен жеке сөйлесу. Хабарламаны тек таңдалған жүргізуші көреді.</div>
+<select id="chatDriver">
+<option value="">Жүргізушіні таңдаңыз</option>
+</select>
+<button class="refresh" id="refreshMessagesButton">🔄 Хаттарды жаңарту</button>
+<div id="chatMessage" class="message"></div>
+<div id="chatMessages" class="chat-box">
+<div class="empty">Алдымен жүргізушіні таңдаңыз.</div>
+</div>
+<div class="chat-compose">
+<textarea id="chatInput" maxlength="2000" placeholder="Жүргізушіге хабарлама жазыңыз..."></textarea>
+<button class="send" id="sendMessageButton">📨 Хабарлама жіберу</button>
+<div class="small">Хабарлама ұзындығы: 1–2000 таңба.</div>
+</div>
+</div>
+
+<div class="panel">
 <h2>💰 Апталық комиссиялар</h2>
 <div class="small">Әр жүргізушіден орындалған тапсырыстардың 10% комиссия есептеледі.</div>
 <button class="refresh" id="refreshCommissionsButton">🔄 Комиссияларды жаңарту</button>
@@ -111,6 +138,11 @@ const commissionMessage=document.getElementById("commissionMessage");
 const commissionsBox=document.getElementById("commissions");
 const historyMessage=document.getElementById("historyMessage");
 const historyBox=document.getElementById("paymentHistory");
+const chatDriver=document.getElementById("chatDriver");
+const chatMessages=document.getElementById("chatMessages");
+const chatMessage=document.getElementById("chatMessage");
+const chatInput=document.getElementById("chatInput");
+const sendMessageButton=document.getElementById("sendMessageButton");
 
 function esc(v){
 return String(v??"").replace(/[&<>"']/g,c=>({
@@ -311,6 +343,152 @@ listMessage.textContent="Жүктеу кезінде қате пайда бол�
 }
 }
 
+function renderDrivers(drivers){
+const previous=chatDriver.value;
+chatDriver.innerHTML='<option value="">Жүргізушіні таңдаңыз</option>';
+
+(drivers||[]).forEach(driver=>{
+const option=document.createElement("option");
+option.value=driver.id;
+option.textContent=
+(driver.full_name||"Жүргізуші")+" — "+(driver.phone||"Телефон жоқ");
+chatDriver.appendChild(option);
+});
+
+if(previous && [...chatDriver.options].some(o=>o.value===previous)){
+chatDriver.value=previous;
+}
+}
+
+async function loadMessages(){
+const driverId=chatDriver.value;
+
+if(!driverId){
+chatMessages.innerHTML='<div class="empty">Алдымен жүргізушіні таңдаңыз.</div>';
+chatMessage.textContent="";
+return;
+}
+
+chatMessage.textContent="Хаттар жүктелуде...";
+chatMessages.innerHTML="";
+
+try{
+const url="/api/admin-commissions?action=messages&driver_id="+
+encodeURIComponent(driverId);
+
+const r=await fetch(url,{
+method:"GET",
+credentials:"same-origin",
+cache:"no-store"
+});
+
+const d=await r.json();
+
+if(r.status===401){
+showLogin();
+loginMessage.textContent="Әкімші жүйесіне қайта кіріңіз";
+return;
+}
+
+if(!r.ok||!d.success){
+chatMessage.textContent=d.message||"Хаттарды жүктеу мүмкін болмады";
+return;
+}
+
+const items=d.messages||[];
+
+if(!items.length){
+chatMessages.innerHTML='<div class="empty">Бұл жүргізушімен әлі хат алмасу жоқ.</div>';
+}else{
+items.forEach(item=>{
+const bubble=document.createElement("div");
+bubble.className="chat-message "+
+(item.sender_role==="admin"?"chat-admin":"chat-driver");
+
+const meta=document.createElement("div");
+meta.className="chat-meta";
+meta.textContent=
+(item.sender_role==="admin"?"Сіз • Әкімші":"Жүргізуші")+" • "+
+dateText(item.created_at);
+
+const content=document.createElement("div");
+content.className="chat-content";
+content.textContent=item.message||"";
+
+bubble.appendChild(meta);
+bubble.appendChild(content);
+chatMessages.appendChild(bubble);
+});
+}
+
+chatMessages.scrollTop=chatMessages.scrollHeight;
+chatMessage.textContent="Хабарлама саны: "+items.length;
+
+}catch(e){
+chatMessage.textContent="Хаттарды жүктеу кезінде қате";
+}
+}
+
+async function sendMessage(){
+const driverId=chatDriver.value;
+const message=chatInput.value.trim();
+
+if(!driverId){
+chatMessage.textContent="Алдымен жүргізушіні таңдаңыз";
+return;
+}
+
+if(!message){
+chatMessage.textContent="Хабарлама мәтінін жазыңыз";
+return;
+}
+
+if(message.length>2000){
+chatMessage.textContent="Хабарлама 2000 таңбадан аспауы керек";
+return;
+}
+
+sendMessageButton.disabled=true;
+sendMessageButton.textContent="Жіберілуде...";
+
+try{
+const r=await fetch("/api/admin-commissions",{
+method:"POST",
+credentials:"same-origin",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+action:"send_message",
+driver_id:driverId,
+message_type:"text",
+message
+})
+});
+
+const d=await r.json();
+
+if(r.status===401){
+showLogin();
+loginMessage.textContent="Әкімші жүйесіне қайта кіріңіз";
+return;
+}
+
+if(!r.ok||!d.success){
+chatMessage.textContent=d.message||"Хабарлама жіберілмеді";
+return;
+}
+
+chatInput.value="";
+chatMessage.textContent="✅ Хабарлама жіберілді";
+await loadMessages();
+
+}catch(e){
+chatMessage.textContent="Сервермен байланыс қатесі";
+}finally{
+sendMessageButton.disabled=false;
+sendMessageButton.textContent="📨 Хабарлама жіберу";
+}
+}
+
 async function loadCommissions(){
 commissionMessage.textContent="Комиссиялар жүктелуде...";
 commissionsBox.innerHTML="";
@@ -338,6 +516,8 @@ historyMessage.textContent="Төлем тарихын алу мүмкін бол
 return;
 }
 
+renderDrivers(d.drivers||[]);
+
 const items=d.commissions||[];
 
 if(!items.length){
@@ -364,7 +544,6 @@ card.innerHTML=`
 <div class="week">
 📅 Апта: ${esc(dateText(weekStart))} — ${esc(dateText(weekEnd))}
 </div>
-
 <div class="money-grid">
 <div class="money-item">
 <span>Жалпы тапсырыс сомасы</span>
@@ -383,7 +562,6 @@ card.innerHTML=`
 <strong class="unpaid">${money(unpaid)}</strong>
 </div>
 </div>
-
 ${unpaid>0?
 `<button class="paid"
 data-driver-id="${esc(item.driver_id)}"
@@ -392,7 +570,6 @@ data-week-end="${esc(weekEnd)}">
 ✅ Төленді деп белгілеу
 </button>`:
 '<div class="status received">✅ Комиссия толық төленген</div>'}
-
 <p class="commission-note">
 Бұл батырманы жүргізушіден комиссия ақшасы нақты алынғаннан кейін ғана басыңыз.
 </p>
@@ -574,6 +751,21 @@ document.getElementById("refreshCommissionsButton")
 
 document.getElementById("refreshHistoryButton")
 .addEventListener("click",loadCommissions);
+
+document.getElementById("refreshMessagesButton")
+.addEventListener("click",loadMessages);
+
+document.getElementById("sendMessageButton")
+.addEventListener("click",sendMessage);
+
+chatDriver.addEventListener("change",loadMessages);
+
+chatInput.addEventListener("keydown",e=>{
+if(e.key==="Enter" && !e.shiftKey){
+e.preventDefault();
+sendMessage();
+}
+});
 
 document.getElementById("password")
 .addEventListener("keydown",e=>{
