@@ -1,4 +1,8 @@
+import crypto from "crypto";
+
 export default async function handler(req, res) {
+  res.setHeader("Cache-Control", "no-store");
+
   if (req.method !== "POST") {
     return res.status(405).json({
       error: "Тек POST сұранысы қабылданады"
@@ -46,7 +50,15 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Көлік класын анықтау
+    // 2. Жолаушыға жеке GPS токенін жасау
+    const trackingToken = crypto.randomBytes(32).toString("hex");
+
+    const trackingTokenHash = crypto
+      .createHash("sha256")
+      .update(trackingToken)
+      .digest("hex");
+
+    // 3. Көлік класын анықтау
     const carClassMap = {
       "Эконом": "economy",
       "Комфорт": "comfort",
@@ -57,7 +69,7 @@ export default async function handler(req, res) {
 
     const carClass = carClassMap[car] || "economy";
 
-    // 3. Supabase-ке сақталатын мәлімет
+    // 4. Supabase-ке сақталатын мәлімет
     const orderData = {
       passenger_name: String(name).trim(),
       passenger_phone: String(phone).trim(),
@@ -69,7 +81,8 @@ export default async function handler(req, res) {
         : null,
       price: numericPrice,
       payment_method: payment || "cash",
-      status: "searching"
+      status: "searching",
+      passenger_tracking_token_hash: trackingTokenHash
     };
 
     const coordinates = {
@@ -90,7 +103,7 @@ export default async function handler(req, res) {
       }
     }
 
-    // 4. Supabase-ке тапсырысты сақтау
+    // 5. Supabase-ке тапсырысты сақтау
     const dbResponse = await fetch(
       `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders`,
       {
@@ -121,10 +134,10 @@ export default async function handler(req, res) {
       });
     }
 
-    // 5. Сақталған тапсырыстың ID нөмірі
+    // 6. Сақталған тапсырыстың ID нөмірі
     const orderId = dbResult[0].id;
 
-    // 6. Telegram хабарламасы
+    // 7. Telegram хабарламасы
     const token = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -168,10 +181,11 @@ export default async function handler(req, res) {
       }
     }
 
-    // 7. Сәтті жауап
+    // 8. Жолаушыға GPS токенін қайтару
     return res.status(200).json({
       success: true,
       orderId,
+      trackingToken,
       status: "searching",
       telegramSent,
       message: "Тапсырыс базаға сәтті сақталды."
