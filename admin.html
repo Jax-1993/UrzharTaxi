@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="kk">
 <head>
@@ -9,20 +8,22 @@
 *{box-sizing:border-box}
 body{margin:0;padding:18px;background:#101522;color:#fff;font-family:Arial,sans-serif}
 .container{max-width:850px;margin:auto}
-header,.panel,.application,.commission-card,.history-card{background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px}
+header,.panel,.application,.commission-card,.history-card{
+background:#202b40;border-radius:16px;padding:20px;margin-bottom:16px
+}
 h1{color:#ffcc00;margin:0}
 .subtitle,.small{color:#aebbd0}
-input,select,textarea{width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;background:#111a2a;color:white;font-size:16px;margin:10px 0}
+input,select,textarea{
+width:100%;padding:15px;border-radius:10px;border:1px solid #52617b;
+background:#111a2a;color:white;font-size:16px;margin:10px 0
+}
 textarea{min-height:100px;resize:vertical}
 button{border:0;border-radius:10px;padding:13px 17px;font-weight:bold;font-size:15px;cursor:pointer;margin:5px 4px 5px 0}
 button:disabled{opacity:.5;cursor:not-allowed}
-.primary{background:#ffcc00;color:#171717}
-.approve{background:#19b875;color:white}
+.primary,.copy,.send{background:#ffcc00;color:#171717}
+.approve,.paid{background:#19b875;color:white}
 .reject{background:#e34b59;color:white}
 .refresh{background:#405575;color:white}
-.copy{background:#ffcc00;color:#171717}
-.paid{background:#19b875;color:white}
-.send{background:#ffcc00;color:#171717}
 .message{color:#ffcc00;margin:12px 0}
 .details{line-height:1.8;color:#e1e8f3}
 .application{background:#26344d}
@@ -43,8 +44,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .money-item strong{font-size:18px;overflow-wrap:anywhere}
 .unpaid{color:#ffcc00}
 .received{color:#19d995}
-.week{color:#aebbd0;font-size:14px;line-height:1.6}
-.commission-note{color:#aebbd0;font-size:13px;line-height:1.5}
+.week,.commission-note{color:#aebbd0;font-size:13px;line-height:1.6}
 .history-card{background:#172b2a;border:1px solid #23775b}
 .history-card h3{color:#19d995}
 .history-date{color:#aebbd0;font-size:13px;line-height:1.6}
@@ -57,6 +57,10 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .chat-meta{font-size:12px;color:#b8c5d8;margin-bottom:6px}
 .chat-content{color:white}
 .chat-compose{background:#172237;padding:12px;border-radius:12px}
+.unread-badge{display:inline-block;background:#e34b59;color:white;border-radius:20px;padding:4px 9px;font-size:12px;font-weight:bold;margin-left:6px}
+.read-status{font-size:12px;color:#aebbd0;text-align:right;margin-top:7px}
+.read-status.read{color:#19d995}
+.chat-heading{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
 @media(max-width:480px){
 body{padding:10px}
 header,.panel,.application,.commission-card,.history-card{padding:15px}
@@ -91,18 +95,26 @@ header,.panel,.application,.commission-card,.history-card{padding:15px}
 </div>
 
 <div class="panel">
-<h2>💬 Жүргізушілермен жеке хат</h2>
-<div class="small">Әр жүргізушімен жеке сөйлесу. Хабарламаны тек таңдалған жүргізуші көреді.</div>
+<h2 class="chat-heading">
+💬 Жүргізушілермен жеке хат
+<span id="unreadBadge" class="unread-badge hidden">0 жаңа хат</span>
+</h2>
+<div class="small">Әр жүргізушімен жеке сөйлесу. Оқылған хаттар ✓✓ белгісімен көрсетіледі.</div>
+
 <select id="chatDriver">
 <option value="">Жүргізушіні таңдаңыз</option>
 </select>
+
 <button class="refresh" id="refreshMessagesButton">🔄 Хаттарды жаңарту</button>
 <div id="chatMessage" class="message"></div>
+
 <div id="chatMessages" class="chat-box">
 <div class="empty">Алдымен жүргізушіні таңдаңыз.</div>
 </div>
+
 <div class="chat-compose">
-<textarea id="chatInput" maxlength="2000" placeholder="Жүргізушіге хабарлама жазыңыз..."></textarea>
+<textarea id="chatInput" maxlength="2000"
+placeholder="Жүргізушіге хабарлама жазыңыз..."></textarea>
 <button class="send" id="sendMessageButton">📨 Хабарлама жіберу</button>
 <div class="small">Хабарлама ұзындығы: 1–2000 таңба.</div>
 </div>
@@ -128,21 +140,25 @@ header,.panel,.application,.commission-card,.history-card{padding:15px}
 </div>
 
 <script>
-const loginPanel=document.getElementById("loginPanel");
-const applicationsPanel=document.getElementById("applicationsPanel");
-const loginMessage=document.getElementById("loginMessage");
-const listMessage=document.getElementById("listMessage");
-const applicationsBox=document.getElementById("applications");
-const credentialPanel=document.getElementById("credentialPanel");
-const commissionMessage=document.getElementById("commissionMessage");
-const commissionsBox=document.getElementById("commissions");
-const historyMessage=document.getElementById("historyMessage");
-const historyBox=document.getElementById("paymentHistory");
-const chatDriver=document.getElementById("chatDriver");
-const chatMessages=document.getElementById("chatMessages");
-const chatMessage=document.getElementById("chatMessage");
-const chatInput=document.getElementById("chatInput");
-const sendMessageButton=document.getElementById("sendMessageButton");
+const $=id=>document.getElementById(id);
+
+const loginPanel=$("loginPanel");
+const applicationsPanel=$("applicationsPanel");
+const loginMessage=$("loginMessage");
+const listMessage=$("listMessage");
+const applicationsBox=$("applications");
+const credentialPanel=$("credentialPanel");
+const commissionMessage=$("commissionMessage");
+const commissionsBox=$("commissions");
+const historyMessage=$("historyMessage");
+const historyBox=$("paymentHistory");
+const chatDriver=$("chatDriver");
+const chatMessages=$("chatMessages");
+const chatMessage=$("chatMessage");
+const chatInput=$("chatInput");
+const sendMessageButton=$("sendMessageButton");
+
+let unreadTotal=0;
 
 function esc(v){
 return String(v??"").replace(/[&<>"']/g,c=>({
@@ -161,11 +177,8 @@ const d=new Date(v);
 if(!Number.isFinite(d.getTime()))return "Көрсетілмеген";
 return d.toLocaleString("kk-KZ",{
 timeZone:"Asia/Almaty",
-year:"numeric",
-month:"2-digit",
-day:"2-digit",
-hour:"2-digit",
-minute:"2-digit"
+year:"numeric",month:"2-digit",day:"2-digit",
+hour:"2-digit",minute:"2-digit"
 });
 }
 
@@ -179,8 +192,20 @@ loginPanel.classList.add("hidden");
 applicationsPanel.classList.remove("hidden");
 }
 
+function updateUnreadBadge(count){
+unreadTotal=Math.max(0,Number(count)||0);
+const badge=$("unreadBadge");
+
+if(unreadTotal>0){
+badge.textContent="🔴 "+unreadTotal+" жаңа хат";
+badge.classList.remove("hidden");
+}else{
+badge.classList.add("hidden");
+}
+}
+
 async function login(){
-const password=document.getElementById("password").value;
+const password=$("password").value;
 
 if(!password){
 loginMessage.textContent="Құпиясөзді енгізіңіз";
@@ -204,13 +229,10 @@ loginMessage.textContent=d.message||"Кіру сәтсіз";
 return;
 }
 
-document.getElementById("password").value="";
+$("password").value="";
 showApplications();
 
-await Promise.all([
-loadApplications(),
-loadCommissions()
-]);
+await Promise.all([loadApplications(),loadCommissions()]);
 
 }catch(e){
 loginMessage.textContent="Сервермен байланыс жоқ";
@@ -257,8 +279,7 @@ box.appendChild(copy);
 
 const warning=document.createElement("p");
 warning.className="small";
-warning.textContent=
-"Маңызды: бұл құпиясөз тек осы экранда көрсетіледі. Оны жүргізушіге қауіпсіз жеке арнамен жеткізіңіз.";
+warning.textContent="Маңызды: бұл құпиясөз тек осы экранда көрсетіледі.";
 box.appendChild(warning);
 
 credentialPanel.appendChild(box);
@@ -270,8 +291,7 @@ applicationsBox.innerHTML="";
 
 try{
 const r=await fetch("/api/admin-applications",{
-credentials:"same-origin",
-cache:"no-store"
+credentials:"same-origin",cache:"no-store"
 });
 
 const d=await r.json();
@@ -288,7 +308,6 @@ return;
 }
 
 const items=d.applications||[];
-
 listMessage.textContent="Барлық өтінім саны: "+items.length;
 
 if(!items.length){
@@ -307,14 +326,11 @@ typeof item.photo_url==="string"&&/^https:\/\//i.test(item.photo_url)
 :'<p class="small">Көлік фотосы қолжетімсіз</p>';
 
 const names={
-economy:"Эконом",
-comfort:"Комфорт",
-comfort_plus:"Комфорт+"
+economy:"Эконом",comfort:"Комфорт",comfort_plus:"Комфорт+"
 };
 
 const statuses={
-pending:"⏳ Күтуде",
-approved:"✅ Мақұлданды",
+pending:"⏳ Күтуде",approved:"✅ Мақұлданды",
 rejected:"❌ Қабылданбады"
 };
 
@@ -326,7 +342,7 @@ card.innerHTML=`
 <b>Жылы:</b> ${esc(item.car_year||"—")}<br>
 <b>Нөмірі:</b> ${esc(item.car_number)}<br>
 <b>Санаты:</b> ${esc(names[item.car_class]||item.car_class)}<br>
-<b>Уақыты:</b> ${esc(item.created_at?dateText(item.created_at):"—")}
+<b>Уақыты:</b> ${esc(dateText(item.created_at))}
 </div>
 ${photo}
 <div class="status ${esc(item.status)}">${esc(statuses[item.status]||item.status)}</div>
@@ -355,9 +371,61 @@ option.textContent=
 chatDriver.appendChild(option);
 });
 
-if(previous && [...chatDriver.options].some(o=>o.value===previous)){
+if(previous&&[...chatDriver.options].some(o=>o.value===previous)){
 chatDriver.value=previous;
 }
+}
+
+function renderMessages(items){
+chatMessages.innerHTML="";
+
+if(!items.length){
+chatMessages.innerHTML='<div class="empty">Бұл жүргізушімен әлі хат алмасу жоқ.</div>';
+return;
+}
+
+items.forEach(item=>{
+const isAdmin=item.sender_role==="admin";
+const bubble=document.createElement("div");
+
+bubble.className="chat-message "+
+(isAdmin?"chat-admin":"chat-driver");
+
+const meta=document.createElement("div");
+meta.className="chat-meta";
+meta.textContent=(isAdmin?"Сіз • Әкімші":"Жүргізуші")+" • "+
+dateText(item.created_at);
+
+const content=document.createElement("div");
+content.className="chat-content";
+content.textContent=item.message||"";
+
+const read=document.createElement("div");
+read.className="read-status";
+
+if(isAdmin){
+if(item.read_at){
+read.classList.add("read");
+read.textContent="✓✓ Оқылды • "+dateText(item.read_at);
+}else{
+read.textContent="✓ Жіберілді • Оқылуын күтуде";
+}
+}else{
+if(item.read_at){
+read.classList.add("read");
+read.textContent="✓✓ Сіз оқыдыңыз";
+}else{
+read.textContent="Жаңа хабарлама";
+}
+}
+
+bubble.appendChild(meta);
+bubble.appendChild(content);
+bubble.appendChild(read);
+chatMessages.appendChild(bubble);
+});
+
+chatMessages.scrollTop=chatMessages.scrollHeight;
 }
 
 async function loadMessages(){
@@ -396,33 +464,10 @@ return;
 }
 
 const items=d.messages||[];
+renderMessages(items);
 
-if(!items.length){
-chatMessages.innerHTML='<div class="empty">Бұл жүргізушімен әлі хат алмасу жоқ.</div>';
-}else{
-items.forEach(item=>{
-const bubble=document.createElement("div");
-bubble.className="chat-message "+
-(item.sender_role==="admin"?"chat-admin":"chat-driver");
-
-const meta=document.createElement("div");
-meta.className="chat-meta";
-meta.textContent=
-(item.sender_role==="admin"?"Сіз • Әкімші":"Жүргізуші")+" • "+
-dateText(item.created_at);
-
-const content=document.createElement("div");
-content.className="chat-content";
-content.textContent=item.message||"";
-
-bubble.appendChild(meta);
-bubble.appendChild(content);
-chatMessages.appendChild(bubble);
-});
-}
-
-chatMessages.scrollTop=chatMessages.scrollHeight;
-chatMessage.textContent="Хабарлама саны: "+items.length;
+chatMessage.textContent="Хабарлама саны: "+items.length+
+" • Оқылған күйі жаңартылды";
 
 }catch(e){
 chatMessage.textContent="Хаттарды жүктеу кезінде қате";
@@ -440,11 +485,6 @@ return;
 
 if(!message){
 chatMessage.textContent="Хабарлама мәтінін жазыңыз";
-return;
-}
-
-if(message.length>2000){
-chatMessage.textContent="Хабарлама 2000 таңбадан аспауы керек";
 return;
 }
 
@@ -518,6 +558,13 @@ return;
 
 renderDrivers(d.drivers||[]);
 
+/* Сервер жалпы оқылмаған хат санын қайтарса, көрсетеміз */
+if(typeof d.unread_messages==="number"){
+updateUnreadBadge(d.unread_messages);
+}else if(Array.isArray(d.unread_messages)){
+updateUnreadBadge(d.unread_messages.length);
+}
+
 const items=d.commissions||[];
 
 if(!items.length){
@@ -531,48 +578,29 @@ card.className="commission-card";
 
 const unpaid=Number(item.unpaid_total||0);
 const paid=Number(item.paid_total||0);
-const driverName=item.driver_name||"Жүргізуші";
-const weekStart=item.week_start||"";
-const weekEnd=item.week_end||"";
 
 card.innerHTML=`
-<h3>🚘 ${esc(driverName)}</h3>
+<h3>🚘 ${esc(item.driver_name||"Жүргізуші")}</h3>
 <div class="details">
 <b>Телефон:</b> ${esc(item.driver_phone||"—")}<br>
 <b>Тапсырыс саны:</b> ${esc(item.rides_count||0)}
 </div>
 <div class="week">
-📅 Апта: ${esc(dateText(weekStart))} — ${esc(dateText(weekEnd))}
+📅 Апта: ${esc(dateText(item.week_start))} — ${esc(dateText(item.week_end))}
 </div>
 <div class="money-grid">
-<div class="money-item">
-<span>Жалпы тапсырыс сомасы</span>
-<strong>${money(item.gross_total)}</strong>
-</div>
-<div class="money-item">
-<span>Біздің 10% комиссия</span>
-<strong>${money(item.commission_total)}</strong>
-</div>
-<div class="money-item">
-<span>Төленген комиссия</span>
-<strong class="received">${money(paid)}</strong>
-</div>
-<div class="money-item">
-<span>Төленбеген комиссия</span>
-<strong class="unpaid">${money(unpaid)}</strong>
-</div>
+<div class="money-item"><span>Жалпы тапсырыс сомасы</span><strong>${money(item.gross_total)}</strong></div>
+<div class="money-item"><span>Біздің 10% комиссия</span><strong>${money(item.commission_total)}</strong></div>
+<div class="money-item"><span>Төленген комиссия</span><strong class="received">${money(paid)}</strong></div>
+<div class="money-item"><span>Төленбеген комиссия</span><strong class="unpaid">${money(unpaid)}</strong></div>
 </div>
 ${unpaid>0?
 `<button class="paid"
 data-driver-id="${esc(item.driver_id)}"
-data-week-start="${esc(weekStart)}"
-data-week-end="${esc(weekEnd)}">
-✅ Төленді деп белгілеу
-</button>`:
+data-week-start="${esc(item.week_start||"")}"
+data-week-end="${esc(item.week_end||"")}">✅ Төленді деп белгілеу</button>`:
 '<div class="status received">✅ Комиссия толық төленген</div>'}
-<p class="commission-note">
-Бұл батырманы жүргізушіден комиссия ақшасы нақты алынғаннан кейін ғана басыңыз.
-</p>
+<p class="commission-note">Бұл батырманы комиссия ақшасы нақты алынғаннан кейін ғана басыңыз.</p>
 `;
 
 commissionsBox.appendChild(card);
@@ -592,8 +620,7 @@ historyBox.innerHTML="";
 
 if(!items.length){
 historyMessage.textContent="Әзірге төленген комиссия тарихы жоқ";
-historyBox.innerHTML=
-'<div class="empty">Комиссия нақты төленіп, әкімші растағаннан кейін осы жерде сақталады.</div>';
+historyBox.innerHTML='<div class="empty">Комиссия нақты төленіп, әкімші растағаннан кейін осы жерде сақталады.</div>';
 return;
 }
 
@@ -613,8 +640,7 @@ card.innerHTML=`
 <b>Қай апта үшін:</b><br>
 ${esc(dateText(item.week_start))} — ${esc(dateText(item.week_end))}
 <br><br>
-<b>Төленген күні:</b><br>
-${esc(dateText(item.paid_at))}
+<b>Төленген күні:</b><br>${esc(dateText(item.paid_at))}
 </div>
 <div class="history-amount">${money(item.paid_total)}</div>
 <div class="status received">✅ Төлем қабылданды деп белгіленген</div>
@@ -634,11 +660,7 @@ commissionMessage.textContent="Есеп деректері толық емес";
 return;
 }
 
-const confirmed=confirm(
-"Осы жүргізушіден осы аптаның 10% комиссия ақшасын нақты алдыңыз ба?\n\nТек ақша қолыңызға түскен болса ғана растаңыз."
-);
-
-if(!confirmed)return;
+if(!confirm("Осы жүргізушіден осы аптаның комиссия ақшасын нақты алдыңыз ба?"))return;
 
 button.disabled=true;
 button.textContent="Өңделуде...";
@@ -670,10 +692,7 @@ button.textContent="✅ Төленді деп белгілеу";
 return;
 }
 
-commissionMessage.textContent=
-"✅ Төлем белгіленді. Қабылданған комиссия: "+
-money(d.commission_paid);
-
+commissionMessage.textContent="✅ Төлем белгіленді: "+money(d.commission_paid);
 await loadCommissions();
 
 }catch(e){
@@ -720,7 +739,7 @@ return;
 
 if(status==="approved"){
 if(!d.temporary_password){
-listMessage.textContent="Аккаунт жасалды, бірақ уақытша құпиясөз серверден келмеді. Әкімшіге хабарласыңыз.";
+listMessage.textContent="Уақытша құпиясөз серверден келмеді";
 button.disabled=false;
 return;
 }
@@ -740,54 +759,36 @@ button.disabled=false;
 }
 }
 
-document.getElementById("loginButton")
-.addEventListener("click",login);
-
-document.getElementById("refreshButton")
-.addEventListener("click",loadApplications);
-
-document.getElementById("refreshCommissionsButton")
-.addEventListener("click",loadCommissions);
-
-document.getElementById("refreshHistoryButton")
-.addEventListener("click",loadCommissions);
-
-document.getElementById("refreshMessagesButton")
-.addEventListener("click",loadMessages);
-
-document.getElementById("sendMessageButton")
-.addEventListener("click",sendMessage);
+$("loginButton").addEventListener("click",login);
+$("refreshButton").addEventListener("click",loadApplications);
+$("refreshCommissionsButton").addEventListener("click",loadCommissions);
+$("refreshHistoryButton").addEventListener("click",loadCommissions);
+$("refreshMessagesButton").addEventListener("click",loadMessages);
+$("sendMessageButton").addEventListener("click",sendMessage);
 
 chatDriver.addEventListener("change",loadMessages);
 
 chatInput.addEventListener("keydown",e=>{
-if(e.key==="Enter" && !e.shiftKey){
+if(e.key==="Enter"&&!e.shiftKey){
 e.preventDefault();
 sendMessage();
 }
 });
 
-document.getElementById("password")
-.addEventListener("keydown",e=>{
+$("password").addEventListener("keydown",e=>{
 if(e.key==="Enter")login();
 });
 
 applicationsBox.addEventListener("click",e=>{
 const button=e.target.closest("button[data-id]");
 if(button){
-updateApplication(
-button.dataset.id,
-button.dataset.status,
-button
-);
+updateApplication(button.dataset.id,button.dataset.status,button);
 }
 });
 
 commissionsBox.addEventListener("click",e=>{
 const button=e.target.closest("button[data-driver-id]");
-if(button){
-markCommissionPaid(button);
-}
+if(button)markCommissionPaid(button);
 });
 </script>
 </body>
