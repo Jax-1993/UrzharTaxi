@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ҮРЖАР TAXI — Жүргізуші кабинеті</title>
-
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#101522;color:#fff;font-family:Arial,sans-serif}
@@ -33,127 +32,46 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .sound-button{width:100%;background:#53647c;color:white}
 .sound-button.active{background:#16834a}
 .sound-info{font-size:13px;color:#c5cede;margin-top:8px}
-
-/* ЖЕКЕ ХАБАРЛАМА */
-.chat-box{
-  background:#151e2d;
-  border-radius:12px;
-  padding:12px;
-  height:320px;
-  overflow-y:auto;
-  margin:12px 0;
-}
-.chat-message{
-  max-width:88%;
-  padding:11px;
-  border-radius:12px;
-  margin:10px 0;
-  overflow-wrap:anywhere;
-}
-.chat-message.admin{
-  background:#35445b;
-  margin-right:auto;
-}
-.chat-message.driver{
-  background:#175b43;
-  margin-left:auto;
-}
-.chat-sender{
-  color:#ffcc00;
-  font-size:12px;
-  font-weight:bold;
-  margin-bottom:6px;
-}
-.chat-text{
-  white-space:pre-wrap;
-  line-height:1.4;
-}
-.chat-time{
-  color:#c5cede;
-  font-size:11px;
-  margin-top:7px;
-  text-align:right;
-}
-.chat-input{
-  width:100%;
-  min-height:75px;
-  resize:vertical;
-  border:1px solid #53647c;
-  border-radius:10px;
-  padding:12px;
-  background:#151e2d;
-  color:white;
-  font:14px Arial,sans-serif;
-}
-.chat-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-}
-.chat-actions button{
-  flex:1;
-}
-.payment-report-button{
-  width:100%;
-  background:#16834a;
-  color:white;
-}
-.chat-note{
-  color:#b9c2d0;
-  font-size:12px;
-  line-height:1.5;
-}
+.chat-box{background:#151e2d;border-radius:12px;padding:12px;height:320px;overflow-y:auto;margin:12px 0}
+.chat-message{max-width:88%;padding:11px;border-radius:12px;margin:10px 0;overflow-wrap:anywhere}
+.chat-message.admin{background:#35445b;margin-right:auto}
+.chat-message.driver{background:#175b43;margin-left:auto}
+.chat-sender{color:#ffcc00;font-size:12px;font-weight:bold;margin-bottom:6px}
+.chat-text{white-space:pre-wrap;line-height:1.4}
+.chat-time{color:#c5cede;font-size:11px;margin-top:7px;text-align:right}
+.chat-read{color:#8ee6a2;font-size:11px;text-align:right;margin-top:4px}
+.chat-input{width:100%;min-height:75px;resize:vertical;border:1px solid #53647c;border-radius:10px;padding:12px;background:#151e2d;color:white;font:14px Arial,sans-serif}
+.chat-actions{display:flex;gap:8px;flex-wrap:wrap}
+.chat-actions button{flex:1}
+.payment-report-button{width:100%;background:#16834a;color:white}
+.chat-note{color:#b9c2d0;font-size:12px;line-height:1.5}
 @media(max-width:380px){
- .stat strong{font-size:18px}
- button{width:100%}
- .chat-message{max-width:95%}
+.stat strong{font-size:18px}
+button{width:100%}
+.chat-message{max-width:95%}
 }
 </style>
 </head>
-
 <body>
-
 <header>
 <h2>🚕 ҮРЖАР TAXI</h2>
 <div>Жүргізуші кабинеті</div>
 </header>
-
 <main>
 
 <div class="card">
 <h3>🔔 Тапсырыс дыбысы</h3>
-<button id="soundButton" class="sound-button" onclick="toggleSound()">
-🔕 Дыбысты қосу
-</button>
-<p id="soundInfo" class="sound-info">
-Жаңа тапсырыс келгенде дыбыстық белгі беріледі.
-</p>
+<button id="soundButton" class="sound-button" onclick="toggleSound()">🔕 Дыбысты қосу</button>
+<p id="soundInfo" class="sound-info">Жаңа тапсырыс келгенде дыбыстық белгі беріледі.</p>
 </div>
 
 <div class="card">
 <h3>📊 Менің статистикам</h3>
 <div class="stats">
-
-<div class="stat">
-<small>Орындалған сапар</small>
-<strong id="rides">—</strong>
-</div>
-
-<div class="stat">
-<small>Жалпы айналым</small>
-<strong id="gross">—</strong>
-</div>
-
-<div class="stat">
-<small>Жүргізуші табысы</small>
-<strong id="earning">—</strong>
-</div>
-
-<div class="stat">
-<small>10% комиссия</small>
-<strong id="commission">—</strong>
-</div>
-
+<div class="stat"><small>Орындалған сапар</small><strong id="rides">—</strong></div>
+<div class="stat"><small>Жалпы айналым</small><strong id="gross">—</strong></div>
+<div class="stat"><small>Жүргізуші табысы</small><strong id="earning">—</strong></div>
+<div class="stat"><small>10% комиссия</small><strong id="commission">—</strong></div>
 </div>
 </div>
 
@@ -166,53 +84,23 @@ button:disabled{opacity:.5;cursor:not-allowed}
 
 <div class="card">
 <h3>💳 Комиссия төлемдерінің тарихы</h3>
-<div id="paymentHistory" class="muted">
-Төлем тарихы жүктелуде...
-</div>
+<div id="paymentHistory" class="muted">Төлем тарихы жүктелуде...</div>
 </div>
 
-<!-- ӘКІМШІМЕН ЖЕКЕ ХАБАРЛАМА -->
 <div class="card">
 <h3>💬 Әкімшімен байланыс</h3>
-
-<p class="chat-note">
-Бұл — әкімшімен жеке хат алмасу бөлімі. Хабарламаларды тек сіз және әкімші көре аласыз.
-</p>
-
+<p class="chat-note">Бұл — әкімшімен жеке хат алмасу бөлімі.</p>
 <div id="chatMessages" class="chat-box">
 <div class="muted">Хабарламалар жүктелуде...</div>
 </div>
-
-<textarea
-  id="chatInput"
-  class="chat-input"
-  maxlength="2000"
-  placeholder="Әкімшіге хабарлама жазыңыз..."
-></textarea>
-
+<textarea id="chatInput" class="chat-input" maxlength="2000" placeholder="Әкімшіге хабарлама жазыңыз..."></textarea>
 <div class="chat-actions">
-<button id="sendChatButton" onclick="sendChatMessage()">
-📨 Жіберу
-</button>
-
-<button id="refreshChatButton" onclick="loadMessages()">
-🔄 Чатты жаңарту
-</button>
+<button id="sendChatButton" onclick="sendChatMessage()">📨 Жіберу</button>
+<button id="refreshChatButton" onclick="loadMessages()">🔄 Чатты жаңарту</button>
 </div>
-
-<button
-  id="paymentReportButton"
-  class="payment-report-button"
-  onclick="sendPaymentReport()"
->
-💳 Комиссияны төледім
-</button>
-
+<button id="paymentReportButton" class="payment-report-button" onclick="sendPaymentReport()">💳 Комиссияны төледім</button>
 <p id="chatStatus" class="muted"></p>
-
-<p class="chat-note">
-Ескерту: «Комиссияны төледім» батырмасы әкімшіге хабарлама жібереді. Комиссия әкімші төлемді тексеріп, растағаннан кейін ғана төленді болып есептеледі.
-</p>
+<p class="chat-note">Комиссия әкімші төлемді тексеріп, растағаннан кейін ғана төленді болып есептеледі.</p>
 </div>
 
 <div class="card">
@@ -228,630 +116,430 @@ button:disabled{opacity:.5;cursor:not-allowed}
 <div class="card">
 <button onclick="loadAll()" id="refresh">🔄 Жаңарту</button>
 <p id="message" class="muted"></p>
-<p class="muted">
-Кабинет ашылмаса, жүргізуші аккаунтына қайта кіріңіз.
-<a href="/driver-login.html" style="color:#ffcc00">Кіру беті</a>
-</p>
+<p class="muted">Кабинет ашылмаса, жүргізуші аккаунтына қайта кіріңіз.
+<a href="/driver-login.html" style="color:#ffcc00">Кіру беті</a></p>
 </div>
-
 </main>
 
 <script>
-const money = n =>
-  Number(n || 0).toLocaleString("kk-KZ") + " ₸";
+const money=n=>Number(n||0).toLocaleString("kk-KZ")+" ₸";
 
-let soundEnabled = false;
-let audioContext = null;
-let knownOrderIds = new Set();
-let firstOrdersLoaded = false;
-let polling = false;
-let chatLoading = false;
+let soundEnabled=false;
+let audioContext=null;
+let knownOrderIds=new Set();
+let firstOrdersLoaded=false;
+let polling=false;
+let chatLoading=false;
+let markingRead=false;
+let knownAdminMessages=new Set();
 
-function dateText(value) {
-  if (!value) return "Көрсетілмеген";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "Көрсетілмеген";
-  }
-
-  return date.toLocaleString("kk-KZ", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    timeZone: "Asia/Almaty"
-  });
+function dateText(value){
+if(!value)return "Көрсетілмеген";
+const date=new Date(value);
+if(Number.isNaN(date.getTime()))return "Көрсетілмеген";
+return date.toLocaleString("kk-KZ",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",timeZone:"Asia/Almaty"});
 }
 
-function shortDate(value) {
-  if (!value) return "—";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleDateString("kk-KZ", {
-    timeZone: "Asia/Almaty"
-  });
+function shortDate(value){
+if(!value)return "—";
+const date=new Date(value);
+if(Number.isNaN(date.getTime()))return "—";
+return date.toLocaleDateString("kk-KZ",{timeZone:"Asia/Almaty"});
 }
 
-async function api(url, options = {}) {
-  const response = await fetch(url, {
-    credentials: "include",
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
-  });
-
-  let data;
-
-  try {
-    data = await response.json();
-  } catch {
-    throw new Error("Серверден дұрыс жауап келмеді");
-  }
-
-  if (!response.ok || data.success === false) {
-    throw new Error(data.message || data.error || "Сұраныс орындалмады");
-  }
-
-  return data;
+async function api(url,options={}){
+const response=await fetch(url,{
+credentials:"include",
+...options,
+headers:{"Content-Type":"application/json",...(options.headers||{})}
+});
+let data;
+try{data=await response.json()}catch{throw new Error("Серверден дұрыс жауап келмеді")}
+if(!response.ok||data.success===false)throw new Error(data.message||data.error||"Сұраныс орындалмады");
+return data;
 }
 
-function addText(parent, text, tag = "p") {
-  const element = document.createElement(tag);
-  element.textContent = text;
-  parent.appendChild(element);
-  return element;
+function addText(parent,text,tag="p"){
+const element=document.createElement(tag);
+element.textContent=text;
+parent.appendChild(element);
+return element;
 }
 
-function showMessage(text, type = "muted") {
-  const message = document.getElementById("message");
-  message.textContent = text;
-  message.className = type;
+function showMessage(text,type="muted"){
+const element=document.getElementById("message");
+element.textContent=text;
+element.className=type;
 }
 
-function showChatStatus(text, type = "muted") {
-  const element = document.getElementById("chatStatus");
-  element.textContent = text;
-  element.className = type;
+function showChatStatus(text,type="muted"){
+const element=document.getElementById("chatStatus");
+element.textContent=text;
+element.className=type;
 }
 
-function statusText(status) {
-  const values = {
-    searching: "Жаңа тапсырыс",
-    accepted: "Қабылданды",
-    in_progress: "Сапар орындалуда",
-    completed: "Аяқталды"
-  };
-
-  return values[String(status || "").toLowerCase()] ||
-    status ||
-    "Белгісіз";
+function statusText(status){
+const values={searching:"Жаңа тапсырыс",accepted:"Қабылданды",in_progress:"Сапар орындалуда",completed:"Аяқталды"};
+return values[String(status||"").toLowerCase()]||status||"Белгісіз";
 }
 
-/* ДЫБЫС ЖҮЙЕСІ */
+/* ДЫБЫС */
 
-async function enableSound() {
-  const AudioContextClass =
-    window.AudioContext || window.webkitAudioContext;
-
-  if (!AudioContextClass) {
-    throw new Error("Бұл браузер дыбысты қолдамайды");
-  }
-
-  if (!audioContext) {
-    audioContext = new AudioContextClass();
-  }
-
-  if (audioContext.state === "suspended") {
-    await audioContext.resume();
-  }
-
-  soundEnabled = true;
-
-  document.getElementById("soundButton").textContent =
-    "🔔 Дыбыс қосылды";
-
-  document.getElementById("soundButton").classList.add("active");
-
-  document.getElementById("soundInfo").textContent =
-    "Жаңа тапсырыс келгенде дыбыс шығады.";
+async function enableSound(){
+const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+if(!AudioContextClass)throw new Error("Бұл браузер дыбысты қолдамайды");
+if(!audioContext)audioContext=new AudioContextClass();
+if(audioContext.state==="suspended")await audioContext.resume();
+soundEnabled=true;
+document.getElementById("soundButton").textContent="🔔 Дыбыс қосылды";
+document.getElementById("soundButton").classList.add("active");
+document.getElementById("soundInfo").textContent="Жаңа тапсырыс келгенде дыбыс шығады.";
 }
 
-async function toggleSound() {
-  try {
-    if (soundEnabled) {
-      soundEnabled = false;
-
-      document.getElementById("soundButton").textContent =
-        "🔕 Дыбысты қосу";
-
-      document.getElementById("soundButton").classList.remove("active");
-
-      document.getElementById("soundInfo").textContent =
-        "Дыбыс өшірілді.";
-
-      return;
-    }
-
-    await enableSound();
-    playOrderSound();
-
-  } catch (error) {
-    showMessage(error.message, "error");
-  }
+async function toggleSound(){
+try{
+if(soundEnabled){
+soundEnabled=false;
+document.getElementById("soundButton").textContent="🔕 Дыбысты қосу";
+document.getElementById("soundButton").classList.remove("active");
+document.getElementById("soundInfo").textContent="Дыбыс өшірілді.";
+return;
+}
+await enableSound();
+playOrderSound();
+}catch(error){showMessage(error.message,"error")}
 }
 
-function playOrderSound() {
-  if (!soundEnabled || !audioContext) return;
-  if (audioContext.state !== "running") return;
-
-  const now = audioContext.currentTime;
-
-  [0, 0.28, 0.56].forEach((offset, index) => {
-    const oscillator = audioContext.createOscillator();
-    const gain = audioContext.createGain();
-
-    oscillator.type = "sine";
-    oscillator.frequency.value = index === 1 ? 1100 : 880;
-
-    gain.gain.setValueAtTime(0.0001, now + offset);
-    gain.gain.exponentialRampToValueAtTime(
-      0.25,
-      now + offset + 0.025
-    );
-    gain.gain.exponentialRampToValueAtTime(
-      0.0001,
-      now + offset + 0.18
-    );
-
-    oscillator.connect(gain);
-    gain.connect(audioContext.destination);
-
-    oscillator.start(now + offset);
-    oscillator.stop(now + offset + 0.2);
-  });
+function playOrderSound(){
+if(!soundEnabled||!audioContext||audioContext.state!=="running")return;
+const now=audioContext.currentTime;
+[0,.28,.56].forEach((offset,index)=>{
+const oscillator=audioContext.createOscillator();
+const gain=audioContext.createGain();
+oscillator.type="sine";
+oscillator.frequency.value=index===1?1100:880;
+gain.gain.setValueAtTime(.0001,now+offset);
+gain.gain.exponentialRampToValueAtTime(.25,now+offset+.025);
+gain.gain.exponentialRampToValueAtTime(.0001,now+offset+.18);
+oscillator.connect(gain);
+gain.connect(audioContext.destination);
+oscillator.start(now+offset);
+oscillator.stop(now+offset+.2);
+});
 }
 
-/* КОМИССИЯ ТӨЛЕМ ТАРИХЫ */
+/* ТӨЛЕМ ТАРИХЫ */
 
-function renderPaymentHistory(history) {
-  const container = document.getElementById("paymentHistory");
-  container.replaceChildren();
-
-  if (!Array.isArray(history) || history.length === 0) {
-    container.textContent = "Әзірге комиссия төлемдері тіркелмеген.";
-    return;
-  }
-
-  history.forEach(record => {
-    const item = document.createElement("div");
-    item.className = "history-item";
-
-    const amount = addText(item, money(record.amount), "div");
-    amount.className = "history-amount";
-
-    addText(item,
-      "📅 Қай апта: " +
-      shortDate(record.weekStart) +
-      " — " +
-      shortDate(record.weekEnd)
-    );
-
-    addText(item, "💳 Төленген күні: " + dateText(record.paidAt));
-    addText(item, "🚕 Сапар саны: " + Number(record.ridesCount || 0));
-
-    container.appendChild(item);
-  });
+function renderPaymentHistory(history){
+const container=document.getElementById("paymentHistory");
+container.replaceChildren();
+if(!Array.isArray(history)||!history.length){
+container.textContent="Әзірге комиссия төлемдері тіркелмеген.";
+return;
+}
+history.forEach(record=>{
+const item=document.createElement("div");
+item.className="history-item";
+const amount=addText(item,money(record.amount),"div");
+amount.className="history-amount";
+addText(item,"📅 Қай апта: "+shortDate(record.weekStart)+" — "+shortDate(record.weekEnd));
+addText(item,"💳 Төленген күні: "+dateText(record.paidAt));
+addText(item,"🚕 Сапар саны: "+Number(record.ridesCount||0));
+container.appendChild(item);
+});
 }
 
-async function loadStats() {
-  const data = await api("/api/driver-stats");
-
-  document.getElementById("rides").textContent =
-    data.ridesCount ?? 0;
-
-  document.getElementById("gross").textContent =
-    money(data.grossTotal);
-
-  document.getElementById("earning").textContent =
-    money(data.driverEarning);
-
-  document.getElementById("commission").textContent =
-    money(data.commissionTotal);
-
-  const weekly = data.weekly || {};
-
-  document.getElementById("unpaid").textContent =
-    money(weekly.unpaid);
-
-  document.getElementById("paid").textContent =
-    money(weekly.paid);
-
-  if (weekly.start && weekly.end) {
-    document.getElementById("week").textContent =
-      "Апта: " +
-      shortDate(weekly.start) +
-      " — " +
-      shortDate(weekly.end);
-  } else {
-    document.getElementById("week").textContent = "";
-  }
-
-  renderPaymentHistory(data.paymentHistory);
+async function loadStats(){
+const data=await api("/api/driver-stats");
+document.getElementById("rides").textContent=data.ridesCount??0;
+document.getElementById("gross").textContent=money(data.grossTotal);
+document.getElementById("earning").textContent=money(data.driverEarning);
+document.getElementById("commission").textContent=money(data.commissionTotal);
+const weekly=data.weekly||{};
+document.getElementById("unpaid").textContent=money(weekly.unpaid);
+document.getElementById("paid").textContent=money(weekly.paid);
+document.getElementById("week").textContent=weekly.start&&weekly.end?"Апта: "+shortDate(weekly.start)+" — "+shortDate(weekly.end):"";
+renderPaymentHistory(data.paymentHistory);
 }
 
-/* ӘКІМШІМЕН ЖЕКЕ ХАБАРЛАМА */
+/* ОҚЫЛДЫ ДЕП БЕЛГІЛЕУ */
 
-function renderMessages(messages) {
-  const container = document.getElementById("chatMessages");
-  const wasNearBottom =
-    container.scrollHeight - container.scrollTop - container.clientHeight < 70;
-
-  container.replaceChildren();
-
-  if (!Array.isArray(messages) || messages.length === 0) {
-    container.textContent = "Әзірге хабарлама жоқ.";
-    return;
-  }
-
-  messages.forEach(item => {
-    const bubble = document.createElement("div");
-
-    bubble.className =
-      "chat-message " +
-      (item.sender_role === "admin" ? "admin" : "driver");
-
-    const sender = document.createElement("div");
-    sender.className = "chat-sender";
-
-    if (item.sender_role === "admin") {
-      sender.textContent = "👨‍💼 Әкімші";
-    } else {
-      sender.textContent = "🚕 Сіз";
-    }
-
-    bubble.appendChild(sender);
-
-    if (item.message_type === "payment_report") {
-      const label = document.createElement("div");
-      label.className = "chat-sender";
-      label.textContent = "💳 КОМИССИЯ ТӨЛЕМІ ТУРАЛЫ ХАБАРЛАМА";
-      bubble.appendChild(label);
-    }
-
-    if (item.message_type === "admin_notice") {
-      const label = document.createElement("div");
-      label.className = "chat-sender";
-      label.textContent = "📢 ӘКІМШІНІҢ ХАБАРЛАМАСЫ";
-      bubble.appendChild(label);
-    }
-
-    const messageText = document.createElement("div");
-    messageText.className = "chat-text";
-    messageText.textContent = item.message || "";
-
-    bubble.appendChild(messageText);
-
-    const time = document.createElement("div");
-    time.className = "chat-time";
-    time.textContent = dateText(item.created_at);
-
-    bubble.appendChild(time);
-    container.appendChild(bubble);
-  });
-
-  if (wasNearBottom) {
-    container.scrollTop = container.scrollHeight;
-  }
+async function markMessagesRead(){
+if(markingRead)return;
+markingRead=true;
+try{
+const result=await api("/api/driver-stats",{
+method:"POST",
+body:JSON.stringify({action:"mark_read"})
+});
+return result;
+}catch(error){
+console.error("Mark read error:",error);
+showChatStatus("Оқылғанын белгілеу қатесі: "+error.message,"error");
+}finally{
+markingRead=false;
+}
 }
 
-async function loadMessages() {
-  if (chatLoading) return;
-  chatLoading = true;
+/* ЧАТ */
 
-  try {
-    const data = await api("/api/driver-stats?action=messages");
-    renderMessages(data.messages || []);
-    showChatStatus("Хабарламалар жаңартылды", "success");
-  } catch (error) {
-    showChatStatus(error.message, "error");
-  } finally {
-    chatLoading = false;
-  }
+function renderMessages(messages){
+const container=document.getElementById("chatMessages");
+const wasNearBottom=container.scrollHeight-container.scrollTop-container.clientHeight<70;
+container.replaceChildren();
+
+if(!Array.isArray(messages)||!messages.length){
+container.textContent="Әзірге хабарлама жоқ.";
+return;
 }
 
-async function sendChatMessage() {
-  const input = document.getElementById("chatInput");
-  const button = document.getElementById("sendChatButton");
-  const message = input.value.trim();
+messages.forEach(item=>{
+const bubble=document.createElement("div");
+bubble.className="chat-message "+(item.sender_role==="admin"?"admin":"driver");
 
-  if (!message) {
-    showChatStatus("Алдымен хабарлама жазыңыз", "error");
-    return;
-  }
+const sender=document.createElement("div");
+sender.className="chat-sender";
+sender.textContent=item.sender_role==="admin"?"👨‍💼 Әкімші":"🚕 Сіз";
+bubble.appendChild(sender);
 
-  if (message.length > 2000) {
-    showChatStatus("Хабарлама 2000 таңбадан аспауы керек", "error");
-    return;
-  }
-
-  button.disabled = true;
-  button.textContent = "Жіберіліп жатыр...";
-
-  try {
-    await api("/api/driver-stats", {
-      method: "POST",
-      body: JSON.stringify({
-        action: "send_message",
-        message_type: "text",
-        message
-      })
-    });
-
-    input.value = "";
-    await loadMessages();
-    showChatStatus("Хабарлама әкімшіге жіберілді", "success");
-
-  } catch (error) {
-    showChatStatus(error.message, "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "📨 Жіберу";
-  }
+if(item.message_type==="payment_report"||item.message_type==="admin_notice"){
+const label=document.createElement("div");
+label.className="chat-sender";
+label.textContent=item.message_type==="payment_report"?"💳 КОМИССИЯ ТӨЛЕМІ ТУРАЛЫ ХАБАРЛАМА":"📢 ӘКІМШІНІҢ ХАБАРЛАМАСЫ";
+bubble.appendChild(label);
 }
 
-async function sendPaymentReport() {
-  const button = document.getElementById("paymentReportButton");
+const messageText=document.createElement("div");
+messageText.className="chat-text";
+messageText.textContent=item.message||"";
+bubble.appendChild(messageText);
 
-  if (!confirm(
-    "Комиссияны шынымен төлегеніңізді растайсыз ба? Әкімшіге хабарлама жіберіледі."
-  )) return;
+const time=document.createElement("div");
+time.className="chat-time";
+time.textContent=dateText(item.created_at);
+bubble.appendChild(time);
 
-  button.disabled = true;
-  button.textContent = "Жіберіліп жатыр...";
+if(item.sender_role==="admin"){
+const read=document.createElement("div");
+read.className="chat-read";
+read.textContent=item.read_at?"✓ Сіз оқыдыңыз":"Жаңа хабарлама";
+bubble.appendChild(read);
+}else{
+const read=document.createElement("div");
+read.className="chat-read";
+read.textContent="✓ Жіберілді";
+bubble.appendChild(read);
+}
 
-  try {
-    await api("/api/driver-stats", {
-      method: "POST",
-      body: JSON.stringify({
-        action: "send_message",
-        message_type: "payment_report",
-        message: "Мен апталық комиссияны төледім. Төлемді тексеріп, растауыңызды сұраймын."
-      })
-    });
+container.appendChild(bubble);
+});
 
-    await loadMessages();
-    showChatStatus(
-      "Төлем туралы хабарлама әкімшіге жіберілді. Әкімшінің растауын күтіңіз.",
-      "success"
-    );
+if(wasNearBottom)container.scrollTop=container.scrollHeight;
+}
 
-  } catch (error) {
-    showChatStatus(error.message, "error");
-  } finally {
-    button.disabled = false;
-    button.textContent = "💳 Комиссияны төледім";
-  }
+async function loadMessages(){
+if(chatLoading)return;
+chatLoading=true;
+try{
+let data=await api("/api/driver-stats?action=messages");
+let messages=data.messages||[];
+
+const unread=messages.some(
+item=>item.sender_role==="admin"&&!item.read_at
+);
+
+if(unread){
+await markMessagesRead();
+data=await api("/api/driver-stats?action=messages");
+messages=data.messages||[];
+}
+
+renderMessages(messages);
+
+const unreadCount=messages.filter(
+item=>item.sender_role==="admin"&&!item.read_at
+).length;
+
+showChatStatus(
+unreadCount===0?"Хабарламалар жаңартылды":"Оқылмаған хабарламалар бар",
+"success"
+);
+}catch(error){
+showChatStatus(error.message,"error");
+}finally{
+chatLoading=false;
+}
+}
+
+async function sendChatMessage(){
+const input=document.getElementById("chatInput");
+const button=document.getElementById("sendChatButton");
+const message=input.value.trim();
+if(!message){
+showChatStatus("Алдымен хабарлама жазыңыз","error");
+return;
+}
+button.disabled=true;
+button.textContent="Жіберіліп жатыр...";
+try{
+await api("/api/driver-stats",{
+method:"POST",
+body:JSON.stringify({action:"send_message",message_type:"text",message})
+});
+input.value="";
+await loadMessages();
+showChatStatus("Хабарлама әкімшіге жіберілді","success");
+}catch(error){
+showChatStatus(error.message,"error");
+}finally{
+button.disabled=false;
+button.textContent="📨 Жіберу";
+}
+}
+
+async function sendPaymentReport(){
+const button=document.getElementById("paymentReportButton");
+if(!confirm("Комиссияны шынымен төлегеніңізді растайсыз ба? Әкімшіге хабарлама жіберіледі."))return;
+button.disabled=true;
+button.textContent="Жіберіліп жатыр...";
+try{
+await api("/api/driver-stats",{
+method:"POST",
+body:JSON.stringify({
+action:"send_message",
+message_type:"payment_report",
+message:"Мен апталық комиссияны төледім. Төлемді тексеріп, растауыңызды сұраймын."
+})
+});
+await loadMessages();
+showChatStatus("Төлем туралы хабарлама әкімшіге жіберілді.","success");
+}catch(error){
+showChatStatus(error.message,"error");
+}finally{
+button.disabled=false;
+button.textContent="💳 Комиссияны төледім";
+}
 }
 
 /* ТАПСЫРЫСТАР */
 
-function makeOrderCard(order, type) {
-  const item = document.createElement("div");
-  item.className = "order";
+function makeOrderCard(order,type){
+const item=document.createElement("div");
+item.className="order";
+addText(item,"📍 Қайдан: "+(order.pickup_address||"Көрсетілмеген"));
+addText(item,"🏁 Қайда: "+(order.destination_address||"Көрсетілмеген"));
+if(order.passenger_name)addText(item,"👤 Жолаушы: "+order.passenger_name);
+if(order.passenger_phone)addText(item,"📞 Телефон: "+order.passenger_phone);
+addText(item,"🚘 Көлік класы: "+(order.car_class||"Көрсетілмеген"));
+addText(item,"📏 Қашықтық: "+(order.distance_km?order.distance_km+" км":"Көрсетілмеген"));
+addText(item,"💰 Бағасы: "+money(order.price));
+addText(item,"💳 Төлем: "+(order.payment_method||"Көрсетілмеген"));
+const status=addText(item,"Мәртебесі: "+statusText(order.status));
+status.className="status";
 
-  addText(item, "📍 Қайдан: " +
-    (order.pickup_address || "Көрсетілмеген"));
-
-  addText(item, "🏁 Қайда: " +
-    (order.destination_address || "Көрсетілмеген"));
-
-  if (order.passenger_name) {
-    addText(item, "👤 Жолаушы: " + order.passenger_name);
-  }
-
-  if (order.passenger_phone) {
-    addText(item, "📞 Телефон: " + order.passenger_phone);
-  }
-
-  addText(item, "🚘 Көлік класы: " +
-    (order.car_class || "Көрсетілмеген"));
-
-  addText(item, "📏 Қашықтық: " +
-    (order.distance_km
-      ? order.distance_km + " км"
-      : "Көрсетілмеген"));
-
-  addText(item, "💰 Бағасы: " + money(order.price));
-
-  addText(item, "💳 Төлем: " +
-    (order.payment_method || "Көрсетілмеген"));
-
-  const status = addText(
-    item,
-    "Мәртебесі: " + statusText(order.status)
-  );
-  status.className = "status";
-
-  if (type === "new") {
-    const button = document.createElement("button");
-    button.textContent = "✅ Қабылдау";
-    button.addEventListener("click", () =>
-      acceptOrder(order.id, button)
-    );
-    item.appendChild(button);
-  }
-
-  if (
-    type === "mine" &&
-    ["accepted", "in_progress"].includes(
-      String(order.status || "").toLowerCase()
-    )
-  ) {
-    const button = document.createElement("button");
-    button.textContent = "🏁 Сапарды аяқтау";
-    button.addEventListener("click", () =>
-      completeOrder(order.id, button)
-    );
-    item.appendChild(button);
-  }
-
-  return item;
+if(type==="new"){
+const button=document.createElement("button");
+button.textContent="✅ Қабылдау";
+button.addEventListener("click",()=>acceptOrder(order.id,button));
+item.appendChild(button);
 }
 
-async function loadOrders() {
-  const data = await api("/api/driver-orders");
-
-  const newContainer = document.getElementById("newOrders");
-  const myContainer = document.getElementById("myOrders");
-
-  newContainer.replaceChildren();
-  myContainer.replaceChildren();
-
-  const newOrders = Array.isArray(data.new_orders)
-    ? data.new_orders
-    : [];
-
-  const myOrders = Array.isArray(data.my_orders)
-    ? data.my_orders
-    : [];
-
-  const currentIds = new Set(
-    newOrders.map(order => order.id).filter(Boolean)
-  );
-
-  if (firstOrdersLoaded) {
-    const hasNewOrder = newOrders.some(
-      order => order.id && !knownOrderIds.has(order.id)
-    );
-
-    if (hasNewOrder) {
-      playOrderSound();
-      showMessage("🔔 Жаңа тапсырыс келді!", "success");
-    }
-  }
-
-  knownOrderIds = currentIds;
-  firstOrdersLoaded = true;
-
-  if (newOrders.length === 0) {
-    newContainer.textContent = "Қазір жаңа тапсырыс жоқ";
-  } else {
-    newOrders.forEach(order => {
-      newContainer.appendChild(makeOrderCard(order, "new"));
-    });
-  }
-
-  if (myOrders.length === 0) {
-    myContainer.textContent = "Әзірге өз тапсырысыңыз жоқ";
-  } else {
-    myOrders.forEach(order => {
-      myContainer.appendChild(makeOrderCard(order, "mine"));
-    });
-  }
+if(type==="mine"&&["accepted","in_progress"].includes(String(order.status||"").toLowerCase())){
+const button=document.createElement("button");
+button.textContent="🏁 Сапарды аяқтау";
+button.addEventListener("click",()=>completeOrder(order.id,button));
+item.appendChild(button);
+}
+return item;
 }
 
-async function acceptOrder(orderId, button) {
-  if (!confirm("Осы тапсырысты қабылдайсыз ба?")) return;
+async function loadOrders(){
+const data=await api("/api/driver-orders");
+const newContainer=document.getElementById("newOrders");
+const myContainer=document.getElementById("myOrders");
+newContainer.replaceChildren();
+myContainer.replaceChildren();
 
-  button.disabled = true;
-  button.textContent = "Қабылданып жатыр...";
+const newOrders=Array.isArray(data.new_orders)?data.new_orders:[];
+const myOrders=Array.isArray(data.my_orders)?data.my_orders:[];
 
-  try {
-    await api("/api/driver-accept", {
-      method: "POST",
-      body: JSON.stringify({ orderId })
-    });
+const currentIds=new Set(newOrders.map(order=>order.id).filter(Boolean));
 
-    showMessage("Тапсырыс қабылданды!", "success");
-    await loadAll();
-
-  } catch (error) {
-    button.disabled = false;
-    button.textContent = "✅ Қабылдау";
-    showMessage(error.message, "error");
-  }
+if(firstOrdersLoaded){
+const hasNewOrder=newOrders.some(order=>order.id&&!knownOrderIds.has(order.id));
+if(hasNewOrder){
+playOrderSound();
+showMessage("🔔 Жаңа тапсырыс келді!","success");
+}
 }
 
-async function completeOrder(orderId, button) {
-  if (!confirm(
-    "Сапар аяқталды ма? Аяқтаған соң баға бойынша 10% комиссия есептеледі."
-  )) return;
+knownOrderIds=currentIds;
+firstOrdersLoaded=true;
 
-  button.disabled = true;
-  button.textContent = "Аяқталып жатыр...";
+if(!newOrders.length)newContainer.textContent="Қазір жаңа тапсырыс жоқ";
+else newOrders.forEach(order=>newContainer.appendChild(makeOrderCard(order,"new")));
 
-  try {
-    const result = await api("/api/driver-complete", {
-      method: "POST",
-      body: JSON.stringify({ orderId })
-    });
+if(!myOrders.length)myContainer.textContent="Әзірге өз тапсырысыңыз жоқ";
+else myOrders.forEach(order=>myContainer.appendChild(makeOrderCard(order,"mine")));
+}
 
-    showMessage(
-      "Сапар аяқталды! Комиссия: " +
-      money(result.commission) +
-      ". Сіздің табысыңыз: " +
-      money(result.driver_earning),
-      "success"
-    );
+async function acceptOrder(orderId,button){
+if(!confirm("Осы тапсырысты қабылдайсыз ба?"))return;
+button.disabled=true;
+button.textContent="Қабылданып жатыр...";
+try{
+await api("/api/driver-accept",{method:"POST",body:JSON.stringify({orderId})});
+showMessage("Тапсырыс қабылданды!","success");
+await loadAll();
+}catch(error){
+button.disabled=false;
+button.textContent="✅ Қабылдау";
+showMessage(error.message,"error");
+}
+}
 
-    await loadAll();
-
-  } catch (error) {
-    button.disabled = false;
-    button.textContent = "🏁 Сапарды аяқтау";
-    showMessage(error.message, "error");
-  }
+async function completeOrder(orderId,button){
+if(!confirm("Сапар аяқталды ма? Аяқтаған соң баға бойынша 10% комиссия есептеледі."))return;
+button.disabled=true;
+button.textContent="Аяқталып жатыр...";
+try{
+const result=await api("/api/driver-complete",{method:"POST",body:JSON.stringify({orderId})});
+showMessage("Сапар аяқталды! Комиссия: "+money(result.commission)+". Сіздің табысыңыз: "+money(result.driver_earning),"success");
+await loadAll();
+}catch(error){
+button.disabled=false;
+button.textContent="🏁 Сапарды аяқтау";
+showMessage(error.message,"error");
+}
 }
 
 /* ЖАЛПЫ ЖАҢАРТУ */
 
-async function loadAll() {
-  if (polling) return;
-  polling = true;
+async function loadAll(){
+if(polling)return;
+polling=true;
+const button=document.getElementById("refresh");
+button.disabled=true;
 
-  const button = document.getElementById("refresh");
-  button.disabled = true;
+const results=await Promise.allSettled([
+loadStats(),
+loadOrders(),
+loadMessages()
+]);
 
-  const results = await Promise.allSettled([
-    loadStats(),
-    loadOrders(),
-    loadMessages()
-  ]);
+const errors=results.filter(result=>result.status==="rejected").map(result=>result.reason.message);
+if(errors.length)showMessage(errors.join(" • "),"error");
+else showMessage("Мәліметтер жаңартылды","success");
 
-  const errors = results
-    .filter(result => result.status === "rejected")
-    .map(result => result.reason.message);
-
-  if (errors.length) {
-    showMessage(errors.join(" • "), "error");
-  } else {
-    showMessage("Мәліметтер жаңартылды", "success");
-  }
-
-  button.disabled = false;
-  polling = false;
+button.disabled=false;
+polling=false;
 }
-
-/* БЕТ АШЫЛҒАНДА ЖӘНЕ ӘР 5 СЕКУНД САЙЫН ЖАҢАРТУ */
 
 loadAll();
 
-setInterval(() => {
-  if (document.visibilityState === "visible") {
-    loadAll();
-  }
-}, 5000);
-
+setInterval(()=>{
+if(document.visibilityState==="visible")loadAll();
+},5000);
 </script>
 </body>
 </html>
