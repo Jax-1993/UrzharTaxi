@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="kk">
+<!DOCTYPE html><html lang="kk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -30,22 +29,27 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 .history-item{background:#303d52;padding:14px;border-radius:10px;margin:10px 0}
 .history-item p{margin:7px 0;overflow-wrap:anywhere}
 .history-amount{color:#8ee6a2;font-size:20px;font-weight:bold}
+.sound-button{width:100%;background:#53647c;color:white}
+.sound-button.active{background:#16834a}
+.sound-info{font-size:13px;color:#c5cede;margin-top:8px}
 @media(max-width:380px){
  .stat strong{font-size:18px}
  button{width:100%}
 }
 </style>
 </head>
-<body>
-
-<header>
+<body><header>
 <h2>🚕 ҮРЖАР TAXI</h2>
 <div>Жүргізуші кабинеті</div>
-</header>
-
-<main>
-
-<div class="card">
+</header><main><div class="card">
+<h3>🔔 Тапсырыс дыбысы</h3>
+<button id="soundButton" class="sound-button" onclick="toggleSound()">
+🔕 Дыбысты қосу
+</button>
+<p id="soundInfo" class="sound-info">
+Жаңа тапсырыс келгенде дыбыстық белгі беріледі.
+</p>
+</div><div class="card">
 <h3>📊 Менің статистикам</h3>
 <div class="stats">
 <div class="stat">
@@ -65,46 +69,38 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 <strong id="commission">—</strong>
 </div>
 </div>
-</div>
-
-<div class="card">
+</div><div class="card">
 <h3>📅 Апталық комиссия</h3>
 <p>Төленбеген: <strong id="unpaid">—</strong></p>
 <p>Төленген: <strong id="paid">—</strong></p>
 <p class="muted" id="week"></p>
-</div>
-
-<div class="card">
+</div><div class="card">
 <h3>💳 Комиссия төлемдерінің тарихы</h3>
 <div id="paymentHistory" class="muted">
 Төлем тарихы жүктелуде...
 </div>
-</div>
-
-<div class="card">
+</div><div class="card">
 <h3 class="section-title">🆕 Жаңа тапсырыстар</h3>
 <div id="newOrders" class="muted">Жүктелуде...</div>
-</div>
-
-<div class="card">
+</div><div class="card">
 <h3 class="section-title">🚕 Менің тапсырыстарым</h3>
 <div id="myOrders" class="muted">Жүктелуде...</div>
-</div>
-
-<div class="card">
+</div><div class="card">
 <button onclick="loadAll()" id="refresh">🔄 Жаңарту</button>
 <p id="message" class="muted"></p>
 <p class="muted">
 Кабинет ашылмаса, жүргізуші аккаунтына қайта кіріңіз.
 <a href="/driver-login.html" style="color:#ffcc00">Кіру беті</a>
 </p>
-</div>
-
-</main>
-
-<script>
+</div></main><script>
 const money = n =>
   Number(n || 0).toLocaleString("kk-KZ") + " ₸";
+
+let soundEnabled = false;
+let audioContext = null;
+let knownOrderIds = new Set();
+let firstOrdersLoaded = false;
+let polling = false;
 
 function dateText(value) {
   if (!value) return "Көрсетілмеген";
@@ -190,6 +186,91 @@ function statusText(status) {
     "Белгісіз";
 }
 
+/* ДЫБЫС ЖҮЙЕСІ */
+
+async function enableSound() {
+  const AudioContextClass =
+    window.AudioContext || window.webkitAudioContext;
+
+  if (!AudioContextClass) {
+    throw new Error("Бұл браузер дыбысты қолдамайды");
+  }
+
+  if (!audioContext) {
+    audioContext = new AudioContextClass();
+  }
+
+  if (audioContext.state === "suspended") {
+    await audioContext.resume();
+  }
+
+  soundEnabled = true;
+
+  document.getElementById("soundButton").textContent =
+    "🔔 Дыбыс қосылды";
+
+  document.getElementById("soundButton").classList.add("active");
+
+  document.getElementById("soundInfo").textContent =
+    "Жаңа тапсырыс келгенде дыбыс шығады.";
+}
+
+async function toggleSound() {
+  try {
+    if (soundEnabled) {
+      soundEnabled = false;
+
+      document.getElementById("soundButton").textContent =
+        "🔕 Дыбысты қосу";
+
+      document.getElementById("soundButton").classList.remove("active");
+
+      document.getElementById("soundInfo").textContent =
+        "Дыбыс өшірілді.";
+
+      return;
+    }
+
+    await enableSound();
+    playOrderSound();
+
+  } catch (error) {
+    showMessage(error.message, "error");
+  }
+}
+
+function playOrderSound() {
+  if (!soundEnabled || !audioContext) return;
+
+  if (audioContext.state !== "running") return;
+
+  const now = audioContext.currentTime;
+
+  [0, 0.28, 0.56].forEach((offset, index) => {
+    const oscillator = audioContext.createOscillator();
+    const gain = audioContext.createGain();
+
+    oscillator.type = "sine";
+    oscillator.frequency.value = index === 1 ? 1100 : 880;
+
+    gain.gain.setValueAtTime(0.0001, now + offset);
+    gain.gain.exponentialRampToValueAtTime(
+      0.25,
+      now + offset + 0.025
+    );
+    gain.gain.exponentialRampToValueAtTime(
+      0.0001,
+      now + offset + 0.18
+    );
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.start(now + offset);
+    oscillator.stop(now + offset + 0.2);
+  });
+}
+
 function renderPaymentHistory(history) {
   const container = document.getElementById("paymentHistory");
   container.replaceChildren();
@@ -203,30 +284,18 @@ function renderPaymentHistory(history) {
     const item = document.createElement("div");
     item.className = "history-item";
 
-    const amount = addText(
-      item,
-      money(record.amount),
-      "div"
-    );
+    const amount = addText(item, money(record.amount), "div");
     amount.className = "history-amount";
 
-    addText(
-      item,
+    addText(item,
       "📅 Қай апта: " +
       shortDate(record.weekStart) +
       " — " +
       shortDate(record.weekEnd)
     );
 
-    addText(
-      item,
-      "💳 Төленген күні: " + dateText(record.paidAt)
-    );
-
-    addText(
-      item,
-      "🚕 Сапар саны: " + Number(record.ridesCount || 0)
-    );
+    addText(item, "💳 Төленген күні: " + dateText(record.paidAt));
+    addText(item, "🚕 Сапар саны: " + Number(record.ridesCount || 0));
 
     container.appendChild(item);
   });
@@ -348,13 +417,29 @@ async function loadOrders() {
     ? data.my_orders
     : [];
 
+  const currentIds = new Set(
+    newOrders.map(order => order.id).filter(Boolean)
+  );
+
+  if (firstOrdersLoaded) {
+    const hasNewOrder = newOrders.some(
+      order => order.id && !knownOrderIds.has(order.id)
+    );
+
+    if (hasNewOrder) {
+      playOrderSound();
+      showMessage("🔔 Жаңа тапсырыс келді!", "success");
+    }
+  }
+
+  knownOrderIds = currentIds;
+  firstOrdersLoaded = true;
+
   if (newOrders.length === 0) {
     newContainer.textContent = "Қазір жаңа тапсырыс жоқ";
   } else {
     newOrders.forEach(order => {
-      newContainer.appendChild(
-        makeOrderCard(order, "new")
-      );
+      newContainer.appendChild(makeOrderCard(order, "new"));
     });
   }
 
@@ -362,9 +447,7 @@ async function loadOrders() {
     myContainer.textContent = "Әзірге өз тапсырысыңыз жоқ";
   } else {
     myOrders.forEach(order => {
-      myContainer.appendChild(
-        makeOrderCard(order, "mine")
-      );
+      myContainer.appendChild(makeOrderCard(order, "mine"));
     });
   }
 }
@@ -423,10 +506,11 @@ async function completeOrder(orderId, button) {
 }
 
 async function loadAll() {
-  const button = document.getElementById("refresh");
+  if (polling) return;
+  polling = true;
 
+  const button = document.getElementById("refresh");
   button.disabled = true;
-  showMessage("Мәліметтер жүктелуде...");
 
   const results = await Promise.allSettled([
     loadStats(),
@@ -444,10 +528,18 @@ async function loadAll() {
   }
 
   button.disabled = false;
+  polling = false;
 }
 
-loadAll();
-</script>
+/* БЕТ АШЫЛҒАНДА ЖӘНЕ ӘР 5 СЕКУНД САЙЫН ЖАҢАРТУ */
 
-</body>
+loadAll();
+
+setInterval(() => {
+  if (document.visibilityState === "visible") {
+    loadAll();
+  }
+}, 5000);
+
+</script></body>
 </html>
