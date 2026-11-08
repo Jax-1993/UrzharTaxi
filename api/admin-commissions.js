@@ -89,6 +89,11 @@ function getWeek(dateValue) {
   };
 }
 
+function validDriverId(id) {
+  return typeof id === "string" &&
+    /^[0-9a-f-]{36}$/i.test(id);
+}
+
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -114,7 +119,30 @@ export default async function handler(req, res) {
   }
 
   try {
+    // GET: комиссиялар, жүргізушілер немесе жеке хаттар
     if (req.method === "GET") {
+      const action = req.query?.action;
+      const driverId = req.query?.driver_id;
+
+      // Әкімші мен жүргізуші арасындағы хаттарды оқу
+      if (action === "messages") {
+        if (!validDriverId(driverId)) {
+          return res.status(400).json({
+            success: false,
+            message: "Жүргізуші ID қате"
+          });
+        }
+
+        const messages = await supabase(
+          `driver_messages?select=id,driver_id,sender_role,message_type,message,created_at,read_at&driver_id=eq.${encodeURIComponent(driverId)}&order=created_at.asc&limit=200`
+        );
+
+        return res.status(200).json({
+          success: true,
+          messages: messages || []
+        });
+      }
+
       const [commissions, drivers] = await Promise.all([
         supabase(
           "driver_commissions?select=id,driver_id,order_id,ride_price,commission_amount,status,created_at,paid_at&order=created_at.desc&limit=5000"
@@ -160,7 +188,6 @@ export default async function handler(req, res) {
         if (row.status === "paid") {
           group.paid_total += commission;
 
-          // Бір уақытта төленген жазбалар бір төлем ретінде топталады.
           const paidAt = row.paid_at || null;
           const historyKey =
             row.driver_id + "_" +
@@ -212,23 +239,85 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         commissions: result,
-        payment_history: paymentHistory
+        payment_history: paymentHistory,
+        drivers: drivers || []
       });
     }
 
+    // POST: хабарлама жіберу немесе комиссияны төленді деп белгілеу
     if (req.method === "POST") {
+      const body = req.body || {};
+
+      // Әкімшіден жүргізушіге жеке хабарлама
+      if (body.action === "send_message") {
+        const driver_id = body.driver_id;
+        const message = String(body.message || "").trim();
+        const message_type = body.message_type || "text";
+
+        if (!validDriverId(driver_id)) {
+          return res.status(400).json({
+            success: false,
+            message: "Жүргізуші ID қате"
+          });
+        }
+
+        if (!message || message.length > 2000) {
+          return res.status(400).json({
+            success: false,
+            message: "Хабарлама 1–2000 таңба болуы керек"
+          });
+        }
+
+        if (!["text", "admin_notice"].includes(message_type)) {
+          return res.status(400).json({
+            success: false,
+            message: "Хабарлама түрі қате"
+          });
+        }
+
+        const driver = await supabase(
+          `drivers?select=id&id=eq.${encodeURIComponent(driver_id)}&limit=1`
+        );
+
+        if (!driver || driver.length === 0) {
+          return res.status(404).json({
+            success: false,
+            message: "Жүргізуші табылмады"
+          });
+        }
+
+        const saved = await supabase("driver_messages", {
+          method: "POST",
+          headers: {
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({
+            driver_id,
+            sender_role: "admin",
+            message_type,
+            message
+          })
+        });
+
+        return res.status(200).json({
+          success: true,
+          message: "Хабарлама жіберілді",
+          data: saved?.[0] || null
+        });
+      }
+
+      // Бұрынғы комиссия төлемін растау қызметі
       const {
         driver_id,
         week_start,
         week_end
-      } = req.body || {};
+      } = body;
 
       const start = Date.parse(week_start);
       const end = Date.parse(week_end);
 
       if (
-        typeof driver_id !== "string" ||
-        !/^[0-9a-f-]{36}$/i.test(driver_id) ||
+        !validDriverId(driver_id) ||
         !Number.isFinite(start) ||
         !Number.isFinite(end) ||
         end <= start ||
@@ -291,7 +380,7 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: "Комиссия есебінде сервер қатесі"
+      message: "Комиссия немесе хабарлама бөлімінде сервер қатесі"
     });
   }
 }
