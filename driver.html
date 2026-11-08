@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="kk">
+<!DOCTYPE html>
+<html lang="kk">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,16 +33,25 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 .sound-button{width:100%;background:#53647c;color:white}
 .sound-button.active{background:#16834a}
 .sound-info{font-size:13px;color:#c5cede;margin-top:8px}
+.gps-button{width:100%;background:#16834a;color:white}
+.gps-button.active{background:#53647c}
+.gps-info{font-size:13px;color:#c5cede;line-height:1.5}
 @media(max-width:380px){
  .stat strong{font-size:18px}
  button{width:100%}
 }
 </style>
 </head>
-<body><header>
+<body>
+
+<header>
 <h2>🚕 ҮРЖАР TAXI</h2>
 <div>Жүргізуші кабинеті</div>
-</header><main><div class="card">
+</header>
+
+<main>
+
+<div class="card">
 <h3>🔔 Тапсырыс дыбысы</h3>
 <button id="soundButton" class="sound-button" onclick="toggleSound()">
 🔕 Дыбысты қосу
@@ -49,7 +59,23 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 <p id="soundInfo" class="sound-info">
 Жаңа тапсырыс келгенде дыбыстық белгі беріледі.
 </p>
-</div><div class="card">
+</div>
+
+<div class="card">
+<h3>📍 GPS — орналасқан жерім</h3>
+<p id="gpsStatus" class="gps-info">
+GPS бөлісу өшірулі. Орналасқан жеріңіз тек өз рұқсатыңызбен жіберіледі.
+</p>
+<button id="gpsButton" class="gps-button" onclick="toggleGPS()">
+📍 GPS бөлісуді қосу
+</button>
+<p class="gps-info">
+GPS тек қабылданған немесе орындалып жатқан тапсырыс кезінде жіберіледі.
+Бөлісуді кез келген уақытта тоқтатуға болады.
+</p>
+</div>
+
+<div class="card">
 <h3>📊 Менің статистикам</h3>
 <div class="stats">
 <div class="stat">
@@ -69,30 +95,44 @@ hr{border:0;border-top:1px solid #53647c;margin:14px 0}
 <strong id="commission">—</strong>
 </div>
 </div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <h3>📅 Апталық комиссия</h3>
 <p>Төленбеген: <strong id="unpaid">—</strong></p>
 <p>Төленген: <strong id="paid">—</strong></p>
 <p class="muted" id="week"></p>
-</div><div class="card">
+</div>
+
+<div class="card">
 <h3>💳 Комиссия төлемдерінің тарихы</h3>
 <div id="paymentHistory" class="muted">
 Төлем тарихы жүктелуде...
 </div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <h3 class="section-title">🆕 Жаңа тапсырыстар</h3>
 <div id="newOrders" class="muted">Жүктелуде...</div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <h3 class="section-title">🚕 Менің тапсырыстарым</h3>
 <div id="myOrders" class="muted">Жүктелуде...</div>
-</div><div class="card">
+</div>
+
+<div class="card">
 <button onclick="loadAll()" id="refresh">🔄 Жаңарту</button>
 <p id="message" class="muted"></p>
 <p class="muted">
 Кабинет ашылмаса, жүргізуші аккаунтына қайта кіріңіз.
 <a href="/driver-login.html" style="color:#ffcc00">Кіру беті</a>
 </p>
-</div></main><script>
+</div>
+
+</main>
+
+<script>
 const money = n =>
   Number(n || 0).toLocaleString("kk-KZ") + " ₸";
 
@@ -101,6 +141,13 @@ let audioContext = null;
 let knownOrderIds = new Set();
 let firstOrdersLoaded = false;
 let polling = false;
+
+/* GPS айнымалылары */
+let gpsEnabled = false;
+let gpsWatchId = null;
+let gpsSending = false;
+let activeGpsOrderId = null;
+let lastGpsPosition = null;
 
 function dateText(value) {
   if (!value) return "Көрсетілмеген";
@@ -154,7 +201,7 @@ async function api(url, options = {}) {
   }
 
   if (!response.ok || data.success === false) {
-    throw new Error(data.message || "Сұраныс орындалмады");
+    throw new Error(data.message || data.error || "Сұраныс орындалмады");
   }
 
   return data;
@@ -241,7 +288,6 @@ async function toggleSound() {
 
 function playOrderSound() {
   if (!soundEnabled || !audioContext) return;
-
   if (audioContext.state !== "running") return;
 
   const now = audioContext.currentTime;
@@ -270,6 +316,169 @@ function playOrderSound() {
     oscillator.stop(now + offset + 0.2);
   });
 }
+
+/* GPS ЖҮЙЕСІ */
+
+function setGpsStatus(text, type = "muted") {
+  const element = document.getElementById("gpsStatus");
+  element.textContent = text;
+  element.className = "gps-info " + type;
+}
+
+function setGpsButton() {
+  const button = document.getElementById("gpsButton");
+
+  if (gpsEnabled) {
+    button.textContent = "⏹ GPS бөлісуді тоқтату";
+    button.classList.add("active");
+  } else {
+    button.textContent = "📍 GPS бөлісуді қосу";
+    button.classList.remove("active");
+  }
+}
+
+function getActiveOrder(orders) {
+  return orders.find(order =>
+    ["accepted", "in_progress"].includes(
+      String(order.status || "").toLowerCase()
+    )
+  );
+}
+
+async function sendDriverLocation(position) {
+  if (!gpsEnabled || !activeGpsOrderId || gpsSending) return;
+
+  gpsSending = true;
+
+  const latitude = position.coords.latitude;
+  const longitude = position.coords.longitude;
+
+  try {
+    await api("/api/driver-location", {
+      method: "POST",
+      body: JSON.stringify({
+        orderId: activeGpsOrderId,
+        latitude,
+        longitude
+      })
+    });
+
+    lastGpsPosition = {
+      latitude,
+      longitude,
+      time: new Date()
+    };
+
+    setGpsStatus(
+      "🟢 GPS қосулы. Орналасқан жеріңіз жолаушыға жіберіліп жатыр. Соңғы жаңарту: " +
+      lastGpsPosition.time.toLocaleTimeString("kk-KZ"),
+      "success"
+    );
+
+  } catch (error) {
+    setGpsStatus(
+      "GPS жіберу қатесі: " + error.message,
+      "error"
+    );
+  } finally {
+    gpsSending = false;
+  }
+}
+
+function gpsError(error) {
+  let message = "GPS орнын алу мүмкін болмады.";
+
+  if (error.code === 1) {
+    message = "GPS рұқсаты берілмеді. Браузер баптауынан рұқсат беріңіз.";
+  } else if (error.code === 2) {
+    message = "Құрылғының орналасқан жері анықталмады.";
+  } else if (error.code === 3) {
+    message = "GPS сұранысының уақыты аяқталды. Қайта байқап көріңіз.";
+  }
+
+  setGpsStatus("🔴 " + message, "error");
+}
+
+function stopGPS(message = "GPS бөлісу тоқтатылды.") {
+  gpsEnabled = false;
+
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+
+  activeGpsOrderId = null;
+  gpsSending = false;
+
+  setGpsButton();
+  setGpsStatus(message);
+}
+
+function toggleGPS() {
+  if (gpsEnabled) {
+    stopGPS("GPS бөлісу өзіңіз тарапынан тоқтатылды.");
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    setGpsStatus("Бұл браузер GPS функциясын қолдамайды.", "error");
+    return;
+  }
+
+  const activeOrder = window.currentActiveOrder;
+
+  if (!activeOrder) {
+    setGpsStatus(
+      "Алдымен жаңа тапсырысты қабылдаңыз. GPS тек белсенді сапар кезінде қосылады.",
+      "error"
+    );
+    return;
+  }
+
+  if (!window.isSecureContext) {
+    setGpsStatus(
+      "GPS үшін HTTPS байланысы қажет. Сайтты https арқылы ашыңыз.",
+      "error"
+    );
+    return;
+  }
+
+  activeGpsOrderId = activeOrder.id;
+  gpsEnabled = true;
+  setGpsButton();
+
+  setGpsStatus("⏳ GPS рұқсатын күтіп жатырмыз...");
+
+  gpsWatchId = navigator.geolocation.watchPosition(
+    sendDriverLocation,
+    gpsError,
+    {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 20000
+    }
+  );
+}
+
+function syncGpsWithOrders(orders) {
+  const activeOrder = getActiveOrder(orders);
+  window.currentActiveOrder = activeOrder || null;
+
+  if (!activeOrder && gpsEnabled) {
+    stopGPS("Белсенді сапар жоқ. GPS бөлісу автоматты түрде тоқтатылды.");
+    return;
+  }
+
+  if (
+    activeOrder &&
+    gpsEnabled &&
+    activeGpsOrderId !== activeOrder.id
+  ) {
+    stopGPS("Белсенді тапсырыс өзгерді. GPS бөлісуді қайта қосыңыз.");
+  }
+}
+
+/* КОМИССИЯ ТӨЛЕМ ТАРИХЫ */
 
 function renderPaymentHistory(history) {
   const container = document.getElementById("paymentHistory");
@@ -337,6 +546,8 @@ async function loadStats() {
   renderPaymentHistory(data.paymentHistory);
 }
 
+/* ТАПСЫРЫСТАР */
+
 function makeOrderCard(order, type) {
   const item = document.createElement("div");
   item.className = "order";
@@ -389,6 +600,13 @@ function makeOrderCard(order, type) {
       String(order.status || "").toLowerCase()
     )
   ) {
+    const gpsNote = addText(
+      item,
+      "📍 Жолаушының GPS орны: GPS бақылау жүйесі қосылғаннан кейін көрсетіледі.",
+      "p"
+    );
+    gpsNote.className = "muted";
+
     const button = document.createElement("button");
     button.textContent = "🏁 Сапарды аяқтау";
     button.addEventListener("click", () =>
@@ -416,6 +634,8 @@ async function loadOrders() {
   const myOrders = Array.isArray(data.my_orders)
     ? data.my_orders
     : [];
+
+  syncGpsWithOrders(myOrders);
 
   const currentIds = new Set(
     newOrders.map(order => order.id).filter(Boolean)
@@ -488,6 +708,10 @@ async function completeOrder(orderId, button) {
       body: JSON.stringify({ orderId })
     });
 
+    if (activeGpsOrderId === orderId) {
+      stopGPS("Сапар аяқталды. GPS бөлісу тоқтатылды.");
+    }
+
     showMessage(
       "Сапар аяқталды! Комиссия: " +
       money(result.commission) +
@@ -504,6 +728,8 @@ async function completeOrder(orderId, button) {
     showMessage(error.message, "error");
   }
 }
+
+/* ЖАЛПЫ ЖАҢАРТУ */
 
 async function loadAll() {
   if (polling) return;
@@ -531,6 +757,15 @@ async function loadAll() {
   polling = false;
 }
 
+/* БЕТТІ ЖАБУ КЕЗІНДЕ GPS WATCH ТОҚТАТУ */
+
+window.addEventListener("pagehide", () => {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+});
+
 /* БЕТ АШЫЛҒАНДА ЖӘНЕ ӘР 5 СЕКУНД САЙЫН ЖАҢАРТУ */
 
 loadAll();
@@ -541,5 +776,6 @@ setInterval(() => {
   }
 }, 5000);
 
-</script></body>
+</script>
+</body>
 </html>
