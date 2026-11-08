@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="kk">
 <head>
@@ -6,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ҮРЖАР TAXI — Жүргізуші кіруі</title>
 <style>
+* { box-sizing: border-box; }
+
 body {
   margin: 0;
   padding: 20px;
@@ -13,6 +14,7 @@ body {
   color: white;
   font-family: Arial, sans-serif;
 }
+
 .box {
   max-width: 420px;
   margin: 70px auto;
@@ -20,9 +22,10 @@ body {
   background: #1d293b;
   border-radius: 18px;
 }
-h2 { text-align: center; }
+
+h2, h3 { text-align: center; }
+
 input, button {
-  box-sizing: border-box;
   width: 100%;
   padding: 15px;
   margin-top: 15px;
@@ -30,11 +33,42 @@ input, button {
   border-radius: 10px;
   font-size: 16px;
 }
-button {
+
+.password-box {
+  position: relative;
+  margin-top: 15px;
+}
+
+.password-box input {
+  margin-top: 0;
+  padding-right: 55px;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 45px;
+  height: 45px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: #263449;
+  font-size: 23px;
+  cursor: pointer;
+}
+
+button[type="submit"] {
   background: #16a34a;
   color: white;
   font-weight: bold;
+  cursor: pointer;
 }
+
+button:disabled {
+  opacity: 0.6;
+}
+
 #message {
   margin-top: 15px;
   text-align: center;
@@ -43,6 +77,7 @@ button {
 </style>
 </head>
 <body>
+
 <div class="box">
   <h2>🚕 ҮРЖАР TAXI</h2>
   <h3>Жүргізуші кабинеті</h3>
@@ -54,12 +89,24 @@ button {
       placeholder="Телефон нөмірі"
       required
     >
-    <input
-      id="password"
-      type="password"
-      placeholder="Уақытша құпиясөз"
-      required
-    >
+
+    <div class="password-box">
+      <input
+        id="password"
+        type="password"
+        placeholder="Уақытша құпиясөз"
+        required
+      >
+
+      <button
+        type="button"
+        class="toggle-password"
+        id="togglePassword"
+        aria-label="Парольді көрсету"
+        aria-pressed="false"
+      >👁️</button>
+    </div>
+
     <button type="submit">Жүйеге кіру</button>
   </form>
 
@@ -67,11 +114,26 @@ button {
 </div>
 
 <script>
+const passwordInput = document.getElementById("password");
+const togglePassword = document.getElementById("togglePassword");
+
+togglePassword.addEventListener("click", () => {
+  const isHidden = passwordInput.type === "password";
+
+  passwordInput.type = isHidden ? "text" : "password";
+  togglePassword.textContent = isHidden ? "🙈" : "👁️";
+  togglePassword.setAttribute("aria-pressed", String(isHidden));
+  togglePassword.setAttribute(
+    "aria-label",
+    isHidden ? "Парольді жасыру" : "Парольді көрсету"
+  );
+});
+
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const message = document.getElementById("message");
-  const button = e.target.querySelector("button");
+  const button = e.target.querySelector('button[type="submit"]');
 
   button.disabled = true;
   message.textContent = "Тексерілуде...";
@@ -85,7 +147,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
       credentials: "same-origin",
       body: JSON.stringify({
         phone: document.getElementById("phone").value.trim(),
-        password: document.getElementById("password").value
+        password: passwordInput.value
       })
     });
 
@@ -97,7 +159,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     }
 
     message.textContent = "Сәтті кірдіңіз!";
-
     window.location.href = "/driver.html";
 
   } catch (error) {
@@ -107,5 +168,6 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
   }
 });
 </script>
+
 </body>
 </html>
