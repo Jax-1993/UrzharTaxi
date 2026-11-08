@@ -13,7 +13,7 @@ function getAlmatyWeek(date) {
   ));
 
   const start = new Date(monday.getTime() - 5 * 60 * 60 * 1000);
-  const end = new Date(start.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const end = new Date(start.getTime() + 7 * 86400000);
 
   return { start, end };
 }
@@ -108,7 +108,10 @@ async function authenticateDriver(req, URL, KEY) {
 }
 
 export default async function handler(req, res) {
-  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader(
+    "Content-Type",
+    "application/json; charset=utf-8"
+  );
 
   try {
     const URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
@@ -121,7 +124,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Жүргізушіні сессия арқылы тексеру
     const auth = await authenticateDriver(req, URL, KEY);
 
     if (auth.error) {
@@ -133,8 +135,11 @@ export default async function handler(req, res) {
 
     const { driverId, headers } = auth;
 
-    // Хабарламаларды алу
-    if (req.method === "GET" && req.query?.action === "messages") {
+    // ХАБАРЛАМАЛАРДЫ АЛУ
+    if (
+      req.method === "GET" &&
+      req.query?.action === "messages"
+    ) {
       const response = await fetch(
         `${URL}/rest/v1/driver_messages?driver_id=eq.${driverId}&select=id,sender_role,message_type,message,created_at,read_at&order=created_at.asc&limit=200`,
         { headers }
@@ -146,13 +151,20 @@ export default async function handler(req, res) {
 
       const messages = await response.json();
 
+      const unreadCount = messages.filter(
+        item =>
+          item.sender_role === "admin" &&
+          !item.read_at
+      ).length;
+
       return res.status(200).json({
         success: true,
-        messages
+        messages,
+        unreadCount
       });
     }
 
-    // Жүргізушіден хабарлама немесе төлем туралы есеп қабылдау
+    // POST ӘРЕКЕТТЕРІ
     if (req.method === "POST") {
       let body = req.body || {};
 
@@ -167,64 +179,96 @@ export default async function handler(req, res) {
         }
       }
 
-      if (body.action !== "send_message") {
-        return res.status(400).json({
-          success: false,
-          message: "Әрекет дұрыс емес"
-        });
-      }
+      // ХАБАРЛАМАНЫ ОҚЫЛДЫ ДЕП БЕЛГІЛЕУ
+      if (body.action === "mark_read") {
+        const response = await fetch(
+          `${URL}/rest/v1/driver_messages?driver_id=eq.${driverId}&sender_role=eq.admin&read_at=is.null`,
+          {
+            method: "PATCH",
+            headers: {
+              ...headers,
+              Prefer: "return=representation"
+            },
+            body: JSON.stringify({
+              read_at: new Date().toISOString()
+            })
+          }
+        );
 
-      const message = String(body.message || "").trim();
-      const messageType = body.message_type || "text";
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Mark read error:", errorText);
 
-      if (!["text", "payment_report"].includes(messageType)) {
-        return res.status(400).json({
-          success: false,
-          message: "Хабарлама түрі дұрыс емес"
-        });
-      }
-
-      if (!message || message.length > 2000) {
-        return res.status(400).json({
-          success: false,
-          message: "Хабарлама 1–2000 таңба аралығында болуы керек"
-        });
-      }
-
-      const response = await fetch(
-        `${URL}/rest/v1/driver_messages`,
-        {
-          method: "POST",
-          headers: {
-            ...headers,
-            Prefer: "return=representation"
-          },
-          body: JSON.stringify({
-            driver_id: driverId,
-            sender_role: "driver",
-            message_type: messageType,
-            message
-          })
+          throw new Error("Оқылғанын белгілеу қатесі");
         }
-      );
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Message insert error:", errorText);
+        const updated = await response.json();
 
-        throw new Error("Хабарламаны сақтау қатесі");
+        return res.status(200).json({
+          success: true,
+          message: "Хабарламалар оқылды",
+          updatedCount: updated.length
+        });
       }
 
-      const saved = await response.json();
+      // ЖАҢА ХАБАРЛАМА ЖІБЕРУ
+      if (body.action === "send_message") {
+        const message = String(body.message || "").trim();
+        const messageType = body.message_type || "text";
 
-      return res.status(201).json({
-        success: true,
-        message: "Хабарлама жіберілді",
-        data: saved[0] || null
+        if (!["text", "payment_report"].includes(messageType)) {
+          return res.status(400).json({
+            success: false,
+            message: "Хабарлама түрі дұрыс емес"
+          });
+        }
+
+        if (!message || message.length > 2000) {
+          return res.status(400).json({
+            success: false,
+            message: "Хабарлама 1–2000 таңба аралығында болуы керек"
+          });
+        }
+
+        const response = await fetch(
+          `${URL}/rest/v1/driver_messages`,
+          {
+            method: "POST",
+            headers: {
+              ...headers,
+              Prefer: "return=representation"
+            },
+            body: JSON.stringify({
+              driver_id: driverId,
+              sender_role: "driver",
+              message_type: messageType,
+              message
+            })
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Message insert error:", errorText);
+
+          throw new Error("Хабарламаны сақтау қатесі");
+        }
+
+        const saved = await response.json();
+
+        return res.status(201).json({
+          success: true,
+          message: "Хабарлама жіберілді",
+          data: saved[0] || null
+        });
+      }
+
+      return res.status(400).json({
+        success: false,
+        message: "Әрекет дұрыс емес"
       });
     }
 
-    // Бұрынғы статистика тек GET арқылы жұмыс істейді
     if (req.method !== "GET") {
       return res.status(405).json({
         success: false,
@@ -232,16 +276,18 @@ export default async function handler(req, res) {
       });
     }
 
-    const [ordersResponse, commissionsResponse] = await Promise.all([
-      fetch(
-        `${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=eq.completed&select=price,created_at`,
-        { headers }
-      ),
-      fetch(
-        `${URL}/rest/v1/driver_commissions?driver_id=eq.${driverId}&select=commission_amount,status,created_at,paid_at&order=created_at.desc`,
-        { headers }
-      )
-    ]);
+    // СТАТИСТИКА
+    const [ordersResponse, commissionsResponse] =
+      await Promise.all([
+        fetch(
+          `${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=eq.completed&select=price,created_at`,
+          { headers }
+        ),
+        fetch(
+          `${URL}/rest/v1/driver_commissions?driver_id=eq.${driverId}&select=commission_amount,status,created_at,paid_at&order=created_at.desc`,
+          { headers }
+        )
+      ]);
 
     if (!ordersResponse.ok || !commissionsResponse.ok) {
       throw new Error("Статистика деректерін алу қатесі");
@@ -265,6 +311,7 @@ export default async function handler(req, res) {
 
     const weekly = commissions.filter(item => {
       const created = new Date(item.created_at);
+
       return (
         created >= currentWeek.start &&
         created < currentWeek.end
@@ -287,7 +334,7 @@ export default async function handler(req, res) {
         0
       );
 
-    // Төленген комиссияларды төлем күні мен аптасы бойынша топтау
+    // ТӨЛЕМ ТАРИХЫ
     const historyMap = new Map();
 
     commissions
@@ -312,11 +359,16 @@ export default async function handler(req, res) {
         }
 
         const record = historyMap.get(key);
-        record.amount += Number(item.commission_amount || 0);
+
+        record.amount += Number(
+          item.commission_amount || 0
+        );
+
         record.ridesCount += 1;
       });
 
-    const paymentHistory = Array.from(historyMap.values())
+    const paymentHistory = Array
+      .from(historyMap.values())
       .map(item => ({
         ...item,
         amount: Number(item.amount.toFixed(2))
