@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="kk">
 <head>
@@ -32,9 +33,80 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .sound-button{width:100%;background:#53647c;color:white}
 .sound-button.active{background:#16834a}
 .sound-info{font-size:13px;color:#c5cede;margin-top:8px}
+
+/* ЖЕКЕ ХАБАРЛАМА */
+.chat-box{
+  background:#151e2d;
+  border-radius:12px;
+  padding:12px;
+  height:320px;
+  overflow-y:auto;
+  margin:12px 0;
+}
+.chat-message{
+  max-width:88%;
+  padding:11px;
+  border-radius:12px;
+  margin:10px 0;
+  overflow-wrap:anywhere;
+}
+.chat-message.admin{
+  background:#35445b;
+  margin-right:auto;
+}
+.chat-message.driver{
+  background:#175b43;
+  margin-left:auto;
+}
+.chat-sender{
+  color:#ffcc00;
+  font-size:12px;
+  font-weight:bold;
+  margin-bottom:6px;
+}
+.chat-text{
+  white-space:pre-wrap;
+  line-height:1.4;
+}
+.chat-time{
+  color:#c5cede;
+  font-size:11px;
+  margin-top:7px;
+  text-align:right;
+}
+.chat-input{
+  width:100%;
+  min-height:75px;
+  resize:vertical;
+  border:1px solid #53647c;
+  border-radius:10px;
+  padding:12px;
+  background:#151e2d;
+  color:white;
+  font:14px Arial,sans-serif;
+}
+.chat-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.chat-actions button{
+  flex:1;
+}
+.payment-report-button{
+  width:100%;
+  background:#16834a;
+  color:white;
+}
+.chat-note{
+  color:#b9c2d0;
+  font-size:12px;
+  line-height:1.5;
+}
 @media(max-width:380px){
  .stat strong{font-size:18px}
  button{width:100%}
+ .chat-message{max-width:95%}
 }
 </style>
 </head>
@@ -99,6 +171,50 @@ button:disabled{opacity:.5;cursor:not-allowed}
 </div>
 </div>
 
+<!-- ӘКІМШІМЕН ЖЕКЕ ХАБАРЛАМА -->
+<div class="card">
+<h3>💬 Әкімшімен байланыс</h3>
+
+<p class="chat-note">
+Бұл — әкімшімен жеке хат алмасу бөлімі. Хабарламаларды тек сіз және әкімші көре аласыз.
+</p>
+
+<div id="chatMessages" class="chat-box">
+<div class="muted">Хабарламалар жүктелуде...</div>
+</div>
+
+<textarea
+  id="chatInput"
+  class="chat-input"
+  maxlength="2000"
+  placeholder="Әкімшіге хабарлама жазыңыз..."
+></textarea>
+
+<div class="chat-actions">
+<button id="sendChatButton" onclick="sendChatMessage()">
+📨 Жіберу
+</button>
+
+<button id="refreshChatButton" onclick="loadMessages()">
+🔄 Чатты жаңарту
+</button>
+</div>
+
+<button
+  id="paymentReportButton"
+  class="payment-report-button"
+  onclick="sendPaymentReport()"
+>
+💳 Комиссияны төледім
+</button>
+
+<p id="chatStatus" class="muted"></p>
+
+<p class="chat-note">
+Ескерту: «Комиссияны төледім» батырмасы әкімшіге хабарлама жібереді. Комиссия әкімші төлемді тексеріп, растағаннан кейін ғана төленді болып есептеледі.
+</p>
+</div>
+
 <div class="card">
 <h3 class="section-title">🆕 Жаңа тапсырыстар</h3>
 <div id="newOrders" class="muted">Жүктелуде...</div>
@@ -129,6 +245,7 @@ let audioContext = null;
 let knownOrderIds = new Set();
 let firstOrdersLoaded = false;
 let polling = false;
+let chatLoading = false;
 
 function dateText(value) {
   if (!value) return "Көрсетілмеген";
@@ -199,6 +316,12 @@ function showMessage(text, type = "muted") {
   const message = document.getElementById("message");
   message.textContent = text;
   message.className = type;
+}
+
+function showChatStatus(text, type = "muted") {
+  const element = document.getElementById("chatStatus");
+  element.textContent = text;
+  element.className = type;
 }
 
 function statusText(status) {
@@ -364,6 +487,160 @@ async function loadStats() {
   }
 
   renderPaymentHistory(data.paymentHistory);
+}
+
+/* ӘКІМШІМЕН ЖЕКЕ ХАБАРЛАМА */
+
+function renderMessages(messages) {
+  const container = document.getElementById("chatMessages");
+  const wasNearBottom =
+    container.scrollHeight - container.scrollTop - container.clientHeight < 70;
+
+  container.replaceChildren();
+
+  if (!Array.isArray(messages) || messages.length === 0) {
+    container.textContent = "Әзірге хабарлама жоқ.";
+    return;
+  }
+
+  messages.forEach(item => {
+    const bubble = document.createElement("div");
+
+    bubble.className =
+      "chat-message " +
+      (item.sender_role === "admin" ? "admin" : "driver");
+
+    const sender = document.createElement("div");
+    sender.className = "chat-sender";
+
+    if (item.sender_role === "admin") {
+      sender.textContent = "👨‍💼 Әкімші";
+    } else {
+      sender.textContent = "🚕 Сіз";
+    }
+
+    bubble.appendChild(sender);
+
+    if (item.message_type === "payment_report") {
+      const label = document.createElement("div");
+      label.className = "chat-sender";
+      label.textContent = "💳 КОМИССИЯ ТӨЛЕМІ ТУРАЛЫ ХАБАРЛАМА";
+      bubble.appendChild(label);
+    }
+
+    if (item.message_type === "admin_notice") {
+      const label = document.createElement("div");
+      label.className = "chat-sender";
+      label.textContent = "📢 ӘКІМШІНІҢ ХАБАРЛАМАСЫ";
+      bubble.appendChild(label);
+    }
+
+    const messageText = document.createElement("div");
+    messageText.className = "chat-text";
+    messageText.textContent = item.message || "";
+
+    bubble.appendChild(messageText);
+
+    const time = document.createElement("div");
+    time.className = "chat-time";
+    time.textContent = dateText(item.created_at);
+
+    bubble.appendChild(time);
+    container.appendChild(bubble);
+  });
+
+  if (wasNearBottom) {
+    container.scrollTop = container.scrollHeight;
+  }
+}
+
+async function loadMessages() {
+  if (chatLoading) return;
+  chatLoading = true;
+
+  try {
+    const data = await api("/api/driver-stats?action=messages");
+    renderMessages(data.messages || []);
+    showChatStatus("Хабарламалар жаңартылды", "success");
+  } catch (error) {
+    showChatStatus(error.message, "error");
+  } finally {
+    chatLoading = false;
+  }
+}
+
+async function sendChatMessage() {
+  const input = document.getElementById("chatInput");
+  const button = document.getElementById("sendChatButton");
+  const message = input.value.trim();
+
+  if (!message) {
+    showChatStatus("Алдымен хабарлама жазыңыз", "error");
+    return;
+  }
+
+  if (message.length > 2000) {
+    showChatStatus("Хабарлама 2000 таңбадан аспауы керек", "error");
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = "Жіберіліп жатыр...";
+
+  try {
+    await api("/api/driver-stats", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "send_message",
+        message_type: "text",
+        message
+      })
+    });
+
+    input.value = "";
+    await loadMessages();
+    showChatStatus("Хабарлама әкімшіге жіберілді", "success");
+
+  } catch (error) {
+    showChatStatus(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "📨 Жіберу";
+  }
+}
+
+async function sendPaymentReport() {
+  const button = document.getElementById("paymentReportButton");
+
+  if (!confirm(
+    "Комиссияны шынымен төлегеніңізді растайсыз ба? Әкімшіге хабарлама жіберіледі."
+  )) return;
+
+  button.disabled = true;
+  button.textContent = "Жіберіліп жатыр...";
+
+  try {
+    await api("/api/driver-stats", {
+      method: "POST",
+      body: JSON.stringify({
+        action: "send_message",
+        message_type: "payment_report",
+        message: "Мен апталық комиссияны төледім. Төлемді тексеріп, растауыңызды сұраймын."
+      })
+    });
+
+    await loadMessages();
+    showChatStatus(
+      "Төлем туралы хабарлама әкімшіге жіберілді. Әкімшінің растауын күтіңіз.",
+      "success"
+    );
+
+  } catch (error) {
+    showChatStatus(error.message, "error");
+  } finally {
+    button.disabled = false;
+    button.textContent = "💳 Комиссияны төледім";
+  }
 }
 
 /* ТАПСЫРЫСТАР */
@@ -547,7 +824,8 @@ async function loadAll() {
 
   const results = await Promise.allSettled([
     loadStats(),
-    loadOrders()
+    loadOrders(),
+    loadMessages()
   ]);
 
   const errors = results
