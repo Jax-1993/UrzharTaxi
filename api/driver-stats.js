@@ -1,3 +1,4 @@
+
 import crypto from "crypto";
 
 function getAlmatyWeek(date) {
@@ -17,18 +18,100 @@ function getAlmatyWeek(date) {
   return { start, end };
 }
 
+async function authenticateDriver(req, URL, KEY) {
+  const cookies = (req.headers.cookie || "")
+    .split(";")
+    .map(x => x.trim());
+
+  const cookie = cookies.find(x =>
+    x.startsWith("urzhar_driver_session=")
+  );
+
+  if (!cookie) {
+    return { error: "Алдымен жүйеге кіріңіз", status: 401 };
+  }
+
+  let token;
+
+  try {
+    token = decodeURIComponent(
+      cookie.split("=").slice(1).join("=")
+    );
+  } catch {
+    return { error: "Сессия дұрыс емес", status: 401 };
+  }
+
+  const parts = token.split(".");
+
+  if (parts.length !== 3) {
+    return { error: "Сессия дұрыс емес", status: 401 };
+  }
+
+  const [driverId, expires, signature] = parts;
+
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  if (
+    !uuid.test(driverId) ||
+    !/^\d+$/.test(expires) ||
+    Number(expires) < Date.now()
+  ) {
+    return {
+      error: "Сессия мерзімі аяқталған",
+      status: 401
+    };
+  }
+
+  const expected = crypto
+    .createHmac("sha256", KEY)
+    .update(`urzhar-driver:${driverId}:${expires}`)
+    .digest("hex");
+
+  const a = Buffer.from(signature, "hex");
+  const b = Buffer.from(expected, "hex");
+
+  if (
+    a.length !== b.length ||
+    !crypto.timingSafeEqual(a, b)
+  ) {
+    return {
+      error: "Сессия расталмады",
+      status: 401
+    };
+  }
+
+  const headers = {
+    apikey: KEY,
+    Authorization: `Bearer ${KEY}`,
+    "Content-Type": "application/json"
+  };
+
+  const driverResponse = await fetch(
+    `${URL}/rest/v1/drivers?id=eq.${driverId}&select=id`,
+    { headers }
+  );
+
+  if (!driverResponse.ok) {
+    throw new Error("Жүргізушіні тексеру қатесі");
+  }
+
+  const drivers = await driverResponse.json();
+
+  if (!drivers.length) {
+    return {
+      error: "Жүргізуші табылмады",
+      status: 403
+    };
+  }
+
+  return { driverId, headers };
+}
+
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
 
-  if (req.method !== "GET") {
-    return res.status(405).json({
-      success: false,
-      message: "Тек GET сұранысы қабылданады"
-    });
-  }
-
   try {
-    const URL = process.env.SUPABASE_URL;
+    const URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
     const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!URL || !KEY) {
@@ -38,89 +121,114 @@ export default async function handler(req, res) {
       });
     }
 
-    const cookies = (req.headers.cookie || "")
-      .split(";")
-      .map(x => x.trim());
+    // Жүргізушіні сессия арқылы тексеру
+    const auth = await authenticateDriver(req, URL, KEY);
 
-    const cookie = cookies.find(x =>
-      x.startsWith("urzhar_driver_session=")
-    );
-
-    if (!cookie) {
-      return res.status(401).json({
+    if (auth.error) {
+      return res.status(auth.status).json({
         success: false,
-        message: "Алдымен жүйеге кіріңіз"
+        message: auth.error
       });
     }
 
-    const token = decodeURIComponent(
-      cookie.split("=").slice(1).join("=")
-    );
+    const { driverId, headers } = auth;
 
-    const parts = token.split(".");
+    // Хабарламаларды алу
+    if (req.method === "GET" && req.query?.action === "messages") {
+      const response = await fetch(
+        `${URL}/rest/v1/driver_messages?driver_id=eq.${driverId}&select=id,sender_role,message_type,message,created_at,read_at&order=created_at.asc&limit=200`,
+        { headers }
+      );
 
-    if (parts.length !== 3) {
-      return res.status(401).json({
-        success: false,
-        message: "Сессия дұрыс емес"
+      if (!response.ok) {
+        throw new Error("Хабарламаларды алу қатесі");
+      }
+
+      const messages = await response.json();
+
+      return res.status(200).json({
+        success: true,
+        messages
       });
     }
 
-    const [driverId, expires, signature] = parts;
+    // Жүргізушіден хабарлама немесе төлем туралы есеп қабылдау
+    if (req.method === "POST") {
+      let body = req.body || {};
 
-    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          return res.status(400).json({
+            success: false,
+            message: "Сұраныс форматы дұрыс емес"
+          });
+        }
+      }
 
-    if (
-      !uuid.test(driverId) ||
-      !/^\d+$/.test(expires) ||
-      Number(expires) < Date.now()
-    ) {
-      return res.status(401).json({
-        success: false,
-        message: "Сессия мерзімі аяқталған"
+      if (body.action !== "send_message") {
+        return res.status(400).json({
+          success: false,
+          message: "Әрекет дұрыс емес"
+        });
+      }
+
+      const message = String(body.message || "").trim();
+      const messageType = body.message_type || "text";
+
+      if (!["text", "payment_report"].includes(messageType)) {
+        return res.status(400).json({
+          success: false,
+          message: "Хабарлама түрі дұрыс емес"
+        });
+      }
+
+      if (!message || message.length > 2000) {
+        return res.status(400).json({
+          success: false,
+          message: "Хабарлама 1–2000 таңба аралығында болуы керек"
+        });
+      }
+
+      const response = await fetch(
+        `${URL}/rest/v1/driver_messages`,
+        {
+          method: "POST",
+          headers: {
+            ...headers,
+            Prefer: "return=representation"
+          },
+          body: JSON.stringify({
+            driver_id: driverId,
+            sender_role: "driver",
+            message_type: messageType,
+            message
+          })
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Message insert error:", errorText);
+
+        throw new Error("Хабарламаны сақтау қатесі");
+      }
+
+      const saved = await response.json();
+
+      return res.status(201).json({
+        success: true,
+        message: "Хабарлама жіберілді",
+        data: saved[0] || null
       });
     }
 
-    const expected = crypto
-      .createHmac("sha256", KEY)
-      .update(`urzhar-driver:${driverId}:${expires}`)
-      .digest("hex");
-
-    const a = Buffer.from(signature, "hex");
-    const b = Buffer.from(expected, "hex");
-
-    if (
-      a.length !== b.length ||
-      !crypto.timingSafeEqual(a, b)
-    ) {
-      return res.status(401).json({
+    // Бұрынғы статистика тек GET арқылы жұмыс істейді
+    if (req.method !== "GET") {
+      return res.status(405).json({
         success: false,
-        message: "Сессия расталмады"
-      });
-    }
-
-    const headers = {
-      apikey: KEY,
-      Authorization: `Bearer ${KEY}`,
-      "Content-Type": "application/json",
-      Range: "0-9999"
-    };
-
-    const driverResponse = await fetch(
-      `${URL}/rest/v1/drivers?id=eq.${driverId}&select=id`,
-      { headers }
-    );
-
-    if (!driverResponse.ok) {
-      throw new Error("Жүргізушіні тексеру қатесі");
-    }
-
-    const drivers = await driverResponse.json();
-
-    if (!drivers.length) {
-      return res.status(403).json({
-        success: false,
-        message: "Жүргізуші табылмады"
+        message: "Әдіс қабылданбайды"
       });
     }
 
@@ -241,7 +349,7 @@ export default async function handler(req, res) {
 
     return res.status(500).json({
       success: false,
-      message: "Статистиканы алу мүмкін болмады"
+      message: "Сұранысты орындау мүмкін болмады"
     });
   }
 }
