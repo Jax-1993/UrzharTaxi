@@ -3,36 +3,27 @@ import crypto from "crypto";
 
 function verifyAdmin(req, password) {
   const cookie = req.headers.cookie || "";
-  const match = cookie.match(
-    /(?:^|;\s*)urzhar_admin_session=([^;]+)/
-  );
-
+  const match = cookie.match(/(?:^|;\s*)urzhar_admin_session=([^;]+)/);
   if (!match) return false;
 
   const parts = match[1].split(".");
   if (parts.length !== 2) return false;
 
   const expires = Number(parts[0]);
-  const receivedSignature = parts[1];
+  const signature = parts[1];
 
-  if (!Number.isFinite(expires) || expires <= Date.now()) {
-    return false;
-  }
+  if (!Number.isFinite(expires) || expires <= Date.now()) return false;
+  if (!/^[a-f0-9]{64}$/i.test(signature)) return false;
 
-  if (!/^[a-f0-9]{64}$/i.test(receivedSignature)) {
-    return false;
-  }
-
-  const expectedSignature = crypto
-    .createHmac("sha256", password)
+  const expected = crypto.createHmac("sha256", password)
     .update("urzhar-admin:" + expires)
     .digest("hex");
 
-  const received = Buffer.from(receivedSignature, "hex");
-  const expected = Buffer.from(expectedSignature, "hex");
+  const receivedBuffer = Buffer.from(signature, "hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
 
-  return received.length === expected.length &&
-    crypto.timingSafeEqual(received, expected);
+  return receivedBuffer.length === expectedBuffer.length &&
+    crypto.timingSafeEqual(receivedBuffer, expectedBuffer);
 }
 
 async function supabase(path, options = {}) {
@@ -119,12 +110,12 @@ export default async function handler(req, res) {
   }
 
   try {
-    // GET: комиссиялар, жүргізушілер немесе жеке хаттар
+    // GET
     if (req.method === "GET") {
       const action = req.query?.action;
       const driverId = req.query?.driver_id;
 
-      // Әкімші мен жүргізуші арасындағы хаттарды оқу
+      // Әкімші чатты ашқанда жүргізушінің хаттарын оқылды деп белгілеу
       if (action === "messages") {
         if (!validDriverId(driverId)) {
           return res.status(400).json({
@@ -137,18 +128,59 @@ export default async function handler(req, res) {
           `driver_messages?select=id,driver_id,sender_role,message_type,message,created_at,read_at&driver_id=eq.${encodeURIComponent(driverId)}&order=created_at.asc&limit=200`
         );
 
+        const unread = (messages || []).filter(
+          m => m.sender_role === "driver" && !m.read_at
+        );
+
+        if (unread.length > 0) {
+          const now = new Date().toISOString();
+
+          await supabase(
+            `driver_messages?driver_id=eq.${encodeURIComponent(driverId)}&sender_role=eq.driver&read_at=is.null`,
+            {
+              method: "PATCH",
+              headers: {
+                Prefer: "return=minimal"
+              },
+              body: JSON.stringify({ read_at: now })
+            }
+          );
+
+          for (const message of messages) {
+            if (message.sender_role === "driver" && !message.read_at) {
+              message.read_at = now;
+            }
+          }
+        }
+
         return res.status(200).json({
           success: true,
           messages: messages || []
         });
       }
 
-      const [commissions, drivers] = await Promise.all([
+      const [commissions, drivers, unreadRows] = await Promise.all([
         supabase(
           "driver_commissions?select=id,driver_id,order_id,ride_price,commission_amount,status,created_at,paid_at&order=created_at.desc&limit=5000"
         ),
-        supabase("drivers?select=id,full_name,phone")
+        supabase("drivers?select=id,full_name,phone"),
+        supabase(
+          "driver_messages?select=driver_id&sender_role=eq.driver&read_at=is.null&limit=10000"
+        )
       ]);
+
+      // Әр жүргізушінің оқылмаған хат санын есептеу
+      const unreadCounts = {};
+
+      for (const row of unreadRows || []) {
+        unreadCounts[row.driver_id] =
+          (unreadCounts[row.driver_id] || 0) + 1;
+      }
+
+      const driversWithUnread = (drivers || []).map(driver => ({
+        ...driver,
+        unread_messages: unreadCounts[driver.id] || 0
+      }));
 
       const driverMap = new Map(
         drivers.map(d => [d.id, d])
@@ -240,15 +272,23 @@ export default async function handler(req, res) {
         success: true,
         commissions: result,
         payment_history: paymentHistory,
-        drivers: drivers || []
+        drivers: driversWithUnread
       });
     }
 
-    // POST: хабарлама жіберу немесе комиссияны төленді деп белгілеу
+    // POST
     if (req.method === "POST") {
-      const body = req.body || {};
+      let body = req.body || {};
 
-      // Әкімшіден жүргізушіге жеке хабарлама
+      if (typeof body === "string") {
+        try {
+          body = JSON.parse(body);
+        } catch {
+          body = {};
+        }
+      }
+
+      // Әкімшіден жүргізушіге хат жіберу
       if (body.action === "send_message") {
         const driver_id = body.driver_id;
         const message = String(body.message || "").trim();
@@ -306,7 +346,7 @@ export default async function handler(req, res) {
         });
       }
 
-      // Бұрынғы комиссия төлемін растау қызметі
+      // Бұрынғы комиссия төлемін растау
       const {
         driver_id,
         week_start,
