@@ -1,0 +1,267 @@
+
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ҮРЖАР TAXI — GPS бақылау</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:#101522;
+  color:#fff;
+  font-family:Arial,sans-serif;
+}
+header{
+  background:#ffd400;
+  color:#111;
+  padding:18px;
+  text-align:center;
+  font-weight:bold;
+  font-size:21px;
+}
+main{
+  max-width:650px;
+  margin:auto;
+  padding:16px;
+}
+.card{
+  background:#202a3b;
+  padding:18px;
+  border-radius:14px;
+  margin-bottom:15px;
+}
+h2{margin-top:0;font-size:19px}
+.status{
+  padding:12px;
+  background:#303d52;
+  border-radius:9px;
+  line-height:1.5;
+  margin:12px 0;
+}
+#map{
+  width:100%;
+  height:350px;
+  border-radius:12px;
+  background:#ddd;
+}
+button{
+  width:100%;
+  border:0;
+  border-radius:10px;
+  padding:15px;
+  margin-top:10px;
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.start{background:#ffd400;color:#111}
+.stop{background:#e54848;color:white}
+.small{
+  color:#c5cede;
+  font-size:13px;
+  line-height:1.5;
+}
+</style>
+</head>
+
+<body>
+
+<header>🚕 ҮРЖАР TAXI</header>
+
+<main>
+
+<div class="card">
+  <h2>📍 Жүргізушінің орнын бақылау</h2>
+
+  <div id="status" class="status">
+    Бақылау әлі басталған жоқ.
+  </div>
+
+  <button id="startBtn" class="start" onclick="startTracking()">
+    📍 Бақылауды бастау
+  </button>
+
+  <button id="stopBtn" class="stop" onclick="stopTracking()" style="display:none">
+    Бақылауды тоқтату
+  </button>
+
+  <p class="small">
+    Жүргізушінің орны тек тапсырыс қабылданып,
+    жүргізуші GPS бөлісуге рұқсат берген жағдайда көрінеді.
+    Бақылауды кез келген уақытта тоқтатуға болады.
+  </p>
+</div>
+
+<div class="card">
+  <h2>🗺️ Жүргізушінің картасы</h2>
+  <div id="map"></div>
+  <p class="small" id="updated">GPS дерегі әлі алынған жоқ.</p>
+</div>
+
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
+const trackingToken = sessionStorage.getItem("urzhar_taxi_tracking_token");
+
+const statusBox = document.getElementById("status");
+const startBtn = document.getElementById("startBtn");
+const stopBtn = document.getElementById("stopBtn");
+const updatedBox = document.getElementById("updated");
+
+let timer = null;
+let marker = null;
+let map = null;
+let active = false;
+
+map = L.map("map").setView([47.09, 81.63], 13);
+
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  attribution: "&copy; OpenStreetMap"
+}).addTo(map);
+
+function showStatus(message) {
+  statusBox.textContent = message;
+}
+
+function getCoordinates(data) {
+  const location = data.driverLocation || data.location || data;
+
+  const latitude =
+    location.latitude ??
+    location.driver_current_latitude ??
+    location.lat;
+
+  const longitude =
+    location.longitude ??
+    location.driver_current_longitude ??
+    location.lng ??
+    location.lon;
+
+  if (
+    typeof latitude !== "number" ||
+    typeof longitude !== "number" ||
+    !Number.isFinite(latitude) ||
+    !Number.isFinite(longitude) ||
+    Math.abs(latitude) > 90 ||
+    Math.abs(longitude) > 180
+  ) {
+    return null;
+  }
+
+  return { latitude, longitude };
+}
+
+async function loadDriverLocation() {
+  if (!active) return;
+
+  try {
+    const response = await fetch("/api/passenger-driver-location", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        orderId: orderId,
+        trackingToken: trackingToken
+      })
+    });
+
+    if (response.status === 403) {
+      showStatus(
+        "⏳ Жүргізуші әлі тағайындалмаған немесе GPS бөлісуді бастамаған. Күте тұрыңыз."
+      );
+      return;
+    }
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "GPS дерегін алу мүмкін болмады.");
+    }
+
+    const coords = getCoordinates(data);
+
+    if (!coords) {
+      showStatus("⏳ Жүргізушінің GPS дерегі әлі түскен жоқ.");
+      return;
+    }
+
+    const point = [
+      coords.latitude,
+      coords.longitude
+    ];
+
+    if (!marker) {
+      marker = L.marker(point).addTo(map);
+      marker.bindPopup("🚕 Жүргізуші");
+    } else {
+      marker.setLatLng(point);
+    }
+
+    map.setView(point, 16);
+
+    showStatus("🟢 Жүргізушінің GPS орны алынды.");
+    updatedBox.textContent =
+      "Соңғы жаңарту: " +
+      new Date().toLocaleTimeString("kk-KZ");
+
+  } catch (error) {
+    showStatus("Қате: " + error.message);
+  }
+}
+
+function startTracking() {
+  if (!orderId || !trackingToken) {
+    showStatus(
+      "Тапсырыс коды табылмады. Алдымен негізгі беттен жаңа тапсырыс беріңіз."
+    );
+    return;
+  }
+
+  if (active) return;
+
+  active = true;
+
+  startBtn.style.display = "none";
+  stopBtn.style.display = "block";
+
+  showStatus("⏳ Жүргізушінің GPS орнын күтіп жатырмыз...");
+
+  loadDriverLocation();
+
+  timer = setInterval(loadDriverLocation, 5000);
+}
+
+function stopTracking() {
+  active = false;
+
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  startBtn.style.display = "block";
+  stopBtn.style.display = "none";
+
+  showStatus("Бақылау тоқтатылды.");
+}
+
+window.addEventListener("pagehide", stopTracking);
+
+if (!orderId || !trackingToken) {
+  showStatus(
+    "Бұл бетке кіру үшін алдымен тапсырыс беру қажет."
+  );
+}
+</script>
+
+</body>
+</html>
