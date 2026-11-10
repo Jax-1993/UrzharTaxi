@@ -110,12 +110,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // GET
     if (req.method === "GET") {
       const action = req.query?.action;
       const driverId = req.query?.driver_id;
 
-      // Әкімші чатты ашқанда жүргізушінің хаттарын оқылды деп белгілеу
       if (action === "messages") {
         if (!validDriverId(driverId)) {
           return res.status(400).json({
@@ -163,13 +161,14 @@ export default async function handler(req, res) {
         supabase(
           "driver_commissions?select=id,driver_id,order_id,ride_price,commission_amount,status,created_at,paid_at&order=created_at.desc&limit=5000"
         ),
-        supabase("drivers?select=id,full_name,phone"),
+        supabase(
+          "drivers?select=id,full_name,phone,is_blocked,deleted_at"
+        ),
         supabase(
           "driver_messages?select=driver_id&sender_role=eq.driver&read_at=is.null&limit=10000"
         )
       ]);
 
-      // Әр жүргізушінің оқылмаған хат санын есептеу
       const unreadCounts = {};
 
       for (const row of unreadRows || []) {
@@ -179,17 +178,19 @@ export default async function handler(req, res) {
 
       const driversWithUnread = (drivers || []).map(driver => ({
         ...driver,
+        is_blocked: driver.is_blocked === true,
+        deleted_at: driver.deleted_at || null,
         unread_messages: unreadCounts[driver.id] || 0
       }));
 
       const driverMap = new Map(
-        drivers.map(d => [d.id, d])
+        (drivers || []).map(d => [d.id, d])
       );
 
       const groups = new Map();
       const history = new Map();
 
-      for (const row of commissions) {
+      for (const row of commissions || []) {
         const week = getWeek(row.created_at);
         const driver = driverMap.get(row.driver_id) || {};
         const price = Number(row.ride_price || 0);
@@ -276,7 +277,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // POST
     if (req.method === "POST") {
       let body = req.body || {};
 
@@ -288,7 +288,6 @@ export default async function handler(req, res) {
         }
       }
 
-      // Әкімшіден жүргізушіге хат жіберу
       if (body.action === "send_message") {
         const driver_id = body.driver_id;
         const message = String(body.message || "").trim();
@@ -346,7 +345,6 @@ export default async function handler(req, res) {
         });
       }
 
-      // Бұрынғы комиссия төлемін растау
       const {
         driver_id,
         week_start,
