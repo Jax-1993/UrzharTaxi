@@ -44,6 +44,13 @@ function getDriverSession(req, secret) {
   return driverId;
 }
 
+function clearSession(res) {
+  res.setHeader(
+    "Set-Cookie",
+    `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`
+  );
+}
+
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   res.setHeader("Cache-Control", "no-store");
@@ -78,7 +85,7 @@ export default async function handler(req, res) {
     const cleanUrl = supabaseUrl.replace(/\/$/, "");
 
     const response = await fetch(
-      `${cleanUrl}/rest/v1/drivers?id=eq.${encodeURIComponent(driverId)}&select=id,full_name,phone,car_brand,car_model,car_number,car_class&limit=1`,
+      `${cleanUrl}/rest/v1/drivers?id=eq.${encodeURIComponent(driverId)}&select=id,full_name,phone,car_brand,car_model,car_number,car_class,is_blocked,block_reason&limit=1`,
       {
         headers: {
           apikey: serviceKey,
@@ -90,6 +97,7 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       console.error("Driver session DB error:", response.status);
+
       return res.status(502).json({
         success: false,
         message: "Дерекқормен байланыс қатесі"
@@ -100,9 +108,23 @@ export default async function handler(req, res) {
     const driver = drivers[0];
 
     if (!driver) {
+      clearSession(res);
+
       return res.status(401).json({
         success: false,
         message: "Жүргізуші табылмады"
+      });
+    }
+
+    if (driver.is_blocked === true) {
+      clearSession(res);
+
+      return res.status(403).json({
+        success: false,
+        blocked: true,
+        message: "Аккаунтыңыз уақытша бұғатталған",
+        reason: driver.block_reason ||
+          "Толық ақпарат алу үшін әкімшіге хабарласыңыз"
       });
     }
 
