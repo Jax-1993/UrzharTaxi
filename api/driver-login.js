@@ -22,7 +22,9 @@ async function verifyPassword(password, storedHash) {
   if (typeof storedHash !== "string") return false;
 
   const parts = storedHash.split("$");
-  if (parts.length !== 3 || parts[0] !== "scrypt") return false;
+  if (parts.length !== 3 || parts[0] !== "scrypt") {
+    return false;
+  }
 
   const [_, salt, hash] = parts;
   const storedKey = Buffer.from(hash, "hex");
@@ -79,7 +81,7 @@ export default async function handler(req, res) {
     const cleanPhone = phone.trim();
 
     const response = await fetch(
-      `${cleanUrl}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,full_name,phone,password_hash&limit=1`,
+      `${cleanUrl}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,full_name,phone,password_hash,is_blocked,block_reason&limit=1`,
       {
         headers: {
           apikey: serviceKey,
@@ -117,6 +119,21 @@ export default async function handler(req, res) {
       return res.status(401).json({
         success: false,
         message: "Телефон немесе құпиясөз қате"
+      });
+    }
+
+    // Бұғатталған жүргізушіні кіргізбеу
+    if (driver.is_blocked === true) {
+      res.setHeader(
+        "Set-Cookie",
+        `${COOKIE_NAME}=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0`
+      );
+
+      return res.status(403).json({
+        success: false,
+        blocked: true,
+        message: "Аккаунтыңыз уақытша бұғатталған.",
+        reason: driver.block_reason || "Комиссия немесе әкімшілік мәселе бойынша әкімшіге хабарласыңыз."
       });
     }
 
