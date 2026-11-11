@@ -9,7 +9,14 @@ function getDriverId(req, secret) {
 
   if (!match) return null;
 
-  const parts = decodeURIComponent(match[1]).split(".");
+  let parts;
+
+  try {
+    parts = decodeURIComponent(match[1]).split(".");
+  } catch {
+    return null;
+  }
+
   if (parts.length !== 3) return null;
 
   const [driverId, expiresText, signature] = parts;
@@ -55,6 +62,45 @@ async function dbGet(url, key) {
   }
 
   return data;
+}
+
+// Қазақстан уақытына айналдыру
+function addOrderDateTime(order) {
+  if (!order.created_at) {
+    return {
+      ...order,
+      order_date: null,
+      order_time: null
+    };
+  }
+
+  const date = new Date(order.created_at);
+
+  if (Number.isNaN(date.getTime())) {
+    return {
+      ...order,
+      order_date: null,
+      order_time: null
+    };
+  }
+
+  return {
+    ...order,
+
+    order_date: new Intl.DateTimeFormat("kk-KZ", {
+      timeZone: "Asia/Almaty",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }).format(date),
+
+    order_time: new Intl.DateTimeFormat("kk-KZ", {
+      timeZone: "Asia/Almaty",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).format(date)
+  };
 }
 
 export default async function handler(req, res) {
@@ -132,14 +178,18 @@ export default async function handler(req, res) {
       dbGet(myUrl.toString(), serviceKey)
     ]);
 
+    // Әр тапсырысқа күн мен уақыт қосу
+    const formattedNewOrders = newOrders.map(addOrderDateTime);
+    const formattedMyOrders = myOrders.map(addOrderDateTime);
+
     return res.status(200).json({
       success: true,
       driver: {
         id: driver.id,
         full_name: driver.full_name
       },
-      new_orders: newOrders,
-      my_orders: myOrders
+      new_orders: formattedNewOrders,
+      my_orders: formattedMyOrders
     });
 
   } catch (error) {
