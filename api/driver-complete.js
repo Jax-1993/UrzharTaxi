@@ -1,4 +1,3 @@
-
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -64,7 +63,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ДҰРЫС СЕССИЯ ҚОЛТАҢБАСЫ
     const expected = crypto
       .createHmac("sha256", SERVICE_KEY)
       .update(`urzhar-driver:${driverId}:${expires}`)
