@@ -1,3 +1,4 @@
+
 import crypto from "crypto";
 
 export default async function handler(req, res) {
@@ -50,7 +51,7 @@ export default async function handler(req, res) {
       });
     }
 
-    // 2. Жолаушыға жеке GPS токенін жасау
+    // 2. Жолаушыға GPS токенін жасау
     const trackingToken = crypto.randomBytes(32).toString("hex");
 
     const trackingTokenHash = crypto
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
 
     const carClass = carClassMap[car] || "economy";
 
-    // 4. Supabase-ке сақталатын мәлімет
+    // 4. Supabase мәліметтері
     const orderData = {
       passenger_name: String(name).trim(),
       passenger_phone: String(phone).trim(),
@@ -103,7 +104,8 @@ export default async function handler(req, res) {
       }
     }
 
-    // 5. Supabase-ке тапсырысты сақтау
+    // 5. Тапсырысты Supabase-ке сақтау
+    // created_at бағанын база автоматты толтырады
     const dbResponse = await fetch(
       `${supabaseUrl.replace(/\/$/, "")}/rest/v1/orders`,
       {
@@ -134,8 +136,26 @@ export default async function handler(req, res) {
       });
     }
 
-    // 6. Сақталған тапсырыстың ID нөмірі
-    const orderId = dbResult[0].id;
+    // 6. Тапсырыс нөмірі және нақты сақталған уақыт
+    const savedOrder = dbResult[0];
+    const orderId = savedOrder.id;
+
+    const createdAt = savedOrder.created_at || new Date().toISOString();
+    const orderDateObject = new Date(createdAt);
+
+    const orderDate = new Intl.DateTimeFormat("kk-KZ", {
+      timeZone: "Asia/Almaty",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric"
+    }).format(orderDateObject);
+
+    const orderTime = new Intl.DateTimeFormat("kk-KZ", {
+      timeZone: "Asia/Almaty",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23"
+    }).format(orderDateObject);
 
     // 7. Telegram хабарламасы
     const token = process.env.TELEGRAM_BOT_TOKEN;
@@ -148,6 +168,8 @@ export default async function handler(req, res) {
         const message =
           "🚕 ҮРЖАР TAXI — ЖАҢА ТАПСЫРЫС\n\n" +
           "🆔 Тапсырыс: " + orderId + "\n" +
+          "📅 Күні: " + orderDate + "\n" +
+          "🕒 Уақыты: " + orderTime + "\n" +
           "👤 Жолаушы: " + name + "\n" +
           "📞 Телефон: " + phone + "\n" +
           "🟢 Қайдан: " + from + "\n" +
@@ -181,12 +203,15 @@ export default async function handler(req, res) {
       }
     }
 
-    // 8. Жолаушыға GPS токенін қайтару
+    // 8. Жолаушыға жауап
     return res.status(200).json({
       success: true,
       orderId,
       trackingToken,
       status: "searching",
+      createdAt,
+      orderDate,
+      orderTime,
       telegramSent,
       message: "Тапсырыс базаға сәтті сақталды."
     });
