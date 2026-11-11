@@ -45,6 +45,8 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .chat-actions button{flex:1}
 .payment-report-button{width:100%;background:#16834a;color:white}
 .chat-note{color:#b9c2d0;font-size:12px;line-height:1.5}
+.order-datetime{background:#172437;border-left:4px solid #ffcc00;padding:11px;border-radius:8px;margin-bottom:12px;color:#fff}
+.order-datetime p{margin:5px 0;font-weight:bold}
 @media(max-width:380px){
 .stat strong{font-size:18px}
 button{width:100%}
@@ -131,7 +133,6 @@ let firstOrdersLoaded=false;
 let polling=false;
 let chatLoading=false;
 let markingRead=false;
-let knownAdminMessages=new Set();
 
 function dateText(value){
 if(!value)return "Көрсетілмеген";
@@ -145,6 +146,22 @@ if(!value)return "—";
 const date=new Date(value);
 if(Number.isNaN(date.getTime()))return "—";
 return date.toLocaleDateString("kk-KZ",{timeZone:"Asia/Almaty"});
+}
+
+// Тапсырыс күнін көрсету
+function renderOrderDateTime(order){
+const date=order.order_date;
+const time=order.order_time;
+
+if(date&&time){
+return "📅 Күні: "+date+"\n🕒 Уақыты: "+time;
+}
+
+if(order.created_at){
+return "📅 Күні мен уақыты: "+dateText(order.created_at);
+}
+
+return "📅 Күні мен уақыты: Көрсетілмеген";
 }
 
 async function api(url,options={}){
@@ -268,11 +285,10 @@ async function markMessagesRead(){
 if(markingRead)return;
 markingRead=true;
 try{
-const result=await api("/api/driver-stats",{
+return await api("/api/driver-stats",{
 method:"POST",
 body:JSON.stringify({action:"mark_read"})
 });
-return result;
 }catch(error){
 console.error("Mark read error:",error);
 showChatStatus("Оқылғанын белгілеу қатесі: "+error.message,"error");
@@ -319,17 +335,10 @@ time.className="chat-time";
 time.textContent=dateText(item.created_at);
 bubble.appendChild(time);
 
-if(item.sender_role==="admin"){
 const read=document.createElement("div");
 read.className="chat-read";
-read.textContent=item.read_at?"✓ Сіз оқыдыңыз":"Жаңа хабарлама";
+read.textContent=item.sender_role==="admin"?(item.read_at?"✓ Сіз оқыдыңыз":"Жаңа хабарлама"):"✓ Жіберілді";
 bubble.appendChild(read);
-}else{
-const read=document.createElement("div");
-read.className="chat-read";
-read.textContent="✓ Жіберілді";
-bubble.appendChild(read);
-}
 
 container.appendChild(bubble);
 });
@@ -344,10 +353,7 @@ try{
 let data=await api("/api/driver-stats?action=messages");
 let messages=data.messages||[];
 
-const unread=messages.some(
-item=>item.sender_role==="admin"&&!item.read_at
-);
-
+const unread=messages.some(item=>item.sender_role==="admin"&&!item.read_at);
 if(unread){
 await markMessagesRead();
 data=await api("/api/driver-stats?action=messages");
@@ -355,15 +361,7 @@ messages=data.messages||[];
 }
 
 renderMessages(messages);
-
-const unreadCount=messages.filter(
-item=>item.sender_role==="admin"&&!item.read_at
-).length;
-
-showChatStatus(
-unreadCount===0?"Хабарламалар жаңартылды":"Оқылмаған хабарламалар бар",
-"success"
-);
+showChatStatus("Хабарламалар жаңартылды","success");
 }catch(error){
 showChatStatus(error.message,"error");
 }finally{
@@ -426,6 +424,16 @@ button.textContent="💳 Комиссияны төледім";
 function makeOrderCard(order,type){
 const item=document.createElement("div");
 item.className="order";
+
+// КҮНІ МЕН УАҚЫТЫ
+const dateBox=document.createElement("div");
+dateBox.className="order-datetime";
+
+const dateLines=renderOrderDateTime(order).split("\n");
+dateLines.forEach(line=>addText(dateBox,line,"p"));
+
+item.appendChild(dateBox);
+
 addText(item,"📍 Қайдан: "+(order.pickup_address||"Көрсетілмеген"));
 addText(item,"🏁 Қайда: "+(order.destination_address||"Көрсетілмеген"));
 if(order.passenger_name)addText(item,"👤 Жолаушы: "+order.passenger_name);
@@ -434,6 +442,7 @@ addText(item,"🚘 Көлік класы: "+(order.car_class||"Көрсетіл�
 addText(item,"📏 Қашықтық: "+(order.distance_km?order.distance_km+" км":"Көрсетілмеген"));
 addText(item,"💰 Бағасы: "+money(order.price));
 addText(item,"💳 Төлем: "+(order.payment_method||"Көрсетілмеген"));
+
 const status=addText(item,"Мәртебесі: "+statusText(order.status));
 status.className="status";
 
