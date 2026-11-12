@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ҮРЖАР TAXI — Жүргізуші кабинеті</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --yellow:#ffcc00;--green:#16bd79;--red:#e34b59;
+  --black:#101114;--gray-bg:#101522;--card:#1c2536;
+  --card-light:#243045;--border:#2e3a52;--text-muted:#94a3b8;
+}
+body{
+  margin:0;background:var(--gray-bg);color:#fff;
+  font-family:'Inter',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== HEADER ===== */
+header{
+  background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);
+  padding:16px;text-align:center;
+  border-bottom:3px solid var(--yellow);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
+header h2{
+  margin:0;color:var(--yellow);font-size:20px;
+  font-weight:900;letter-spacing:-0.5px;
+}
+header .subtitle{
+  color:var(--text-muted);font-size:12px;
+  margin-top:3px;font-weight:500;
+}
+.logout-btn{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,0.08);color:#fff;
+  border:1px solid rgba(255,255,255,0.15);
+  padding:7px 12px;border-radius:9px;font-size:12px;
+  font-weight:600;cursor:pointer;font-family:inherit;
+  transition:background 0.2s;
+}
+.logout-btn:hover{background:rgba(255,255,255,0.15)}
+
+main{max-width:680px;margin:auto;padding:14px}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--card);border-radius:18px;
+  padding:18px;margin:14px 0;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.15);
+}
+.card h3{
+  margin:0 0 14px;color:var(--yellow);
+  font-size:16px;font-weight:800;letter-spacing:-0.3px;
+  display:flex;align-items:center;gap:8px;
+}
+.card h3 .badge{
+  background:var(--red);color:white;
+  padding:2px 8px;border-radius:20px;
+  font-size:11px;font-weight:700;margin-left:auto;
+}
+
+/* ===== STATS ===== */
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{
+  background:linear-gradient(135deg,var(--card-light) 0%,#2a3650 100%);
+  padding:14px;border-radius:13px;
+  border:1px solid rgba(255,255,255,0.05);
+}
+.stat small{
+  color:var(--text-muted);font-size:11px;
+  font-weight:500;letter-spacing:0.3px;
+  display:block;margin-bottom:6px;
+}
+.stat strong{
+  display:block;font-size:22px;
+  font-weight:800;letter-spacing:-0.5px;
+}
+
+/* ===== WEEKLY ===== */
+.weekly-row{
+  display:flex;justify-content:space-between;
+  padding:9px 0;font-size:14px;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.weekly-row:last-of-type{border-bottom:0}
+.weekly-label{color:var(--text-muted)}
+.weekly-value{font-weight:700}
+.week-period{
+  color:var(--text-muted);font-size:12px;
+  margin-top:12px;text-align:center;
+}
+
+/* ===== BUTTONS ===== */
+button{
+  font-family:inherit;border:0;cursor:pointer;
+  transition:transform 0.15s,background 0.2s,box-shadow 0.2s,opacity 0.2s;
+}
+button:active:not(:disabled){transform:scale(0.97)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+
+.btn-accept{
+  background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);
+  color:white;padding:13px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(22,189,121,0.3);
+  width:100%;margin-top:10px;
+}
+.btn-complete{
+  background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);
+  color:#111;padding:13px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(255,204,0,0.3);
+  width:100%;margin-top:10px;
+}
+.btn-cancel{
+  background:linear-gradient(135deg,#e34b59 0%,#f05a68 100%);
+  color:white;padding:13px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(227,75,89,0.3);
+  width:100%;margin-top:8px;
+}
+.btn-gps-start{
+  background:linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%);
+  color:white;padding:13px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(59,130,246,0.3);
+  width:100%;margin-top:8px;
+}
+.btn-gps-stop{
+  background:linear-gradient(135deg,#6366f1 0%,#818cf8 100%);
+  color:white;padding:13px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(99,102,241,0.3);
+  width:100%;margin-top:8px;
+}
+.btn-refresh{
+  background:linear-gradient(135deg,#2d3a52 0%,#3a4a66 100%);
+  color:white;padding:14px 20px;border-radius:12px;
+  font-weight:700;font-size:14px;width:100%;
+}
+
+/* ===== ORDERS ===== */
+.order{
+  background:linear-gradient(135deg,var(--card-light) 0%,#2a3650 100%);
+  padding:14px;border-radius:13px;margin:10px 0;
+  border:1px solid rgba(255,255,255,0.06);
+  animation:fadeIn 0.25s ease;
+}
+.order-heading{
+  color:#ffcc00;font-size:15px;
+  font-weight:800;margin:0 0 8px;
+  display:flex;align-items:center;gap:8px;
+}
+.order-line{
+  font-size:13px;line-height:1.7;
+  margin:3px 0;color:#cbd5e1;
+}
+.order-line a{color:#19d995;text-decoration:none;font-weight:600}
+.order-time{
+  background:linear-gradient(135deg,#1a3d30 0%,#1d493d 100%);
+  border:1px solid #238b68;
+  padding:10px;border-radius:9px;
+  margin:10px 0;line-height:1.8;
+  color:#8fffc8;font-size:12px;
+  white-space:pre-line;font-weight:500;
+}
+.gps-indicator{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  background:rgba(59,130,246,0.15);color:#60a5fa;
+  border:1px solid rgba(59,130,246,0.3);
+  margin-top:6px;
+}
+.gps-indicator.active{
+  background:rgba(22,189,121,0.15);color:#19d995;
+  border-color:rgba(22,189,121,0.3);
+}
+.gps-indicator::before{
+  content:'●';animation:pulse 1.5s infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1}
+  50%{opacity:0.3}
+}
+
+/* ===== STATUS BADGE ===== */
+.status-badge{
+  display:inline-block;
+  padding:3px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  letter-spacing:0.3px;
+}
+.status-searching{background:rgba(255,204,0,0.15);color:#ffcc00}
+.status-accepted{background:rgba(22,189,121,0.15);color:#19d995}
+.status-in_progress{background:rgba(96,165,250,0.15);color:#93c5fd}
+.status-completed{background:rgba(148,163,184,0.15);color:#cbd5e1}
+
+/* ===== CHAT ===== */
+.chat-box{
+  background:#172237;border-radius:12px;
+  padding:12px;max-height:400px;overflow-y:auto;
+  margin:12px 0;border:1px solid rgba(255,255,255,0.05);
+}
+.chat-message{
+  padding:11px;margin:8px 0;border-radius:12px;
+  max-width:85%;line-height:1.5;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+  font-size:13px;animation:fadeIn 0.2s ease;
+}
+.chat-admin{
+  background:#344768;margin-left:auto;
+  border:1px solid #526b91;
+}
+.chat-driver{
+  background:#183c35;margin-right:auto;
+  border:1px solid #28745e;
+}
+.chat-meta{
+  font-size:11px;color:#b8c5d8;
+  margin-bottom:5px;font-weight:500;
+}
+.chat-compose{
+  background:#172237;padding:10px;
+  border-radius:12px;
+  display:flex;gap:8px;align-items:flex-end;
+}
+.chat-compose textarea{
+  flex:1;background:#111a2a;color:white;
+  border:1px solid #52617b;border-radius:10px;
+  padding:11px;font-size:14px;font-family:inherit;
+  resize:none;min-height:44px;max-height:120px;
+  outline:none;
+}
+.chat-compose textarea:focus{border-color:var(--yellow)}
+.chat-send{
+  background:var(--yellow);color:#111;
+  padding:11px 16px;border-radius:10px;
+  font-weight:800;font-size:14px;
+  white-space:nowrap;
+}
+.chat-send:disabled{opacity:0.5;cursor:not-allowed}
+.chat-empty{
+  text-align:center;color:var(--text-muted);
+  font-size:13px;padding:20px;
+  font-style:italic;
+}
+
+/* ===== MISC ===== */
+.muted{color:var(--text-muted);font-size:13px;line-height:1.5}
+.error{color:#ff9999}
+.success{color:#19d995}
+#message{margin-top:12px;font-size:13px;text-align:center;font-weight:600}
+.empty{
+  background:rgba(255,255,255,0.03);
+  padding:18px;border-radius:11px;
+  text-align:center;color:var(--text-muted);
+  font-size:13px;line-height:1.6;
+  border:1px dashed rgba(255,255,255,0.1);
+}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(-5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media(max-width:480px){
+  main{padding:11px}
+  .card{padding:15px}
+  .stat strong{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h2>🚕 ҮРЖАР TAXI</h2>
+  <div class="subtitle">Жүргізуші кабинеті</div>
+  <button class="logout-btn" onclick="logout()">Шығу</button>
+</header>
+
+<main>
+
+<!-- ===== СТАТИСТИКА ===== -->
+<div class="card">
+  <h3>📊 Менің статистикам</h3>
+  <div class="stats">
+    <div class="stat"><small>Орындалған сапар</small><strong id="rides">—</strong></div>
+    <div class="stat"><small>Жалпы айналым</small><strong id="gross">—</strong></div>
+    <div class="stat"><small>Жүргізуші табысы</small><strong id="earning">—</strong></div>
+    <div class="stat"><small>10% комиссия</small><strong id="commission">—</strong></div>
+  </div>
+</div>
+
+<!-- ===== АПТАЛЫҚ КОМИССИЯ ===== -->
+<div class="card">
+  <h3>📅 Апталық комиссия</h3>
+  <div class="weekly-row">
+    <span class="weekly-label">Төленбеген</span>
+    <span class="weekly-value" id="unpaid" style="color:#ffcc00">—</span>
+  </div>
+  <div class="weekly-row">
+    <span class="weekly-label">Төленген</span>
+    <span class="weekly-value" id="paid" style="color:#19d995">—</span>
+  </div>
+  <p class="week-period" id="week"></p>
+</div>
+
+<!-- ===== ЖАҢА ТАПСЫРЫСТАР ===== -->
+<div class="card">
+  <h3>🟢 Жаңа тапсырыстар</h3>
+  <div id="newOrders" class="muted">Тапсырыстар жүктелуде...</div>
+</div>
+
+<!-- ===== МЕНІҢ САПАРЛАРЫМ ===== -->
+<div class="card">
+  <h3>📋 Менің сапарларым</h3>
+  <div id="myOrders" class="muted">Жүктелуде...</div>
+</div>
+
+<!-- ===== ЧАТ ===== -->
+<div class="card">
+  <h3>💬 Әкімшімен чат <span class="badge" id="unreadBadge" style="display:none">0</span></h3>
+  <div class="chat-box" id="chatBox">
+    <div class="chat-empty">Хабарламалар жүктелуде...</div>
+  </div>
+  <div class="chat-compose">
+    <textarea id="chatInput" placeholder="Хабарлама жазыңыз..." maxlength="2000" rows="1"></textarea>
+    <button class="chat-send" id="chatSendBtn" onclick="sendMessage()">📨</button>
+  </div>
+</div>
+
+<!-- ===== ЖАҢАРТУ ===== -->
+<div class="card" style="background:transparent;border:0;box-shadow:none;padding:0">
+  <button class="btn-refresh" onclick="loadAll()" id="refresh">🔄 Жаңарту</button>
+  <p id="message" class="muted" style="text-align:center;margin-top:10px"></p>
+</div>
+
+</main>
+
+<script>
+// ===== GLOBAL STATE =====
+let gpsWatchId = null;
+let gpsActive = false;
+let gpsOrderId = null;
+let lastSentAt = 0;
+const GPS_INTERVAL = 5000; // 5 сек — серверге жіберу жиілігі
+let autoRefreshTimer = null;
+let chatRefreshTimer = null;
+
+const money = n => Number(n || 0).toLocaleString("kk-KZ") + " ₸";
+
+// ===== API HELPER =====
+async function api(url, options = {}) {
+  const response = await fetch(url, {
+    credentials: "include",
+    ...options
+  });
+
+  if (response.status === 401 || response.status === 403) {
+    window.location.href = "/driver-login.html";
+    throw new Error("Сессия аяқталды");
+  }
+
+  const data = await response.json();
+  if (!response.ok || data.success === false) {
+    throw new Error(data.message || "Қате орын алды");
+  }
+  return data;
+}
+
+// ===== STATS =====
+async function loadStats() {
+  const data = await api("/api/driver?action=stats");
+  document.getElementById("rides").textContent = data.ridesCount;
+  document.getElementById("gross").textContent = money(data.grossTotal);
+  document.getElementById("earning").textContent = money(data.driverEarning);
+  document.getElementById("commission").textContent = money(data.commissionTotal);
+  document.getElementById("unpaid").textContent = money(data.weekly.unpaid);
+  document.getElementById("paid").textContent = money(data.weekly.paid);
+  document.getElementById("week").textContent =
+    "Апта: " +
+    new Date(data.weekly.start).toLocaleDateString("kk-KZ") +
+    " — " +
+    new Date(data.weekly.end).toLocaleDateString("kk-KZ");
+}
+
+// ===== ORDERS =====
+const STATUS_LABELS = {
+  searching: "🔍 Ізделуде",
+  accepted: "✅ Қабылданды",
+  in_progress: "🚕 Жолда",
+  completed: "🏁 Аяқталды",
+  cancelled: "❌ Тоқтатылды"
+};
+const CAR_LABELS = { economy: "Эконом", comfort: "Бизнес", comfort_plus: "Бизнес+" };
+
+function escapeHtml(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
+
+function renderOrder(order, containerId, isMyOrder) {
+  const item = document.createElement("div");
+  item.className = "order";
+
+  const name = order.passenger_name || "Жолаушы";
+  const carLabel = CAR_LABELS[order.car_class] || order.car_class || "—";
+
+  // Header
+  const heading = document.createElement("div");
+  heading.className = "order-heading";
+  heading.innerHTML = `🚕 ${escapeHtml(name)}`;
+  if (order.status) {
+    const badge = document.createElement("span");
+    badge.className = "status-badge status-" + order.status;
+    badge.textContent = STATUS_LABELS[order.status] || order.status;
+    heading.appendChild(badge);
+  }
+  item.appendChild(heading);
+
+  // Info
+  const info = document.createElement("div");
+  info.innerHTML = `
+    <div class="order-line">📍 Қайдан: ${escapeHtml(order.pickup_address || "—")}</div>
+    <div class="order-line">🏁 Қайда: ${escapeHtml(order.destination_address || "—")}</div>
+    <div class="order-line">🚘 Класс: ${escapeHtml(carLabel)}</div>
+    <div class="order-line">📏 Қашықтық: ${order.distance_km || "—"} км</div>
+    <div class="order-line">💰 Бағасы: <b style="color:#ffcc00">${money(order.price)}</b></div>
+  `;
+  item.appendChild(info);
+
+  // Phone (my orders)
+  if (isMyOrder && order.passenger_phone) {
+    const phoneLine = document.createElement("div");
+    phoneLine.className = "order-line";
+    phoneLine.innerHTML = `📞 Телефон: <a href="tel:${escapeHtml(order.passenger_phone)}">${escapeHtml(order.passenger_phone)}</a>`;
+    item.appendChild(phoneLine);
+  }
+
+  // Time
+  if (order.order_date && order.order_time) {
+    const time = document.createElement("div");
+    time.className = "order-time";
+    time.textContent = "📅 " + order.order_date + "\n🕒 " + order.order_time;
+    item.appendChild(time);
+  }
+
+  // Payment
+  if (order.payment_method) {
+    const pay = document.createElement("div");
+    pay.className = "order-line";
+    pay.textContent = "💳 Төлем: " + (order.payment_method === "cash" ? "Қолма-қол" : order.payment_method);
+    item.appendChild(pay);
+  }
+
+  // GPS status indicator
+  if (isMyOrder && (order.status === "accepted" || order.status === "in_progress")) {
+    const gps = document.createElement("div");
+    const isActive = gpsActive && gpsOrderId === order.id;
+    gps.className = "gps-indicator" + (isActive ? " active" : "");
+    gps.textContent = isActive ? "GPS бөлісуде" : "GPS өшірулі";
+    item.appendChild(gps);
+  }
+
+  // ===== BUTTONS =====
+  if (!isMyOrder) {
+    // Жаңа тапсырыс — Қабылдау
+    const acceptBtn = document.createElement("button");
+    acceptBtn.className = "btn-accept";
+    acceptBtn.textContent = "✅ ҚАБЫЛДАУ";
+    acceptBtn.onclick = () => acceptOrder(order.id, acceptBtn);
+    item.appendChild(acceptBtn);
+  } else if (order.status === "accepted" || order.status === "in_progress") {
+    // Белсенді сапар — GPS + Аяқтау + Бас тарту
+    const isGpsActive = gpsActive && gpsOrderId === order.id;
+
+    const gpsBtn = document.createElement("button");
+    gpsBtn.className = isGpsActive ? "btn-gps-stop" : "btn-gps-start";
+    gpsBtn.textContent = isGpsActive ? "📡 GPS БӨЛІСУДІ ТОҚТАТУ" : "📡 GPS БӨЛІСУДІ БАСТАУ";
+    gpsBtn.onclick = () => isGpsActive ? stopGps() : startGps(order.id);
+    item.appendChild(gpsBtn);
+
+    const completeBtn = document.createElement("button");
+    completeBtn.className = "btn-complete";
+    completeBtn.textContent = "🏁 САПАРДЫ АЯҚТАУ";
+    completeBtn.onclick = () => completeOrder(order.id, completeBtn);
+    item.appendChild(completeBtn);
+
+    const cancelBtn = document.createElement("button");
+    cancelBtn.className = "btn-cancel";
+    cancelBtn.textContent = "❌ БАС ТАРТУ";
+    cancelBtn.onclick = () => cancelOrder(order.id, cancelBtn);
+    item.appendChild(cancelBtn);
+  }
+
+  const container = document.getElementById(containerId);
+  if (container.firstElementChild?.classList.contains("muted") ||
+      container.firstElementChild?.classList.contains("empty")) {
+    container.innerHTML = "";
+  }
+  container.appendChild(item);
+}
+
+async function loadOrders() {
+  const data = await api("/api/driver?action=orders");
+  const newBox = document.getElementById("newOrders");
+  const myBox = document.getElementById("myOrders");
+  newBox.innerHTML = "";
+  myBox.innerHTML = "";
+
+  const newOrders = Array.isArray(data.new_orders) ? data.new_orders : [];
+  const myOrders = Array.isArray(data.my_orders) ? data.my_orders : [];
+
+  if (!newOrders.length) {
+    newBox.innerHTML = '<div class="empty">Әзірге жаңа тапсырыс жоқ</div>';
+  } else {
+    newOrders.forEach(o => renderOrder(o, "newOrders", false));
+  }
+
+  if (!myOrders.length) {
+    myBox.innerHTML = '<div class="empty">Әзірге белсенді сапар жоқ</div>';
+  } else {
+    myOrders.forEach(o => renderOrder(o, "myOrders", true));
+  }
+}
+
+// ===== ACCEPT ORDER =====
+async function acceptOrder(orderId, btn) {
+  if (!confirm("Осы тапсырысты қабылдайсыз ба?")) return;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Қабылдануда...";
+  showMessage("Тапсырыс қабылдануда...", "");
+
+  try {
+    const r = await fetch("/api/driver?action=accept", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId })
+    });
+    const d = await r.json();
+    if (r.status === 401) { window.location.href = "/driver-login.html"; return; }
+    if (!r.ok || !d.success) throw new Error(d.message || "Қабылдау мүмкін болмады");
+    showMessage("✅ Тапсырыс сізге бекітілді!", "success");
+    await loadOrders();
+  } catch (e) {
+    showMessage("❌ " + e.message, "error");
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+// ===== COMPLETE ORDER =====
+async function completeOrder(orderId, btn) {
+  if (!confirm("Сапарды аяқталды деп белгілейсіз бе?")) return;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Аяқталуда...";
+  showMessage("Сапар аяқталуда...", "");
+
+  try {
+    const r = await fetch("/api/driver?action=complete", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId })
+    });
+    const d = await r.json();
+    if (r.status === 401) { window.location.href = "/driver-login.html"; return; }
+    if (!r.ok || !d.success) throw new Error(d.message || "Аяқтау мүмкін болмады");
+
+    // GPS тоқтату
+    if (gpsActive && gpsOrderId === orderId) stopGps();
+
+    showMessage(`✅ Сапар аяқталды! Табыс: ${money(d.driverEarning)} • Комиссия: ${money(d.commission)}`, "success");
+    await Promise.all([loadAll(), loadChat()]);
+  } catch (e) {
+    showMessage("❌ " + e.message, "error");
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+// ===== CANCEL ORDER =====
+async function cancelOrder(orderId, btn) {
+  if (!confirm("Тапсырыстан бас тартасыз ба? Бұл әрекетті кері қайтару мүмкін емес.")) return;
+  const originalText = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Бас тартылуда...";
+  showMessage("Бас тартылуда...", "");
+
+  try {
+    const r = await fetch("/api/driver?action=cancel", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId })
+    });
+    const d = await r.json();
+    if (r.status === 401) { window.location.href = "/driver-login.html"; return; }
+    if (!r.ok || !d.success) throw new Error(d.message || "Бас тарту мүмкін болмады");
+
+    if (gpsActive && gpsOrderId === orderId) stopGps();
+
+    showMessage("✅ Тапсырыстан бас тартылды", "success");
+    await loadOrders();
+  } catch (e) {
+    showMessage("❌ " + e.message, "error");
+    btn.disabled = false;
+    btn.textContent = originalText;
+  }
+}
+
+// ===== GPS SHARING =====
+async function startGps(orderId) {
+  if (!navigator.geolocation) {
+    showMessage("❌ GPS қолжетімсіз", "error");
+    return;
+  }
+  if (gpsActive) stopGps();
+
+  gpsActive = true;
+  gpsOrderId = orderId;
+  lastSentAt = 0;
+  showMessage("📡 GPS бөлісу басталды...", "success");
+
+  // Дереу алғашқы позицияны жіберу
+  navigator.geolocation.getCurrentPosition(pos => sendLocation(pos), null, {
+    enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+  });
+
+  // watchPosition — үздіксіз бақылау
+  gpsWatchId = navigator.geolocation.watchPosition(
+    pos => sendLocation(pos),
+    err => {
+      console.error("GPS error:", err);
+      if (err.code === 1) {
+        showMessage("❌ GPS рұқсаты берілмеді", "error");
+        stopGps();
+      }
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 }
+  );
+
+  await loadOrders();
+}
+
+async function sendLocation(pos) {
+  if (!gpsActive) return;
+
+  // Rate limit: 5 секунд
+  const now = Date.now();
+  if (now - lastSentAt < GPS_INTERVAL) return;
+  lastSentAt = now;
+
+  try {
+    await fetch("/api/driver?action=share_location", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude
+      })
+    });
+  } catch (e) {
+    console.error("Send location error:", e);
+  }
+}
+
+function stopGps() {
+  if (gpsWatchId !== null) {
+    navigator.geolocation.clearWatch(gpsWatchId);
+    gpsWatchId = null;
+  }
+  gpsActive = false;
+  gpsOrderId = null;
+  lastSentAt = 0;
+  showMessage("📡 GPS бөлісу тоқтатылды", "");
+  loadOrders().catch(() => {});
+}
+
+// ===== CHAT =====
+async function loadChat() {
+  try {
+    const r = await fetch("/api/driver?action=messages", {
+      credentials: "include"
+    });
+    if (r.status === 401) return;
+    const d = await r.json();
+    if (!d.success) return;
+
+    renderChat(d.messages || []);
+    updateUnreadBadge(d.unreadCount || 0);
+
+    // Auto mark read
+    if (d.unreadCount > 0) {
+      fetch("/api/driver?action=mark_read", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: "{}"
+      }).catch(() => {});
+    }
+  } catch (e) {
+    console.error("Chat error:", e);
+  }
+}
+
+function renderChat(messages) {
+  const box = document.getElementById("chatBox");
+  if (!messages.length) {
+    box.innerHTML = '<div class="chat-empty">Әзірге хабарлама жоқ</div>';
+    return;
+  }
+
+  box.innerHTML = "";
+  messages.forEach(m => {
+    const isDriver = m.sender_role === "driver";
+    const msg = document.createElement("div");
+    msg.className = "chat-message " + (isDriver ? "chat-driver" : "chat-admin");
+
+    const meta = document.createElement("div");
+    meta.className = "chat-meta";
+    const time = new Date(m.created_at).toLocaleString("kk-KZ", {
+      timeZone: "Asia/Almaty", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit"
+    });
+    meta.textContent = (isDriver ? "Сіз" : "Әкімші") + " • " + time;
+    msg.appendChild(meta);
+
+    const content = document.createElement("div");
+    content.textContent = m.message || "";
+    msg.appendChild(content);
+
+    box.appendChild(msg);
+  });
+
+  box.scrollTop = box.scrollHeight;
+}
+
+function updateUnreadBadge(count) {
+  const badge = document.getElementById("unreadBadge");
+  if (count > 0) {
+    badge.textContent = count;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+async function sendMessage() {
+  const input = document.getElementById("chatInput");
+  const btn = document.getElementById("chatSendBtn");
+  const message = input.value.trim();
+  if (!message) return;
+
+  btn.disabled = true;
+  try {
+    const r = await fetch("/api/driver?action=send_message", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, message_type: "text" })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.message || "Жіберу мүмкін болмады");
+    input.value = "";
+    await loadChat();
+  } catch (e) {
+    showMessage("❌ " + e.message, "error");
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// Enter — жіберу
+document.addEventListener("DOMContentLoaded", () => {
+  const input = document.getElementById("chatInput");
+  if (input) {
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+});
+
+// ===== LOGOUT =====
+async function logout() {
+  if (!confirm("Жүйеден шығасыз ба?")) return;
+  if (gpsActive) stopGps();
+  try {
+    await fetch("/api/driver?action=logout", { credentials: "include" });
+  } catch (e) {}
+  window.location.href = "/driver-login.html";
+}
+
+// ===== MESSAGE HELPER =====
+function showMessage(text, className) {
+  const m = document.getElementById("message");
+  m.textContent = text;
+  m.className = className || "muted";
+}
+
+// ===== LOAD ALL =====
+async function loadAll() {
+  const btn = document.getElementById("refresh");
+  btn.disabled = true;
+  showMessage("Жүктелуде...", "muted");
+
+  try {
+    await Promise.all([loadStats(), loadOrders(), loadChat()]);
+    showMessage("✅ Мәліметтер жаңартылды", "success");
+    setTimeout(() => {
+      const m = document.getElementById("message");
+      if (m.textContent === "✅ Мәліметтер жаңартылды") {
+        m.textContent = "";
+        m.className = "muted";
+      }
+    }, 3000);
+  } catch (e) {
+    if (e.message !== "Сессия аяқталды") {
+      showMessage("❌ " + e.message, "error");
+    }
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+// ===== AUTO REFRESH =====
+function startAutoRefresh() {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  autoRefreshTimer = setInterval(() => {
+    loadOrders().catch(() => {});
+  }, 30000);
+
+  if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+  chatRefreshTimer = setInterval(() => {
+    loadChat().catch(() => {});
+  }, 15000);
+}
+
+window.addEventListener("pagehide", () => {
+  if (autoRefreshTimer) clearInterval(autoRefreshTimer);
+  if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+  if (gpsActive) stopGps();
+});
+
+// ===== INIT =====
+loadAll().then(() => startAutoRefresh());
+</script>
+
+</body>
+</html>
