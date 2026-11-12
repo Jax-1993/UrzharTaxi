@@ -1,0 +1,1183 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ҮРЖАР TAXI — Әкімші</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{
+  --yellow:#ffcc00;--green:#16bd79;--red:#e34b59;
+  --black:#101114;--gray-bg:#101522;--card:#1c2536;
+  --card-light:#243045;--border:#2e3a52;--text-muted:#94a3b8;
+}
+body{
+  margin:0;background:var(--gray-bg);color:#fff;
+  font-family:'Inter',-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===== HEADER ===== */
+header{
+  background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);
+  padding:16px;text-align:center;
+  border-bottom:3px solid var(--yellow);
+  position:sticky;top:0;z-index:100;
+  box-shadow:0 2px 12px rgba(0,0,0,0.3);
+}
+header h1{
+  margin:0;color:var(--yellow);font-size:20px;
+  font-weight:900;letter-spacing:-0.5px;
+}
+header .subtitle{
+  color:var(--text-muted);font-size:12px;
+  margin-top:3px;font-weight:500;
+}
+.logout-btn{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  background:rgba(255,255,255,0.08);color:#fff;
+  border:1px solid rgba(255,255,255,0.15);
+  padding:7px 12px;border-radius:9px;font-size:12px;
+  font-weight:600;cursor:pointer;font-family:inherit;
+  transition:background 0.2s;
+}
+.logout-btn:hover{background:rgba(255,255,255,0.15)}
+
+main{max-width:850px;margin:auto;padding:14px}
+
+/* ===== LOGIN PANEL ===== */
+.login-panel{
+  max-width:420px;margin:70px auto;
+  background:var(--card);border-radius:20px;
+  padding:32px 24px;border:1px solid var(--border);
+  box-shadow:0 10px 40px rgba(0,0,0,0.3);
+  text-align:center;
+}
+.login-panel h2{
+  color:var(--yellow);margin:0 0 8px;
+  font-size:22px;font-weight:900;
+}
+.login-panel p{
+  color:var(--text-muted);font-size:13px;
+  margin:0 0 24px;line-height:1.5;
+}
+.login-icon{font-size:56px;margin-bottom:12px;display:block}
+
+/* ===== CARDS ===== */
+.card{
+  background:var(--card);border-radius:18px;
+  padding:18px;margin:14px 0;
+  border:1px solid var(--border);
+  box-shadow:0 4px 16px rgba(0,0,0,0.15);
+}
+.card h2{
+  margin:0 0 14px;color:var(--yellow);
+  font-size:16px;font-weight:800;
+  display:flex;align-items:center;gap:8px;
+}
+.card h2 .badge{
+  background:var(--red);color:white;
+  padding:2px 8px;border-radius:20px;
+  font-size:11px;font-weight:700;margin-left:auto;
+}
+
+/* ===== INPUTS ===== */
+input,select,textarea{
+  width:100%;padding:14px;margin:6px 0;
+  border:1.5px solid var(--border);border-radius:12px;
+  background:#111a2a;color:white;
+  font-size:14px;font-family:inherit;outline:none;
+  transition:border-color 0.2s;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--yellow);
+  box-shadow:0 0 0 3px rgba(255,204,0,0.1);
+}
+textarea{min-height:100px;resize:vertical}
+
+/* ===== BUTTONS ===== */
+button{
+  font-family:inherit;border:0;cursor:pointer;
+  transition:transform 0.15s,background 0.2s,opacity 0.2s,box-shadow 0.2s;
+}
+button:active:not(:disabled){transform:scale(0.97)}
+button:disabled{opacity:0.5;cursor:not-allowed}
+
+.btn-primary{
+  background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);
+  color:#111;padding:14px 20px;border-radius:12px;
+  font-weight:800;font-size:14px;
+  box-shadow:0 3px 10px rgba(255,204,0,0.3);
+  width:100%;margin-top:8px;
+}
+.btn-refresh{
+  background:linear-gradient(135deg,#2d3a52 0%,#3a4a66 100%);
+  color:white;padding:13px 18px;border-radius:12px;
+  font-weight:700;font-size:13px;margin-bottom:14px;
+}
+.btn-approve{
+  background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);
+  color:white;padding:11px 16px;border-radius:10px;
+  font-weight:800;font-size:13px;
+  box-shadow:0 3px 10px rgba(22,189,121,0.3);
+  margin-right:8px;margin-top:8px;
+}
+.btn-reject{
+  background:linear-gradient(135deg,#e34b59 0%,#f05a68 100%);
+  color:white;padding:11px 16px;border-radius:10px;
+  font-weight:800;font-size:13px;
+  box-shadow:0 3px 10px rgba(227,75,89,0.3);
+  margin-top:8px;
+}
+.btn-block{
+  background:linear-gradient(135deg,#e34b59 0%,#f05a68 100%);
+  color:white;padding:9px 14px;border-radius:9px;
+  font-weight:700;font-size:12px;
+  margin-right:6px;margin-top:6px;
+}
+.btn-unblock{
+  background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);
+  color:white;padding:9px 14px;border-radius:9px;
+  font-weight:700;font-size:12px;
+  margin-right:6px;margin-top:6px;
+}
+.btn-delete{
+  background:linear-gradient(135deg,#991b1b 0%,#b91c1c 100%);
+  color:white;padding:9px 14px;border-radius:9px;
+  font-weight:700;font-size:12px;
+  margin-top:6px;
+}
+.btn-send{
+  background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);
+  color:#111;padding:12px 18px;border-radius:11px;
+  font-weight:800;font-size:14px;
+}
+
+/* ===== APPLICATION ===== */
+.application{
+  background:linear-gradient(135deg,var(--card-light) 0%,#2a3650 100%);
+  padding:16px;border-radius:14px;margin:12px 0;
+  border:1px solid rgba(255,255,255,0.06);
+  animation:fadeIn 0.25s ease;
+}
+.application h3{
+  color:var(--yellow);font-size:15px;
+  font-weight:800;margin:0 0 10px;
+}
+.application .details{
+  line-height:1.8;color:#cbd5e1;font-size:13px;
+}
+.application .details b{color:#e2e8f0}
+.car-photo{
+  width:100%;max-height:260px;object-fit:contain;
+  background:#0a1320;border-radius:10px;
+  margin-top:12px;
+}
+.status-badge{
+  display:inline-block;
+  padding:4px 10px;border-radius:20px;
+  font-size:11px;font-weight:700;
+  letter-spacing:0.3px;margin:10px 0;
+}
+.status-pending{background:rgba(255,204,0,0.15);color:#ffcc00}
+.status-approved{background:rgba(22,189,121,0.15);color:#19d995}
+.status-rejected{background:rgba(227,75,89,0.15);color:#f05a68}
+
+/* ===== PASSWORD BOX ===== */
+.password-box{
+  background:linear-gradient(135deg,#0f2e22 0%,#142b27 100%);
+  border:2px solid var(--green);border-radius:14px;
+  padding:18px;margin:14px 0;
+  animation:fadeIn 0.4s ease;
+}
+.password-box h3{
+  color:var(--green);margin:0 0 10px;
+  font-size:15px;font-weight:800;
+}
+.password-value{
+  font-size:20px;font-weight:800;
+  overflow-wrap:anywhere;color:#ffdf70;
+  margin:12px 0;padding:12px;
+  background:rgba(0,0,0,0.3);border-radius:9px;
+  text-align:center;letter-spacing:1px;
+  font-family:monospace;
+}
+.btn-copy{
+  background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);
+  color:white;padding:11px 18px;border-radius:10px;
+  font-weight:800;font-size:13px;
+}
+
+/* ===== DRIVER LIST ===== */
+.driver-item{
+  background:linear-gradient(135deg,var(--card-light) 0%,#2a3650 100%);
+  padding:14px;border-radius:13px;margin:10px 0;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.driver-item h4{
+  color:var(--yellow);margin:0 0 6px;
+  font-size:14px;font-weight:800;
+  display:flex;align-items:center;gap:6px;
+}
+.driver-item .meta{
+  color:var(--text-muted);font-size:12px;
+  line-height:1.6;
+}
+.driver-badge{
+  display:inline-block;padding:2px 8px;
+  border-radius:12px;font-size:10px;
+  font-weight:700;margin-left:6px;
+}
+.driver-badge.active{background:rgba(22,189,121,0.15);color:#19d995}
+.driver-badge.blocked{background:rgba(227,75,89,0.15);color:#f05a68}
+
+/* ===== COMMISSION ===== */
+.commission-card{
+  background:linear-gradient(135deg,var(--card-light) 0%,#2a3650 100%);
+  padding:16px;border-radius:14px;margin:12px 0;
+  border:1px solid rgba(255,255,255,0.06);
+}
+.commission-card h3{
+  color:var(--yellow);font-size:15px;
+  font-weight:800;margin:0 0 8px;
+}
+.money-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:8px;margin:12px 0;
+}
+.money-item{
+  background:rgba(0,0,0,0.25);padding:11px;
+  border-radius:9px;
+}
+.money-item span{
+  display:block;color:var(--text-muted);
+  font-size:11px;margin-bottom:4px;
+}
+.money-item strong{
+  font-size:15px;font-weight:800;
+  overflow-wrap:anywhere;
+}
+.money-item .unpaid{color:#ffcc00}
+.money-item .paid{color:#19d995}
+.btn-mark-paid{
+  background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);
+  color:white;padding:12px 18px;border-radius:11px;
+  font-weight:800;font-size:13px;
+  width:100%;margin-top:10px;
+  box-shadow:0 3px 10px rgba(22,189,121,0.3);
+}
+.commission-note{
+  color:var(--text-muted);font-size:11px;
+  margin-top:8px;text-align:center;
+}
+
+/* ===== HISTORY ===== */
+.history-card{
+  background:linear-gradient(135deg,#0f2e22 0%,#172b2a 100%);
+  border:1px solid #23775b;padding:16px;
+  border-radius:14px;margin:12px 0;
+}
+.history-card h3{
+  color:#19d995;font-size:15px;
+  font-weight:800;margin:0 0 8px;
+}
+.history-date{
+  color:var(--text-muted);font-size:12px;
+  line-height:1.6;margin:8px 0;
+}
+.history-amount{
+  font-size:22px;font-weight:900;
+  color:#19d995;margin:10px 0;
+}
+
+/* ===== CHAT ===== */
+.chat-box{
+  background:#0f1826;border-radius:12px;
+  padding:12px;max-height:430px;overflow-y:auto;
+  margin:14px 0;border:1px solid rgba(255,255,255,0.05);
+}
+.chat-message{
+  padding:11px;margin:9px 0;border-radius:12px;
+  max-width:88%;line-height:1.5;
+  overflow-wrap:anywhere;white-space:pre-wrap;
+  font-size:13px;animation:fadeIn 0.2s ease;
+}
+.chat-admin{
+  background:linear-gradient(135deg,#344768 0%,#3d5178 100%);
+  margin-left:auto;border:1px solid #526b91;
+}
+.chat-driver{
+  background:linear-gradient(135deg,#183c35 0%,#1d463d 100%);
+  margin-right:auto;border:1px solid #28745e;
+}
+.chat-meta{
+  font-size:11px;color:#b8c5d8;
+  margin-bottom:5px;font-weight:500;
+}
+.chat-read-status{
+  font-size:10px;color:#94a3b8;
+  margin-top:5px;text-align:right;
+}
+.chat-read-status.read{color:#19d995}
+.chat-compose{
+  background:#0f1826;padding:10px;
+  border-radius:12px;display:flex;gap:8px;
+  align-items:flex-end;
+}
+.chat-compose textarea{
+  flex:1;margin:0;min-height:46px;
+  max-height:120px;resize:none;
+}
+.chat-empty{
+  text-align:center;color:var(--text-muted);
+  font-size:13px;padding:24px;font-style:italic;
+}
+
+/* ===== MISC ===== */
+.message{
+  font-size:13px;line-height:1.5;
+  padding:10px 0;font-weight:600;text-align:center;
+}
+.message.error{color:#f05a68}
+.message.success{color:#19d995}
+.message.info{color:#ffcc00}
+.empty{
+  background:rgba(255,255,255,0.03);
+  padding:18px;border-radius:11px;
+  text-align:center;color:var(--text-muted);
+  font-size:13px;line-height:1.6;
+  border:1px dashed rgba(255,255,255,0.1);
+}
+.hidden{display:none!important}
+.small{font-size:12px;color:var(--text-muted);line-height:1.5}
+
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(-5px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+@media(max-width:480px){
+  main{padding:11px}
+  .card{padding:15px}
+  .money-grid{grid-template-columns:1fr 1fr}
+  .money-item strong{font-size:14px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🛡 ҮРЖАР TAXI</h1>
+  <div class="subtitle">Әкімші кабинеті</div>
+  <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Шығу</button>
+</header>
+
+<main>
+
+<!-- ===== LOGIN PANEL ===== -->
+<section id="loginPanel" class="login-panel">
+  <span class="login-icon">🔐</span>
+  <h2>Әкімші кіруі</h2>
+  <p>Басқару панеліне кіру үшін құпиясөзді енгізіңіз</p>
+  <input id="password" type="password" placeholder="Әкімші құпиясөзі" autocomplete="current-password">
+  <button class="btn-primary" id="loginButton" onclick="login()">КІРУ</button>
+  <div id="loginMessage" class="message"></div>
+</section>
+
+<!-- ===== MAIN APP ===== -->
+<section id="appPanel" class="hidden">
+
+  <!-- ӨТІНІМДЕР -->
+  <div class="card">
+    <h2>📋 Жүргізуші өтінімдері</h2>
+    <button class="btn-refresh" onclick="loadApplications()">🔄 Жаңарту</button>
+    <div id="listMessage" class="message"></div>
+    <div id="credentialPanel"></div>
+    <div id="applications"></div>
+  </div>
+
+  <!-- ЖҮРГІЗУШІЛЕР ТІЗІМІ (ЖАҢА) -->
+  <div class="card">
+    <h2>👥 Жүргізушілер тізімі</h2>
+    <button class="btn-refresh" onclick="loadDrivers()">🔄 Жаңарту</button>
+    <div id="driversMessage" class="message"></div>
+    <div id="driversList"></div>
+  </div>
+
+  <!-- ЧАТ -->
+  <div class="card">
+    <h2>💬 Жүргізушілермен чат <span class="badge hidden" id="unreadBadge">0</span></h2>
+    <div class="small">Әр жүргізушімен жеке сөйлесу</div>
+    <select id="chatDriver" onchange="loadMessages()">
+      <option value="">Жүргізушіні таңдаңыз</option>
+    </select>
+    <button class="btn-refresh" onclick="loadMessages()" style="margin-top:10px">🔄 Хаттарды жаңарту</button>
+    <div id="chatMessage" class="message"></div>
+    <div id="chatMessages" class="chat-box">
+      <div class="chat-empty">Алдымен жүргізушіні таңдаңыз</div>
+    </div>
+    <div class="chat-compose">
+      <textarea id="chatInput" placeholder="Хабарлама жазыңыз..." maxlength="2000" rows="1"></textarea>
+      <button class="btn-send" id="sendMessageButton" onclick="sendMessage()">📨</button>
+    </div>
+  </div>
+
+  <!-- КОМИССИЯЛАР -->
+  <div class="card">
+    <h2>💰 Апталық комиссиялар</h2>
+    <div class="small">Әр жүргізушіден орындалған тапсырыстардың 10% комиссия</div>
+    <button class="btn-refresh" onclick="loadCommissions()" style="margin-top:10px">🔄 Жаңарту</button>
+    <div id="commissionMessage" class="message"></div>
+    <div id="commissions"></div>
+  </div>
+
+  <!-- ТӨЛЕМ ТАРИХЫ -->
+  <div class="card">
+    <h2>💳 Төлем тарихы</h2>
+    <button class="btn-refresh" onclick="loadCommissions()">🔄 Жаңарту</button>
+    <div id="historyMessage" class="message"></div>
+    <div id="paymentHistory"></div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+let unreadTotal = 0;
+
+// ===== HELPERS =====
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
+
+function money(v) {
+  const n = Number(v || 0);
+  return (Number.isFinite(n) ? n : 0).toLocaleString("kk-KZ") + " ₸";
+}
+
+function dateText(v) {
+  if (!v) return "Көрсетілмеген";
+  const d = new Date(v);
+  if (!Number.isFinite(d.getTime())) return "Көрсетілмеген";
+  return d.toLocaleString("kk-KZ", {
+    timeZone: "Asia/Almaty",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit"
+  });
+}
+
+function showLogin() {
+  $("loginPanel").classList.remove("hidden");
+  $("appPanel").classList.add("hidden");
+  $("logoutBtn").classList.add("hidden");
+}
+
+function showApp() {
+  $("loginPanel").classList.add("hidden");
+  $("appPanel").classList.remove("hidden");
+  $("logoutBtn").classList.remove("hidden");
+}
+
+function updateUnreadBadge(count) {
+  unreadTotal = Math.max(0, Number(count) || 0);
+  const badge = $("unreadBadge");
+  if (unreadTotal > 0) {
+    badge.textContent = unreadTotal;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+}
+
+// ===== AUTH CHECK (cookie арқылы) =====
+async function checkAuth() {
+  try {
+    const r = await fetch("/api/admin?action=commissions", {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    if (r.ok) {
+      showApp();
+      await loadAll();
+      return true;
+    }
+  } catch (e) {}
+  showLogin();
+  return false;
+}
+
+// ===== LOGIN =====
+async function login() {
+  const password = $("password").value;
+  if (!password) {
+    $("loginMessage").textContent = "Құпиясөзді енгізіңіз";
+    $("loginMessage").className = "message error";
+    return;
+  }
+  $("loginMessage").textContent = "Тексерілуде...";
+  $("loginMessage").className = "message info";
+
+  try {
+    const r = await fetch("/api/admin?action=login", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    const d = await r.json();
+
+    if (!r.ok || !d.success) {
+      $("loginMessage").textContent = d.message || "Кіру сәтсіз";
+      $("loginMessage").className = "message error";
+      return;
+    }
+
+    $("password").value = "";
+    showApp();
+    await loadAll();
+  } catch (e) {
+    $("loginMessage").textContent = "Сервермен байланыс жоқ";
+    $("loginMessage").className = "message error";
+  }
+}
+
+// ===== LOGOUT =====
+async function logout() {
+  if (!confirm("Жүйеден шығасыз ба?")) return;
+  try {
+    await fetch("/api/admin?action=logout", { credentials: "same-origin" });
+  } catch (e) {}
+  showLogin();
+}
+
+// ===== LOAD APPLICATIONS =====
+async function loadApplications() {
+  $("listMessage").textContent = "Өтінімдер жүктелуде...";
+  $("listMessage").className = "message info";
+  $("applications").innerHTML = "";
+
+  try {
+    const r = await fetch("/api/admin?action=applications", {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    const d = await r.json();
+
+    if (r.status === 401) {
+      showLogin();
+      $("loginMessage").textContent = "Қайта кіру қажет";
+      return;
+    }
+    if (!r.ok || !d.success) {
+      $("listMessage").textContent = d.message || "Өтінімдерді алу мүмкін болмады";
+      $("listMessage").className = "message error";
+      return;
+    }
+
+    const items = d.applications || [];
+    $("listMessage").textContent = "Барлық өтінім: " + items.length;
+    $("listMessage").className = "message info";
+
+    if (!items.length) {
+      $("applications").innerHTML = '<div class="empty">Әзірге өтінім жоқ</div>';
+      return;
+    }
+
+    const names = { economy: "Эконом", comfort: "Бизнес", comfort_plus: "Бизнес+" };
+    const statuses = {
+      pending: "⏳ Күтуде", approved: "✅ Мақұлданды", rejected: "❌ Қабылданбады"
+    };
+
+    items.forEach(item => {
+      const card = document.createElement("div");
+      card.className = "application";
+      card.dataset.phone = item.phone || "";
+
+      const photo = typeof item.photo_url === "string" && /^https:\/\//i.test(item.photo_url)
+        ? '<img class="car-photo" src="' + esc(item.photo_url) + '" alt="Көлік фотосы">'
+        : '<p class="small">Көлік фотосы қолжетімсіз</p>';
+
+      card.innerHTML = `
+        <h3>🚘 ${esc(item.full_name)}</h3>
+        <div class="details">
+          <b>Телефон:</b> ${esc(item.phone)}<br>
+          <b>Көлік:</b> ${esc(item.car_brand)} ${esc(item.car_model)}<br>
+          <b>Жылы:</b> ${esc(item.car_year || "—")}<br>
+          <b>Нөмірі:</b> ${esc(item.car_number)}<br>
+          <b>Санаты:</b> ${esc(names[item.car_class] || item.car_class)}<br>
+          <b>Уақыты:</b> ${esc(dateText(item.created_at))}
+        </div>
+        ${photo}
+        <div class="status-badge status-${esc(item.status)}">${esc(statuses[item.status] || item.status)}</div>
+        ${item.status === "pending" ? `
+          <button class="btn-approve" data-id="${esc(item.id)}" data-action="approve">✅ Мақұлдау</button>
+          <button class="btn-reject" data-id="${esc(item.id)}" data-action="reject">❌ Қабылдамау</button>
+        ` : ""}
+      `;
+
+      $("applications").appendChild(card);
+    });
+
+  } catch (e) {
+    $("listMessage").textContent = "Жүктеу кезінде қате";
+    $("listMessage").className = "message error";
+  }
+}
+
+// ===== SHOW TEMPORARY PASSWORD =====
+function showTemporaryPassword(data) {
+  $("credentialPanel").innerHTML = "";
+
+  const box = document.createElement("div");
+  box.className = "password-box";
+
+  box.innerHTML = `
+    <h3>✅ Жүргізуші аккаунты жасалды</h3>
+    <div style="color:#cbd5e1;font-size:13px">Жүргізуші телефоны: <b>${esc(data.phone)}</b></div>
+    <p style="color:#cbd5e1;font-size:13px;margin:12px 0 4px">Уақытша құпиясөз:</p>
+    <div class="password-value" id="tempPass">${esc(data.temporary_password)}</div>
+    <button class="btn-copy" onclick="copyPassword('${esc(data.temporary_password)}')">📋 Көшіру</button>
+    <p class="small" style="margin-top:12px">⚠️ Бұл құпиясөз тек осы экранда көрсетіледі. Жүргізушіге дереу жеткізіңіз.</p>
+  `;
+
+  $("credentialPanel").appendChild(box);
+}
+
+async function copyPassword(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    alert("✅ Құпиясөз көшірілді");
+  } catch (e) {
+    alert("Көшіру мүмкін болмады. Қолмен жазыңыз: " + text);
+  }
+}
+
+// ===== APPROVE / REJECT =====
+async function updateApplication(id, action, button) {
+  const question = action === "approve"
+    ? "Жүргізушіні мақұлдап, аккаунтын жасаймыз ба?"
+    : "Өтінімді қабылдамаймыз ба?";
+
+  if (!confirm(question)) return;
+
+  const card = button.closest(".application");
+  const driverPhone = card?.dataset.phone || "";
+
+  button.disabled = true;
+  $("listMessage").textContent = "Өңделуде...";
+  $("listMessage").className = "message info";
+
+  try {
+    const r = await fetch(`/api/admin?action=${action}`, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id })
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("listMessage").textContent = d.message || "Өңдеу мүмкін болмады";
+      $("listMessage").className = "message error";
+      button.disabled = false;
+      return;
+    }
+
+    if (action === "approve" && d.temporary_password) {
+      showTemporaryPassword({
+        phone: driverPhone,
+        temporary_password: d.temporary_password
+      });
+    }
+
+    $("listMessage").textContent = d.message || "Дайын";
+    $("listMessage").className = "message success";
+    await Promise.all([loadApplications(), loadDrivers()]);
+
+  } catch (e) {
+    $("listMessage").textContent = "Сервермен байланыс қатесі";
+    $("listMessage").className = "message error";
+    button.disabled = false;
+  }
+}
+
+// ===== LOAD DRIVERS =====
+async function loadDrivers() {
+  $("driversMessage").textContent = "Жүргізушілер жүктелуде...";
+  $("driversMessage").className = "message info";
+  $("driversList").innerHTML = "";
+
+  try {
+    const r = await fetch("/api/admin?action=commissions", {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("driversMessage").textContent = d.message || "Жүгізушілерді алу мүмкін болмады";
+      $("driversMessage").className = "message error";
+      return;
+    }
+
+    const drivers = d.drivers || [];
+    $("driversMessage").textContent = "Барлық жүргізуші: " + drivers.length;
+    $("driversMessage").className = "message info";
+
+    if (!drivers.length) {
+      $("driversList").innerHTML = '<div class="empty">Әзірге расталған жүргізуші жоқ</div>';
+      renderDriverDropdown(drivers);
+      return;
+    }
+
+    drivers.forEach(driver => {
+      const card = document.createElement("div");
+      card.className = "driver-item";
+
+      const isBlocked = driver.is_blocked === true;
+      const isDeleted = !!driver.deleted_at;
+      const badgeText = isDeleted ? "Өшірілген" : isBlocked ? "Бұғатталған" : "Белсенді";
+      const badgeClass = (isBlocked || isDeleted) ? "blocked" : "active";
+
+      card.innerHTML = `
+        <h4>👤 ${esc(driver.full_name || "Белгісіз")} 
+          <span class="driver-badge ${badgeClass}">${badgeText}</span>
+        </h4>
+        <div class="meta">
+          📞 ${esc(driver.phone || "—")}
+        </div>
+        <div class="driver-actions">
+          ${!isDeleted ? `
+            ${isBlocked 
+              ? `<button class="btn-unblock" data-id="${esc(driver.id)}" data-action="unblock_driver">🔓 Бұғаттан шығару</button>`
+              : `<button class="btn-block" data-id="${esc(driver.id)}" data-action="block_driver">🔒 Бұғаттау</button>`
+            }
+            <button class="btn-delete" data-id="${esc(driver.id)}" data-action="delete_driver">🗑 Өшіру</button>
+          ` : '<span class="small">Бұл жүргізуші өшірілген</span>'}
+        </div>
+      `;
+      $("driversList").appendChild(card);
+    });
+
+    renderDriverDropdown(drivers);
+
+  } catch (e) {
+    $("driversMessage").textContent = "Жүктеу қатесі";
+    $("driversMessage").className = "message error";
+  }
+}
+
+function renderDriverDropdown(drivers) {
+  const select = $("chatDriver");
+  const previous = select.value;
+  select.innerHTML = '<option value="">Жүргізушіні таңдаңыз</option>';
+  (drivers || []).forEach(driver => {
+    if (driver.deleted_at) return;
+    const option = document.createElement("option");
+    option.value = driver.id;
+    option.textContent = (driver.full_name || "Жүргізуші") + " — " + (driver.phone || "");
+    select.appendChild(option);
+  });
+  if (previous && [...select.options].some(o => o.value === previous)) {
+    select.value = previous;
+  }
+}
+
+// ===== DRIVER ACTIONS =====
+async function driverAction(id, action, button) {
+  const labels = {
+    block_driver: "🔒 Бұғаттау",
+    unblock_driver: "🔓 Бұғаттан шығару",
+    delete_driver: "🗑 Өшіру"
+  };
+  const confirmText = {
+    block_driver: "Жүргізушіні бұғаттайсыз ба? Ол жүйеге кіре алмайды.",
+    unblock_driver: "Жүргізушінің бұғатын ашасыз ба?",
+    delete_driver: "Жүргізушіні өшіресіз бе? Бұл әрекетті кері қайтару мүмкін емес!"
+  };
+
+  if (!confirm(confirmText[action])) return;
+
+  button.disabled = true;
+  button.textContent = "Өңделуде...";
+  $("driversMessage").textContent = "Өңделуде...";
+  $("driversMessage").className = "message info";
+
+  try {
+    const r = await fetch("/api/admin?action=" + action, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ driver_id: id })
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("driversMessage").textContent = d.message || "Өңдеу мүмкін болмады";
+      $("driversMessage").className = "message error";
+      button.disabled = false;
+      button.textContent = labels[action];
+      return;
+    }
+
+    $("driversMessage").textContent = "✅ Аяқталды";
+    $("driversMessage").className = "message success";
+    await loadDrivers();
+  } catch (e) {
+    $("driversMessage").textContent = "Сервер қатесі";
+    $("driversMessage").className = "message error";
+    button.disabled = false;
+    button.textContent = labels[action];
+  }
+}
+
+// ===== LOAD MESSAGES =====
+async function loadMessages() {
+  const driverId = $("chatDriver").value;
+
+  if (!driverId) {
+    $("chatMessages").innerHTML = '<div class="chat-empty">Алдымен жүргізушіні таңдаңыз</div>';
+    $("chatMessage").textContent = "";
+    return;
+  }
+
+  $("chatMessage").textContent = "Хаттар жүктелуде...";
+  $("chatMessage").className = "message info";
+
+  try {
+    const r = await fetch("/api/admin?action=messages&driver_id=" + encodeURIComponent(driverId), {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("chatMessage").textContent = d.message || "Хаттарды алу мүмкін болмады";
+      $("chatMessage").className = "message error";
+      return;
+    }
+
+    const items = d.messages || [];
+    renderMessages(items);
+    $("chatMessage").textContent = "Хат саны: " + items.length;
+    $("chatMessage").className = "message info";
+
+  } catch (e) {
+    $("chatMessage").textContent = "Хаттарды жүктеу қатесі";
+    $("chatMessage").className = "message error";
+  }
+}
+
+function renderMessages(items) {
+  const box = $("chatMessages");
+  box.innerHTML = "";
+
+  if (!items.length) {
+    box.innerHTML = '<div class="chat-empty">Бұл жүргізушімен әлі хат алмасу жоқ</div>';
+    return;
+  }
+
+  items.forEach(item => {
+    const isAdmin = item.sender_role === "admin";
+    const bubble = document.createElement("div");
+    bubble.className = "chat-message " + (isAdmin ? "chat-admin" : "chat-driver");
+
+    const meta = document.createElement("div");
+    meta.className = "chat-meta";
+    meta.textContent = (isAdmin ? "Сіз • Әкімші" : "Жүргізуші") + " • " + dateText(item.created_at);
+
+    const content = document.createElement("div");
+    content.textContent = item.message || "";
+
+    const read = document.createElement("div");
+    read.className = "chat-read-status";
+
+    if (isAdmin) {
+      if (item.read_at) {
+        read.classList.add("read");
+        read.textContent = "✓✓ Оқылды • " + dateText(item.read_at);
+      } else {
+        read.textContent = "✓ Жіберілді";
+      }
+    } else if (item.read_at) {
+      read.classList.add("read");
+      read.textContent = "✓✓ Сіз оқыдыңыз";
+    }
+
+    bubble.appendChild(meta);
+    bubble.appendChild(content);
+    bubble.appendChild(read);
+    box.appendChild(bubble);
+  });
+
+  box.scrollTop = box.scrollHeight;
+}
+
+// ===== SEND MESSAGE =====
+async function sendMessage() {
+  const driverId = $("chatDriver").value;
+  const message = $("chatInput").value.trim();
+
+  if (!driverId) {
+    $("chatMessage").textContent = "Алдымен жүргізушіні таңдаңыз";
+    $("chatMessage").className = "message error";
+    return;
+  }
+  if (!message) {
+    $("chatMessage").textContent = "Хабарлама мәтінін жазыңыз";
+    $("chatMessage").className = "message error";
+    return;
+  }
+
+  $("sendMessageButton").disabled = true;
+
+  try {
+    const r = await fetch("/api/admin?action=send_message", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ driver_id: driverId, message, message_type: "text" })
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("chatMessage").textContent = d.message || "Жіберу мүмкін болмады";
+      $("chatMessage").className = "message error";
+      return;
+    }
+
+    $("chatInput").value = "";
+    $("chatMessage").textContent = "✅ Хабарлама жіберілді";
+    $("chatMessage").className = "message success";
+    await loadMessages();
+  } catch (e) {
+    $("chatMessage").textContent = "Сервер қатесі";
+    $("chatMessage").className = "message error";
+  } finally {
+    $("sendMessageButton").disabled = false;
+  }
+}
+
+// ===== LOAD COMMISSIONS =====
+async function loadCommissions() {
+  $("commissionMessage").textContent = "Жүктелуде...";
+  $("commissionMessage").className = "message info";
+  $("commissions").innerHTML = "";
+  $("historyMessage").textContent = "Жүктелуде...";
+  $("historyMessage").className = "message info";
+  $("paymentHistory").innerHTML = "";
+
+  try {
+    const r = await fetch("/api/admin?action=commissions", {
+      credentials: "same-origin",
+      cache: "no-store"
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("commissionMessage").textContent = d.message || "Алу мүмкін болмады";
+      $("commissionMessage").className = "message error";
+      return;
+    }
+
+    if (typeof d.unread_messages === "number") {
+      updateUnreadBadge(d.unread_messages);
+    }
+
+    const items = d.commissions || [];
+    if (!items.length) {
+      $("commissionMessage").textContent = "Әзірге есептелген комиссия жоқ";
+      $("commissionMessage").className = "message info";
+    } else {
+      $("commissionMessage").textContent = "Апталық есептер: " + items.length;
+      $("commissionMessage").className = "message info";
+
+      items.forEach(item => {
+        const card = document.createElement("div");
+        card.className = "commission-card";
+        const unpaid = Number(item.unpaid_total || 0);
+        const paid = Number(item.paid_total || 0);
+
+        card.innerHTML = `
+          <h3>🚘 ${esc(item.driver_name || "Жүргізуші")}</h3>
+          <div class="details">
+            <b>Телефон:</b> ${esc(item.driver_phone || "—")} •
+            <b>Тапсырыс:</b> ${esc(item.rides_count || 0)}
+          </div>
+          <div class="small" style="margin-top:8px">📅 ${esc(dateText(item.week_start))} — ${esc(dateText(item.week_end))}</div>
+          <div class="money-grid">
+            <div class="money-item"><span>Жалпы айналым</span><strong>${money(item.gross_total)}</strong></div>
+            <div class="money-item"><span>10% комиссия</span><strong>${money(item.commission_total)}</strong></div>
+            <div class="money-item"><span>Төленген</span><strong class="paid">${money(paid)}</strong></div>
+            <div class="money-item"><span>Төленбеген</span><strong class="unpaid">${money(unpaid)}</strong></div>
+          </div>
+          ${unpaid > 0 ? `
+            <button class="btn-mark-paid"
+              data-driver-id="${esc(item.driver_id)}"
+              data-week-start="${esc(item.week_start || "")}"
+              data-week-end="${esc(item.week_end || "")}"
+              onclick="markCommissionPaid(this)">✅ Төленді деп белгілеу</button>
+            <p class="commission-note">Комиссия ақшасын нақты алған соң басыңыз</p>
+          ` : '<div style="color:#19d995;margin-top:10px;font-weight:700">✅ Комиссия толық төленген</div>'}
+        `;
+        $("commissions").appendChild(card);
+      });
+    }
+
+    renderPaymentHistory(d.payment_history || []);
+
+  } catch (e) {
+    $("commissionMessage").textContent = "Жүктеу қатесі";
+    $("commissionMessage").className = "message error";
+    $("historyMessage").textContent = "Жүктеу қатесі";
+    $("historyMessage").className = "message error";
+  }
+}
+
+// ===== MARK PAID =====
+async function markCommissionPaid(button) {
+  const driverId = button.dataset.driverId;
+  const weekStart = button.dataset.weekStart;
+  const weekEnd = button.dataset.weekEnd;
+
+  if (!driverId || !weekStart || !weekEnd) {
+    $("commissionMessage").textContent = "Деректер толық емес";
+    $("commissionMessage").className = "message error";
+    return;
+  }
+
+  if (!confirm("Осы аптаның комиссиясын нақты алдыңыз ба?")) return;
+
+  button.disabled = true;
+  button.textContent = "Өңделуде...";
+
+  try {
+    const r = await fetch("/api/admin?action=mark_paid", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ driver_id: driverId, week_start: weekStart, week_end: weekEnd })
+    });
+    const d = await r.json();
+
+    if (r.status === 401) { showLogin(); return; }
+    if (!r.ok || !d.success) {
+      $("commissionMessage").textContent = d.message || "Белгілеу мүмкін болмады";
+      $("commissionMessage").className = "message error";
+      button.disabled = false;
+      button.textContent = "✅ Төленді деп белгілеу";
+      return;
+    }
+
+    $("commissionMessage").textContent = "✅ Төлем белгіленді: " + money(d.commission_paid);
+    $("commissionMessage").className = "message success";
+    await loadCommissions();
+
+  } catch (e) {
+    $("commissionMessage").textContent = "Сервер қатесі";
+    $("commissionMessage").className = "message error";
+    button.disabled = false;
+    button.textContent = "✅ Төленді деп белгілеу";
+  }
+}
+
+// ===== RENDER PAYMENT HISTORY =====
+function renderPaymentHistory(items) {
+  const box = $("paymentHistory");
+  box.innerHTML = "";
+
+  if (!items.length) {
+    $("historyMessage").textContent = "Әзірге төлем тарихы жоқ";
+    $("historyMessage").className = "message info";
+    box.innerHTML = '<div class="empty">Комиссия нақты төленген соң осы жерде көрінеді</div>';
+    return;
+  }
+
+  $("historyMessage").textContent = "Төлем жазбалары: " + items.length;
+  $("historyMessage").className = "message info";
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "history-card";
+    card.innerHTML = `
+      <h3>✅ ${esc(item.driver_name || "Жүргізуші")}</h3>
+      <div class="details">
+        <b>Телефон:</b> ${esc(item.driver_phone || "—")} •
+        <b>Сапар:</b> ${esc(item.rides_count || 0)}
+      </div>
+      <div class="history-date">
+        <b>Апта:</b> ${esc(dateText(item.week_start))} — ${esc(dateText(item.week_end))}<br>
+        <b>Төленді:</b> ${esc(dateText(item.paid_at))}
+      </div>
+      <div class="history-amount">${money(item.paid_total)}</div>
+    `;
+    box.appendChild(card);
+  });
+}
+
+// ===== LOAD ALL =====
+async function loadAll() {
+  await Promise.all([
+    loadApplications(),
+    loadDrivers(),
+    loadCommissions()
+  ]);
+}
+
+// ===== EVENT DELEGATION =====
+document.addEventListener("click", e => {
+  // Application approve/reject
+  const appBtn = e.target.closest("button[data-action][data-id]");
+  if (appBtn && !appBtn.dataset.driverId) {
+    const action = appBtn.dataset.action;
+    if (action === "approve" || action === "reject") {
+      updateApplication(appBtn.dataset.id, action, appBtn);
+    }
+  }
+
+  // Driver block/unblock/delete
+  const driverBtn = e.target.closest("button[data-action][data-id]");
+  if (driverBtn && ["block_driver", "unblock_driver", "delete_driver"].includes(driverBtn.dataset.action)) {
+    driverAction(driverBtn.dataset.id, driverBtn.dataset.action, driverBtn);
+  }
+});
+
+// ===== ENTER TO SEND CHAT =====
+document.addEventListener("DOMContentLoaded", () => {
+  const input = $("chatInput");
+  if (input) {
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+  }
+
+  const passInput = $("password");
+  if (passInput) {
+    passInput.addEventListener("keydown", e => {
+      if (e.key === "Enter") login();
+    });
+  }
+
+  // Auto-check auth on load
+  checkAuth();
+});
+</script>
+
+</body>
+</html>
