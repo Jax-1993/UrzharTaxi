@@ -73,7 +73,6 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 </header>
 
 <main>
-  <!-- СТАТИСТИКА -->
   <div class="card">
     <h3>📊 Менің статистикам</h3>
     <div class="stats">
@@ -84,7 +83,6 @@ button:disabled{opacity:0.5;cursor:not-allowed}
     </div>
   </div>
 
-  <!-- АПТАЛЫҚ КОМИССИЯ -->
   <div class="card">
     <h3>📅 Апталық комиссия</h3>
     <div class="weekly-row"><span class="weekly-label">Төленбеген</span><span class="weekly-value" id="unpaid" style="color:#ffcc00">—</span></div>
@@ -92,19 +90,16 @@ button:disabled{opacity:0.5;cursor:not-allowed}
     <p class="week-period" id="week"></p>
   </div>
 
-  <!-- ЖАҢА ТАПСЫРЫСТАР -->
   <div class="card">
     <h3>🟢 Жаңа тапсырыстар</h3>
     <div id="newOrders" class="muted">Тапсырыстар жүктелуде...</div>
   </div>
 
-  <!-- МЕНІҢ САПАРЛАРЫМ -->
   <div class="card">
     <h3>📋 Менің сапарларым</h3>
     <div id="myOrders" class="muted">Жүктелуде...</div>
   </div>
 
-  <!-- ЧАТ -->
   <div class="card">
     <h3>💬 Әкімшімен чат</h3>
     <div class="chat-box" id="chatBox"><div class="chat-empty">Хабарламалар жүктелуде...</div></div>
@@ -114,7 +109,6 @@ button:disabled{opacity:0.5;cursor:not-allowed}
     </div>
   </div>
 
-  <!-- ЖАҢАРТУ -->
   <div class="card" style="background:transparent;border:0;box-shadow:none;padding:0">
     <button class="btn-refresh" onclick="loadAll()" id="refresh">🔄 Жаңарту</button>
     <p id="message" class="muted" style="text-align:center;margin-top:10px"></p>
@@ -206,19 +200,56 @@ async function loadOrders(){
 async function acceptOrder(orderId,btn){
   if(!confirm("Осы тапсырысты қабылдайсыз ба?"))return;
   btn.disabled=true;btn.textContent="Қабылдануда...";
-  try{await fetch("/api/driver?action=accept",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId})});await loadOrders()}catch(e){alert("Қате")}
+  try{
+    const r = await fetch("/api/driver?action=accept",{
+      method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({orderId})
+    });
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.message || "Қабылдау мүмкін болмады");
+    await loadOrders();
+  }catch(e){
+    alert("❌ " + e.message);
+    btn.disabled=false;
+    btn.textContent="✅ ҚАБЫЛДАУ";
+  }
 }
 
 async function completeOrder(orderId,btn){
   if(!confirm("Сапарды аяқталды деп белгілейсіз бе?"))return;
   btn.disabled=true;btn.textContent="Аяқталуда...";
-  try{await fetch("/api/driver?action=complete",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId})});if(gpsActive&&gpsOrderId===orderId)stopGps();await Promise.all([loadAll(),loadChat()])}catch(e){alert("Қате")}
+  try{
+    const r = await fetch("/api/driver?action=complete",{
+      method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({orderId})
+    });
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.message || "Аяқтау мүмкін болмады");
+    
+    if(gpsActive&&gpsOrderId===orderId)stopGps();
+    alert("✅ Сапар аяқталды!\nТабыс: " + money(d.driver_earning) + "\nКомиссия: " + money(d.commission));
+    await Promise.all([loadAll(),loadChat()]);
+  }catch(e){
+    alert("❌ " + e.message);
+    btn.disabled=false;
+    btn.textContent="🏁 САПАРДЫ АЯҚТАУ";
+  }
 }
 
 async function cancelOrder(orderId,btn){
   if(!confirm("Тапсырыстан бас тартасыз ба?"))return;
   btn.disabled=true;btn.textContent="Бас тартылуда...";
-  try{await fetch("/api/driver?action=cancel",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId})});if(gpsActive&&gpsOrderId===orderId)stopGps();await loadOrders()}catch(e){alert("Қате")}
+  try{
+    const r = await fetch("/api/driver?action=cancel",{
+      method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({orderId})
+    });
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.message || "Бас тарту мүмкін болмады");
+    if(gpsActive&&gpsOrderId===orderId)stopGps();
+    await loadOrders();
+  }catch(e){
+    alert("❌ " + e.message);
+    btn.disabled=false;
+    btn.textContent="❌ БАС ТАРТУ";
+  }
 }
 
 async function startGps(orderId){
