@@ -46,7 +46,6 @@ function getAlmatyWeek(date) {
   return { start, end: new Date(start.getTime() + 7 * 86400000) };
 }
 
-// Телефонды тазарту функциясы
 function normalizePhone(phone) {
   let digits = String(phone || "").replace(/\D/g, "");
   if (digits.startsWith("8")) digits = "7" + digits.slice(1);
@@ -63,15 +62,12 @@ export default async function handler(req, res) {
   const action = req.query?.action || req.body?.action;
   const headers = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 
-  // 1. КІРУ
   if (action === "login" && req.method === "POST") {
     const { phone, password } = req.body || {};
-    const cleanPhone = normalizePhone(phone); // Телефонды тазарту
-    
+    const cleanPhone = normalizePhone(phone);
     const r = await fetch(`${URL}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,password_hash,is_blocked,block_reason&limit=1`, { headers });
     const drivers = await r.json();
     const driver = drivers[0];
-    
     if (!driver || !(await verifyPassword(password, driver.password_hash))) {
       return res.status(401).json({ success: false, message: "Телефон немесе құпиясөз қате" });
     }
@@ -82,7 +78,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // 2. ШЫҒУ
   if (action === "logout") {
     res.setHeader("Set-Cookie", `${COOKIE_NAME}=; Max-Age=0; Path=/`);
     return res.status(200).json({ success: true });
@@ -91,7 +86,6 @@ export default async function handler(req, res) {
   const driverId = getDriverId(req, KEY);
   if (!driverId) return res.status(401).json({ success: false, message: "Сессия жоқ" });
 
-  // 3. СТАТИСТИКА
   if (action === "stats" && req.method === "GET") {
     const [oRes, cRes] = await Promise.all([
       fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=eq.completed&select=price`, { headers }),
@@ -108,14 +102,12 @@ export default async function handler(req, res) {
     });
   }
 
-  // 4. ТАПСЫРЫСТАРДЫ АЛУ
   if (action === "orders" && req.method === "GET") {
     const nRes = await fetch(`${URL}/rest/v1/orders?status=eq.searching&select=id,pickup_address,destination_address,car_class,distance_km,price,payment_method,created_at&order=created_at.asc`, { headers });
     const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status&order=created_at.desc`, { headers });
     return res.status(200).json({ success: true, new_orders: await nRes.json(), my_orders: await mRes.json() });
   }
 
-  // 5. ҚАБЫЛДАУ
   if (action === "accept" && req.method === "POST") {
     const { orderId } = req.body;
     const r = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&status=eq.searching&driver_id=is.null`, {
@@ -127,7 +119,17 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // 6. АЯҚТАУ
+  if (action === "start_ride" && req.method === "POST") {
+    const { orderId } = req.body;
+    const r = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&driver_id=eq.${driverId}&status=eq.accepted`, {
+      method: "PATCH", headers: { ...headers, Prefer: "return=representation" },
+      body: JSON.stringify({ status: "in_progress", in_progress_at: new Date().toISOString() })
+    });
+    const updated = await r.json();
+    if (!updated.length) return res.status(409).json({ success: false, message: "Сапарды бастау мүмкін емес" });
+    return res.status(200).json({ success: true });
+  }
+
   if (action === "complete" && req.method === "POST") {
     const r = await fetch(`${URL}/rest/v1/rpc/complete_taxi_order`, {
       method: "POST", headers, body: JSON.stringify({ p_order_id: req.body.orderId, p_driver_id: driverId })
@@ -137,15 +139,13 @@ export default async function handler(req, res) {
     return res.status(200).json(d);
   }
 
-  // 7. БАС ТАРТУ
   if (action === "cancel" && req.method === "POST") {
     await fetch(`${URL}/rest/v1/orders?id=eq.${req.body.orderId}&driver_id=eq.${driverId}&status=in.(accepted,in_progress)`, {
-      method: "PATCH", headers, body: JSON.stringify({ driver_id: null, status: "searching", accepted_at: null })
+      method: "PATCH", headers, body: JSON.stringify({ driver_id: null, status: "searching", accepted_at: null, in_progress_at: null })
     });
     return res.status(200).json({ success: true });
   }
 
-  // 8. GPS БӨЛІСУ
   if (action === "share_location" && req.method === "POST") {
     const { latitude, longitude } = req.body;
     await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)`, {
@@ -155,7 +155,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // 9. ЧАТ (АЛУ ЖӘНЕ ЖІБЕРУ)
   if (action === "messages" && req.method === "GET") {
     const r = await fetch(`${URL}/rest/v1/driver_messages?driver_id=eq.${driverId}&order=created_at.asc&limit=200`, { headers });
     const msgs = await r.json();
