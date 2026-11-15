@@ -3,31 +3,27 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ҮРЖАР TAXI</title>
+<title>ТҰЛПАР TAXI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--yellow:#ffcc00;--black:#101114;--green:#16bd79}
-body{margin:0;font-family:'Inter',-apple-system,sans-serif;background:#f2f3f5;color:#171717;-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:'Inter',sans-serif;background:#f2f3f5;color:#171717;-webkit-font-smoothing:antialiased}
 header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);color:white;display:flex;align-items:center;padding:0 15px;gap:14px;position:relative;z-index:1000;border-bottom:3px solid var(--yellow);box-shadow:0 2px 12px rgba(0,0,0,0.15)}
 .menu-btn{border:0;background:none;color:var(--yellow);font-size:28px;padding:5px;cursor:pointer}
 .brand{flex:1}
 .brand h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-0.5px}
 .brand p{margin:3px 0 0;color:var(--yellow);font-size:11px;font-weight:600}
 .online{font-size:11px;color:#48e5a1;font-weight:600;display:flex;align-items:center;gap:5px}
-.online::before{content:'';width:7px;height:7px;border-radius:50%;background:#48e5a1;box-shadow:0 0 8px #48e5a1;animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#17191e;color:white;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.3)}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:15px}
 .drawer h2{color:var(--yellow);font-weight:800;font-size:18px;margin:0}
 .close-menu{background:none;border:0;color:white;font-size:27px;padding:5px;cursor:pointer}
-.menu-item{width:100%;display:block;text-align:left;background:#262930;color:white;margin-top:12px;padding:15px;border-radius:12px;font-size:15px;border:0;cursor:pointer;font-family:inherit;font-weight:500;transition:background 0.2s}
-.menu-item:hover{background:#3a3d43}
+.menu-item{width:100%;display:block;text-align:left;background:#262930;color:white;margin-top:12px;padding:15px;border-radius:12px;font-size:15px;border:0;cursor:pointer;font-family:inherit;font-weight:500}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2500;backdrop-filter:blur(2px)}
 .overlay.open{display:block}
 .page{display:none}
@@ -36,52 +32,46 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 @keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
 .map-area{height:57vh;min-height:330px;max-height:650px;flex-shrink:0;position:relative}
 #map{height:100%;width:100%;background:#dce9e9}
-.leaflet-container{z-index:1}
 .panel{background:white;padding:18px;border-radius:24px 24px 0 0;position:relative;box-shadow:0 -8px 30px rgba(0,0,0,0.08)}
-.title{font-size:20px;font-weight:800;margin-bottom:12px;letter-spacing:-0.3px}
-.hint{font-size:13px;color:#6b7280;margin-bottom:12px;line-height:1.5}
-.gps-btn{width:100%;padding:13px;background:linear-gradient(135deg,#202329 0%,#2d3139 100%);color:white;border-radius:12px;font-weight:600;border:0;cursor:pointer;font-family:inherit;font-size:14px;transition:transform 0.15s}
-.gps-btn:active{transform:scale(0.98)}
-input{width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;color:#171717;font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s}
-input:focus{border-color:var(--yellow);background:white;box-shadow:0 0 0 3px rgba(255,204,0,0.15)}
-input[type=file]{padding:12px;background:white;border:1.5px dashed #aaa}
-select{width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px;font-family:inherit;outline:none}
-button{border:0;cursor:pointer;font-family:inherit}
-.suggestions{background:#f0fff8;border:2px solid var(--green);border-radius:14px;overflow:hidden;position:relative;z-index:20;box-shadow:0 4px 16px rgba(22,189,121,0.15);margin:8px 0 14px;animation:fadeIn 0.2s ease}
+.title{font-size:20px;font-weight:800;margin-bottom:12px}
+.hint{font-size:13px;color:#6b7280;margin-bottom:12px}
+.gps-btn{width:100%;padding:13px;background:linear-gradient(135deg,#202329 0%,#2d3139 100%);color:white;border-radius:12px;font-weight:600;border:0;cursor:pointer;font-family:inherit;font-size:14px;margin-bottom:10px}
+
+/* Инпут және Х батырмасы үшін */
+.input-wrapper{position:relative;margin:6px 0}
+.input-wrapper input{width:100%;padding:15px;padding-right:45px;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;color:#171717;font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s}
+.input-wrapper input:focus{border-color:var(--yellow);background:white;box-shadow:0 0 0 3px rgba(255,204,0,0.15)}
+.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#e1e4e8;border:0;width:24px;height:24px;border-radius:50%;color:#666;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
+.clear-btn.show{display:flex}
+
+.suggestions{background:#f0fff8;border:2px solid var(--green);border-radius:14px;overflow:hidden;margin:8px 0 14px;animation:fadeIn 0.2s ease}
 .suggestions:empty{display:none}
-@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .suggestion{padding:15px 12px;border-bottom:1px solid #c8efdc;font-size:13px;line-height:1.5;cursor:pointer;background:#f0fff8}
-.suggestion::before{content:"📍 ОСЫ МЕКЕНЖАЙДЫ ТАҢДАҢЫЗ";display:block;color:#07864f;font-size:10px;font-weight:800;margin-bottom:5px}
-.suggestion:last-child{border-bottom:0}
 .suggestion:hover{background:#e0f9ec}
 .small{font-size:12px;color:#6b7280;line-height:1.5}
 .bottom-action{position:sticky;bottom:0;background:white;padding:12px 15px calc(14px + env(safe-area-inset-bottom));z-index:100;border-top:1px solid #eee}
-.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:14px;font-size:16px;letter-spacing:0.3px;box-shadow:0 4px 16px rgba(255,204,0,0.35);transition:transform 0.15s,box-shadow 0.2s}
-.main-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,204,0,0.45)}
+.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:14px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35)}
 .main-btn:disabled{opacity:0.5;box-shadow:none}
-.continue-btn{display:none}
-.continue-btn.show{display:block;animation:fadeIn 0.3s ease}
+.continue-btn{display:none}.continue-btn.show{display:block}
 #page2,#page3,#page4{min-height:calc(100dvh - 65px)}
 #page2{background:#f2f3f5}
-#page2 .panel{border-radius:0;padding-bottom:10px}
-#page3 .panel{border-radius:0}
-.route-summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);border:1px solid #f0d875;padding:14px;border-radius:14px;font-size:13px;line-height:1.8;box-shadow:0 2px 8px rgba(240,216,117,0.2)}
-.car{display:flex;gap:12px;background:white;padding:12px;border:2px solid #e8ebef;border-radius:18px;margin:12px 0;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.06);transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s}
-.car:hover{transform:translateY(-2px)}
-.car.selected{border:3px solid var(--yellow);background:linear-gradient(135deg,#fffdf5 0%,#fffbed 100%);transform:scale(1.01);box-shadow:0 6px 22px rgba(255,204,0,0.25)}
+#page2 .panel,#page3 .panel{border-radius:0;padding-bottom:10px}
+.route-summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);border:1px solid #f0d875;padding:14px;border-radius:14px;font-size:13px;line-height:1.8;margin-bottom:15px}
+.car{display:flex;gap:12px;background:white;padding:12px;border:2px solid #e8ebef;border-radius:18px;margin:12px 0;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
+.car.selected{border:3px solid var(--yellow);background:#fffbed;transform:scale(1.01)}
 .car img{width:115px;height:88px;object-fit:cover;border-radius:12px}
-.car-info{flex:1;display:flex;flex-direction:column;justify-content:center}
+.car-info{flex:1}
 .car-info h3{margin:0 0 4px;font-size:17px;font-weight:800}
 .car-info p{font-size:12px;color:#6b7280;margin:2px 0}
-.price{font-size:20px;font-weight:900;color:#181818;margin-top:6px;letter-spacing:-0.5px}
+.price{font-size:20px;font-weight:900;color:#181818;margin-top:6px}
 .summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);padding:15px;border-radius:14px;margin:12px 0;line-height:1.9;border:1px solid #f0d875}
-.status{text-align:center;padding:40px 15px;animation:fadeIn 0.4s ease}
+.status{text-align:center;padding:40px 15px}
 .status h2{color:#169e68;font-size:24px;font-weight:900;margin-bottom:10px}
-.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px;transition:background 0.2s}
-.back-btn:hover{background:#35373d}
+.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px}
 #carPhotoPreview{display:none;width:100%;max-height:230px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
-@media(max-width:600px){.map-area{height:55vh;min-height:310px}.car img{width:105px;height:80px}.title{font-size:18px}}
-@media(max-height:720px){.map-area{height:48vh;min-height:270px}.car{padding:9px;margin:9px 0}.car img{height:65px}}
+.passenger-info{background:#eef2f7;padding:12px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
+.passenger-info b{color:#111}
+.edit-btn{background:transparent;border:0;color:#3b82f6;font-weight:600;cursor:pointer}
 </style>
 </head>
 <body>
@@ -89,17 +79,16 @@ button{border:0;cursor:pointer;font-family:inherit}
 <header>
   <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="brand">
-    <h2>🚕 URZHAR TAXI</h2>
-    <p>ҮРЖАР • ЖЕДЕЛ ТАКСИ</p>
+    <h2>🚕 ТҰЛПАР TAXI</h2>
+    <p>ЖЕДЕЛ ТАКСИ ҚЫЗМЕТІ</p>
   </div>
-  <div class="online">ONLINE</div>
 </header>
 
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
 
 <nav class="drawer" id="drawer">
   <div class="drawer-top">
-    <h2>URZHAR TAXI</h2>
+    <h2>ТҰЛПАР TAXI</h2>
     <button class="close-menu" onclick="toggleMenu()">×</button>
   </div>
   <button class="menu-item" onclick="menuGo('page1')">🚕 Такси шақыру</button>
@@ -114,10 +103,19 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="title" id="mapTitle">Қай жерден мінесіз?</div>
     <div class="hint" id="hint">Картадан мінетін жерді таңдаңыз немесе GPS рұқсатын беріңіз.</div>
     <button class="gps-btn" onclick="myLocation()">📍 Менің орналасқан жерім</button>
-    <input id="from" placeholder="📍 Қай жерден мінесіз?">
+    
+    <div class="input-wrapper">
+      <input id="from" placeholder="📍 Қай жерден мінесіз?" oninput="toggleClearBtn('from')">
+      <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
+    </div>
     <div id="suggestFrom" class="suggestions"></div>
-    <input id="to" placeholder="🏁 Қайда барасыз?">
+    
+    <div class="input-wrapper">
+      <input id="to" placeholder="🏁 Қайда барасыз?" oninput="toggleClearBtn('to')">
+      <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
+    </div>
     <div id="suggestTo" class="suggestions"></div>
+    
     <div class="small">Алдымен мінетін жерді, содан кейін баратын жерді белгілеңіз.</div>
   </div>
   <div class="bottom-action">
@@ -131,15 +129,15 @@ button{border:0;cursor:pointer;font-family:inherit}
     <div class="route-summary" id="routeSummary"></div>
 
     <div class="car selected" id="economy" onclick="selectCar('economy')">
-      <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop" alt="Эконом">
+      <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop">
       <div class="car-info"><h3>Эконом</h3><p>Күнделікті сапарға</p><div class="price" id="priceEconomy">— ₸</div></div>
     </div>
     <div class="car" id="comfort" onclick="selectCar('comfort')">
-      <img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600&auto=format&fit=crop" alt="Бизнес">
+      <img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600&auto=format&fit=crop">
       <div class="car-info"><h3>Бизнес</h3><p>Кең әрі жайлы көлік</p><div class="price" id="priceComfort">— ₸</div></div>
     </div>
     <div class="car" id="plus" onclick="selectCar('plus')">
-      <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&auto=format&fit=crop" alt="Бизнес+">
+      <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&auto=format&fit=crop">
       <div class="car-info"><h3>Бизнес+</h3><p>Жоғары санатты көлік</p><div class="price" id="pricePlus">— ₸</div></div>
     </div>
   </div>
@@ -153,8 +151,18 @@ button{border:0;cursor:pointer;font-family:inherit}
   <div class="panel">
     <div class="title">👤 Жолаушы туралы ақпарат</div>
     <div class="summary" id="passengerSummary"></div>
-    <input id="name" placeholder="Аты-жөніңіз">
-    <input id="phone" type="tel" placeholder="Телефон нөміріңіз">
+    
+    <!-- Егер аты-телефоны сақталған болса, осы блок шығады -->
+    <div id="savedPassenger" class="passenger-info" style="display:none">
+      <div>👤 <b id="savedName"></b> <br><span style="font-size:12px;color:#666" id="savedPhone"></span></div>
+      <button class="edit-btn" onclick="editPassenger()">Өзгерту</button>
+    </div>
+
+    <!-- Егер сақталмаған болса, осы инпуттар шығады -->
+    <div id="passengerInputs">
+      <input id="name" placeholder="Аты-жөніңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+      <input id="phone" type="tel" placeholder="Телефон нөміріңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    </div>
   </div>
   <div class="bottom-action">
     <button class="main-btn" id="orderBtn" onclick="makeOrder()">🚕 ТАПСЫРЫС БЕРУ</button>
@@ -165,7 +173,6 @@ button{border:0;cursor:pointer;font-family:inherit}
 <section id="page4" class="page">
   <div class="status">
     <h2>✅ Тапсырыс жіберілді!</h2>
-    <p>Тапсырысыңыз жүйеге жіберілді.</p>
     <p>Жүргізушінің тағайындалуы күтілуде...</p>
     <div class="summary" id="finalSummary"></div>
     <p class="small" style="margin-top:15px">⏳ Бақылау бетіне өтуде...</p>
@@ -183,14 +190,14 @@ button{border:0;cursor:pointer;font-family:inherit}
     <input id="carYear" type="number" placeholder="Шыққан жылы">
     <input id="carNumber" placeholder="Мемлекеттік нөмірі">
     <h3>🚕 Қызмет санаты</h3>
-    <select id="carClass">
+    <select id="carClass" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
       <option value="economy">Эконом</option>
       <option value="comfort">Бизнес</option>
       <option value="comfort_plus">Бизнес+</option>
     </select>
     <h3>📸 Көліктің фотосы</h3>
     <input id="carPhoto" type="file" accept="image/jpeg,image/png,image/webp">
-    <img id="carPhotoPreview" alt="Превью">
+    <img id="carPhotoPreview">
     <div id="driverRegisterMessage" class="small" style="margin:12px 0;font-weight:bold;"></div>
     <button class="main-btn" id="driverRegisterBtn" onclick="registerDriver()">ТІРКЕЛУ</button>
     <button class="back-btn" onclick="showPage('page1')">← Басты бет</button>
@@ -203,6 +210,10 @@ let map,startPoint=null,endPoint=null,startMarker=null,endMarker=null,routeLine=
 let distanceKm=0,durationMin=0,routeReady=false,selectedCar='economy',currentPrices={};
 const prices={economy:{base:500,km:100},comfort:{base:700,km:140},plus:{base:1000,km:180}};
 
+// Жолаушы деректерін тексеру
+const savedName = localStorage.getItem('tulpar_passenger_name');
+const savedPhone = localStorage.getItem('tulpar_passenger_phone');
+
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
 function menuGo(id){closeMenu();showPage(id)}
@@ -211,10 +222,30 @@ function goToAdmin(){closeMenu();window.location.href='/admin.html'}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);if(id==='page1'&&map)setTimeout(()=>map.invalidateSize(true),250)}
 function updateContinue(){document.getElementById('continueBtn').classList.toggle('show',!!(startPoint&&endPoint&&routeReady))}
 
+function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
+
+function clearPoint(type){
+  if(type==='A'){
+    startPoint=null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
+    if(startMarker){map.removeLayer(startMarker);startMarker=null}
+    clearRoute();
+    document.getElementById('mapTitle').textContent='Қай жерден мінесіз?';
+    document.getElementById('hint').textContent='Картадан мінетін жерді таңдаңыз.';
+  } else {
+    endPoint=null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
+    if(endMarker){map.removeLayer(endMarker);endMarker=null}
+    if(routeLine){map.removeLayer(routeLine);routeLine=null}
+    distanceKm=0; routeReady=false;
+    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
+    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз.';
+  }
+  updateContinue();
+}
+
 function initMap(){
   map=L.map('map').setView([47.09,81.63],14);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-  map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearRoute();await setPoint('A',e.latlng)}});
+  map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearPoint('B');await setPoint('A',e.latlng)}});
   setTimeout(()=>map.invalidateSize(true),400);
   setTimeout(()=>{
     if(!navigator.geolocation) return;
@@ -223,21 +254,21 @@ function initMap(){
   },600);
 }
 
-function clearRoute(){routeReady=false;distanceKm=0;durationMin=0;if(routeLine){map.removeLayer(routeLine);routeLine=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}endPoint=null;document.getElementById('to').value='';updateContinue()}
+function clearRoute(){routeReady=false;distanceKm=0;durationMin=0;if(routeLine){map.removeLayer(routeLine);routeLine=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}endPoint=null;document.getElementById('to').value='';document.getElementById('clearTo').classList.remove('show');updateContinue()}
 async function reverseAddress(p){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18`);const d=await r.json();return d.display_name||`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}catch(e){return `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}}
 async function setPoint(type,ll,address){
   const p={lat:ll.lat,lon:ll.lng};
-  if(type==='A'){clearRoute();startPoint=p;if(startMarker)map.removeLayer(startMarker);startMarker=L.marker(ll).addTo(map).bindPopup('Мінетін жер').openPopup();document.getElementById('from').value=address||await reverseAddress(p);document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз'}
-  else{endPoint=p;routeReady=false;if(endMarker)map.removeLayer(endMarker);endMarker=L.marker(ll).addTo(map).bindPopup('Баратын жер').openPopup();document.getElementById('to').value=address||await reverseAddress(p);document.getElementById('mapTitle').textContent='Бағыт есептелуде...';const ok=await getRoute();document.getElementById('mapTitle').textContent=ok?'Бағыт дайын!':'Бағытты есептеу мүмкін болмады'}
+  if(type==='A'){clearRoute();startPoint=p;if(startMarker)map.removeLayer(startMarker);startMarker=L.marker(ll).addTo(map).bindPopup('Мінетін жер').openPopup();document.getElementById('from').value=address||await reverseAddress(p);document.getElementById('clearFrom').classList.add('show');document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз'}
+  else{endPoint=p;routeReady=false;if(endMarker)map.removeLayer(endMarker);endMarker=L.marker(ll).addTo(map).bindPopup('Баратын жер').openPopup();document.getElementById('to').value=address||await reverseAddress(p);document.getElementById('clearTo').classList.add('show');document.getElementById('mapTitle').textContent='Бағыт есептелуде...';const ok=await getRoute();document.getElementById('mapTitle').textContent=ok?'Бағыт дайын!':'Бағытты есептеу мүмкін болмады'}
   updateContinue();
 }
 
 function setupSearch(inputId,boxId,type){
   const input=document.getElementById(inputId),box=document.getElementById(boxId);let timer;
   input.addEventListener('input',()=>{
-    clearTimeout(timer);routeReady=false;
-    if(type==='A'){startPoint=null;if(startMarker){map.removeLayer(startMarker);startMarker=null}clearRoute()}else{endPoint=null;if(endMarker){map.removeLayer(endMarker);endMarker=null}if(routeLine){map.removeLayer(routeLine);routeLine=null}distanceKm=0}
-    updateContinue();const q=input.value.trim();box.innerHTML='';if(q.length<3)return;
+    clearTimeout(timer);
+    const q=input.value.trim();
+    if(q.length < 3) return;
     timer=setTimeout(async()=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q+' Үржар')}`);const data=await r.json();box.innerHTML='';data.forEach(item=>{const div=document.createElement('div');div.className='suggestion';div.textContent=item.display_name;div.onclick=async()=>{input.value=item.display_name;box.innerHTML='';const point={lat:Number(item.lat),lng:Number(item.lon)};if(type==='A')await setPoint('A',point,item.display_name);else await setPoint('B',point,item.display_name);map.setView(point,16)};box.appendChild(div)})}catch(e){box.innerHTML=''}},800);
   });
 }
@@ -251,14 +282,48 @@ async function getRoute(){
 function calculatePrices(){for(const k in prices){currentPrices[k]=Math.round(prices[k].base+distanceKm*prices[k].km)}document.getElementById('priceEconomy').textContent=currentPrices.economy.toLocaleString('kk-KZ')+' ₸';document.getElementById('priceComfort').textContent=currentPrices.comfort.toLocaleString('kk-KZ')+' ₸';document.getElementById('pricePlus').textContent=currentPrices.plus.toLocaleString('kk-KZ')+' ₸'}
 function safe(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 
-function continueToCars(){if(!routeReady){alert('Алдымен бағытты таңдаңыз.');return}calculatePrices();document.getElementById('routeSummary').innerHTML=`📍 ${safe(document.getElementById('from').value)}<br>🏁 ${safe(document.getElementById('to').value)}<br>📏 ${distanceKm.toFixed(1)} км<br>⏱ ${durationMin} минут`;showPage('page2')}
+function continueToCars(){if(!routeReady){alert('Алдымен бағытты таңдаңыз.');return}calculatePrices();document.getElementById('routeSummary').innerHTML=`📍 ${safe(document.getElementById('from').value)}<br>🏁 ${safe(document.getElementById('to').value)}<br>📏 ${distanceKm.toFixed(1)} км`;showPage('page2')}
 function selectCar(k){selectedCar=k;document.querySelectorAll('.car').forEach(c=>c.classList.remove('selected'));document.getElementById(k).classList.add('selected')}
-function continueToDetails(){document.getElementById('passengerSummary').innerHTML=`🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;showPage('page3')}
 function backToMap(){showPage('page1')}
 
+function continueToDetails(){
+  document.getElementById('passengerSummary').innerHTML=`🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
+  
+  // Жолаушы деректерін тексеру
+  if(savedName && savedPhone) {
+    document.getElementById('savedName').textContent = savedName;
+    document.getElementById('savedPhone').textContent = savedPhone;
+    document.getElementById('savedPassenger').style.display = 'flex';
+    document.getElementById('passengerInputs').style.display = 'none';
+  } else {
+    document.getElementById('savedPassenger').style.display = 'none';
+    document.getElementById('passengerInputs').style.display = 'block';
+  }
+  
+  showPage('page3');
+}
+
+function editPassenger(){
+  document.getElementById('savedPassenger').style.display = 'none';
+  document.getElementById('passengerInputs').style.display = 'block';
+  document.getElementById('name').value = savedName || '';
+  document.getElementById('phone').value = savedPhone || '';
+}
+
 async function makeOrder(){
-  const name=document.getElementById('name').value.trim(),phone=document.getElementById('phone').value.trim();
-  if(!name||!phone){alert('Аты-жөніңіз бен телефонды енгізіңіз.');return}
+  let name, phone;
+  
+  if(savedName && savedPhone && document.getElementById('passengerInputs').style.display === 'none') {
+    name = savedName; phone = savedPhone;
+  } else {
+    name = document.getElementById('name').value.trim();
+    phone = document.getElementById('phone').value.trim();
+    if(!name || !phone) return alert('Аты-жөніңіз бен телефонды енгізіңіз.');
+    // Сақтап қою
+    localStorage.setItem('tulpar_passenger_name', name);
+    localStorage.setItem('tulpar_passenger_phone', phone);
+  }
+
   const button=document.getElementById('orderBtn');button.disabled=true;button.textContent='Жіберілуде...';
   try{
     const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,phone,from:document.getElementById('from').value,to:document.getElementById('to').value,car:selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Комфорт+',distance:distanceKm.toFixed(1),price:currentPrices[selectedCar],pickup_latitude:startPoint.lat,pickup_longitude:startPoint.lon,destination_latitude:endPoint.lat,destination_longitude:endPoint.lon})});
@@ -268,14 +333,13 @@ async function makeOrder(){
     document.getElementById('finalSummary').innerHTML=`👤 ${safe(name)}<br>📞 ${safe(phone)}<br>🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
     showPage('page4');
     if(result.orderId&&result.trackingToken){setTimeout(()=>{window.location.href='/passenger-tracking.html'},1500)}
-  }catch(e){alert(e.message)}finally{button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
+  }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
+// Тіркелу бөлігі (өзгеріссіз қалды)
 const carPhotoInput=document.getElementById('carPhoto');
 carPhotoInput.addEventListener('change',function(){const file=this.files[0],preview=document.getElementById('carPhotoPreview');if(!file){preview.style.display='none';return}if(file.size>3*1024*1024){alert('Фото 3 МБ-тан аспауы керек.');this.value='';preview.style.display='none';return}const imageUrl=URL.createObjectURL(file);preview.src=imageUrl;preview.style.display='block'});
-
 async function compressCarPhoto(file){const bitmap=await createImageBitmap(file);const maxSize=1280;const scale=Math.min(1,maxSize/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();return canvas.toDataURL('image/jpeg',0.78)}
-
 async function registerDriver(){
   const name=document.getElementById('regName').value.trim(),phone=document.getElementById('regPhone').value.trim(),brand=document.getElementById('carBrand').value.trim(),model=document.getElementById('carModel').value.trim(),year=document.getElementById('carYear').value.trim(),number=document.getElementById('carNumber').value.trim(),carClass=document.getElementById('carClass').value,photo=document.getElementById('carPhoto').files[0];
   const message=document.getElementById('driverRegisterMessage'),button=document.getElementById('driverRegisterBtn');
