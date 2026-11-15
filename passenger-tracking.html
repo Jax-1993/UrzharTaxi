@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ҮРЖАР TAXI — Бақылау</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#101522;color:#fff;font-family:'Inter',sans-serif;min-height:100dvh}
+header{background:#ffd400;color:#111;padding:18px;text-align:center;font-weight:900;font-size:20px;border-bottom:2px solid #e5b800}
+main{max-width:650px;margin:auto;padding:16px}
+.card{background:#1c2536;padding:18px;border-radius:14px;margin-bottom:15px;border:1px solid #2e3a52}
+h2{margin:0 0 12px;font-size:18px;color:#ffcc00}
+.status{padding:12px;background:#243045;border-radius:9px;line-height:1.5;margin:12px 0;font-weight:600;text-align:center}
+.status.searching{color:#ffcc00}
+.status.accepted{color:#19d995}
+#map{width:100%;height:350px;border-radius:12px;background:#ddd;margin-top:10px}
+button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn-cancel{background:#e54848;color:white}
+.btn-home{background:#2d3a52;color:white}
+.small{color:#c5cede;font-size:13px;line-height:1.5;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+<header>🚕 ҮРЖАР TAXI — БАҚЫЛАУ</header>
+<main>
+  <div class="card">
+    <h2>📍 Жүргізушіні бақылау</h2>
+    <div id="status" class="status searching">Жүйеге қосылуда...</div>
+    <div id="map"></div>
+    <p class="small" id="updated">GPS дерегі күтілуде...</p>
+  </div>
+  
+  <div class="card" id="cancelCard" style="display:none">
+    <button class="btn-cancel" onclick="cancelOrder()">❌ САПАРДАН БАС ТАРТУ</button>
+    <button class="btn-home" onclick="window.location.href='/index.html'">🏠 Басты бетке</button>
+  </div>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
+const token = sessionStorage.getItem("urzhar_taxi_tracking_token");
+let map, driverMarker, pollTimer;
+
+function initMap() {
+  map = L.map("map").setView([47.09, 81.63], 13);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(map);
+}
+
+async function checkStatus() {
+  if (!orderId || !token) {
+    document.getElementById("status").textContent = "Тапсырыс табылмады. Басты бетке оралыңыз.";
+    return;
+  }
+  
+  try {
+    const r = await fetch("/api/passenger?action=status", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    const d = await r.json();
+    if (!d.success) return;
+
+    const st = document.getElementById("status");
+    document.getElementById("cancelCard").style.display = "block";
+
+    if (d.order.status === "searching") {
+      st.className = "status searching";
+      st.innerHTML = "🔍 Жүргізуші ізделуде...";
+    } else if (d.order.status === "accepted") {
+      st.className = "status accepted";
+      st.innerHTML = "✅ Жүргізуші тағайындалды! Жолда...";
+      loadLocation();
+    } else if (d.order.status === "in_progress") {
+      st.className = "status accepted";
+      st.innerHTML = "🚕 Сапар басталды!";
+      loadLocation();
+    } else if (d.order.status === "completed") {
+      st.className = "status accepted";
+      st.innerHTML = "🏁 Сапар аяқталды. Рахмет!";
+      document.getElementById("cancelCard").style.display = "none";
+      clearInterval(pollTimer);
+    } else if (d.order.status === "cancelled") {
+      st.className = "status searching";
+      st.innerHTML = "❌ Тапсырыс тоқтатылды";
+      document.getElementById("cancelCard").style.display = "none";
+      clearInterval(pollTimer);
+    }
+  } catch (e) {}
+}
+
+async function loadLocation() {
+  try {
+    const r = await fetch("/api/passenger?action=location", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    const d = await r.json();
+    if (!d.success || !d.driverLocation) return;
+
+    const pt = [Number(d.driverLocation.latitude), Number(d.driverLocation.longitude)];
+    if (!driverMarker) {
+      driverMarker = L.marker(pt, {icon: L.divIcon({html: '<div style="font-size:32px">🚕</div>', iconSize: [32,32], iconAnchor: [16,16]})}).addTo(map);
+    } else {
+      driverMarker.setLatLng(pt);
+    }
+    map.setView(pt, 16);
+    document.getElementById("updated").textContent = "🔄 Соңғы жаңарту: " + new Date().toLocaleTimeString("kk-KZ");
+  } catch (e) {}
+}
+
+async function cancelOrder() {
+  if (!confirm("Сапардан бас тартасыз ба?")) return;
+  try {
+    await fetch("/api/passenger?action=cancel", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    alert("Тапсырыс тоқтатылды");
+    window.location.href = "/index.html";
+  } catch (e) { alert("Қате"); }
+}
+
+initMap();
+checkStatus();
+pollTimer = setInterval(checkStatus, 5000);
+</script>
+</body>
+</html>
