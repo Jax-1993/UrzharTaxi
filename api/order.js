@@ -15,7 +15,6 @@ export default async function handler(req, res) {
     const trackingToken = crypto.randomBytes(32).toString("hex");
     const trackingTokenHash = crypto.createHash("sha256").update(trackingToken).digest("hex");
     
-    // Бизнес+ қатесі түзетілді
     const carClassMap = { "Эконом": "economy", "Бизнес": "comfort", "Комфорт+": "comfort_plus", "Бизнес+": "comfort_plus" };
     const carClass = carClassMap[car] || "economy";
 
@@ -32,6 +31,7 @@ export default async function handler(req, res) {
     if (destination_latitude) orderData.destination_latitude = Number(destination_latitude);
     if (destination_longitude) orderData.destination_longitude = Number(destination_longitude);
 
+    // 1. Дерекқорға сақтау
     const r = await fetch(`${URL}/rest/v1/orders`, {
       method: "POST", headers: { "Content-Type": "application/json", apikey: KEY, Authorization: `Bearer ${KEY}`, Prefer: "return=representation" },
       body: JSON.stringify(orderData)
@@ -39,6 +39,34 @@ export default async function handler(req, res) {
     const dbResult = await r.json();
     if (!r.ok || !dbResult[0]?.id) return res.status(502).json({ error: "Сақтау мүмкін болмады" });
 
+    // 2. Telegram-ға хабарлама жіберу
+    const token = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    if (token && chatId) {
+      try {
+        const message = "🚕 ҮРЖАР TAXI — ЖАҢА ТАПСЫРЫС\n\n" +
+          "👤 Жолаушы: " + name + "\n" +
+          "📞 Телефон: " + phone + "\n" +
+          "🟢 Қайдан: " + from + "\n" +
+          "🔴 Қайда: " + to + "\n" +
+          "🚘 Көлік: " + car + "\n" +
+          "📏 Қашықтық: " + distance + " км\n" +
+          "💰 Бағасы: " + price + " ₸\n" +
+          "💵 Төлем: " + (payment || "Қолма-қол");
+
+        await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: message })
+        });
+      } catch (e) { 
+        console.error("Telegram қатесі:", e.message); 
+      }
+    }
+
     return res.status(200).json({ success: true, orderId: dbResult[0].id, trackingToken });
-  } catch (e) { return res.status(500).json({ error: "Сервер қатесі" }); }
+  } catch (e) { 
+    console.error("Сервер қатесі:", e);
+    return res.status(500).json({ error: "Сервер қатесі" }); 
+  }
 }
