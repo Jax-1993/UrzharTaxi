@@ -46,6 +46,14 @@ function getAlmatyWeek(date) {
   return { start, end: new Date(start.getTime() + 7 * 86400000) };
 }
 
+// Телефонды тазарту функциясы
+function normalizePhone(phone) {
+  let digits = String(phone || "").replace(/\D/g, "");
+  if (digits.startsWith("8")) digits = "7" + digits.slice(1);
+  if (digits.length === 10) digits = "7" + digits;
+  return "+" + digits.slice(-11);
+}
+
 export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   const URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
@@ -58,9 +66,12 @@ export default async function handler(req, res) {
   // 1. КІРУ
   if (action === "login" && req.method === "POST") {
     const { phone, password } = req.body || {};
-    const r = await fetch(`${URL}/rest/v1/drivers?phone=eq.${encodeURIComponent(phone.trim())}&select=id,password_hash,is_blocked,block_reason&limit=1`, { headers });
+    const cleanPhone = normalizePhone(phone); // Телефонды тазарту
+    
+    const r = await fetch(`${URL}/rest/v1/drivers?phone=eq.${encodeURIComponent(cleanPhone)}&select=id,password_hash,is_blocked,block_reason&limit=1`, { headers });
     const drivers = await r.json();
     const driver = drivers[0];
+    
     if (!driver || !(await verifyPassword(password, driver.password_hash))) {
       return res.status(401).json({ success: false, message: "Телефон немесе құпиясөз қате" });
     }
