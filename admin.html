@@ -261,13 +261,25 @@ async function loadCommissions(){
     const items=d.commissions||[];
     if(!items.length){$("commissionMessage").textContent="Комиссия жоқ";return}
     
+    // Деректерді жүргізуші бойынша біріктіру
     const grouped = {};
     items.forEach(item => {
-      if(!grouped[item.driver_id]) {
-        grouped[item.driver_id] = { name: item.driver_name, phone: item.driver_phone, unpaid: 0, paid: 0 };
+      if(!item.drivers) return; // Егер жүргізуші деректері болмаса, өткізіп жіберу
+      const driverId = item.driver_id;
+      if(!grouped[driverId]) {
+        grouped[driverId] = { 
+          name: item.drivers.full_name || "Белгісіз", 
+          phone: item.drivers.phone || "—", 
+          unpaid: 0, 
+          paid: 0 
+        };
       }
-      grouped[item.driver_id].unpaid += Number(item.unpaid_total || 0);
-      grouped[item.driver_id].paid += Number(item.paid_total || 0);
+      const amount = Number(item.commission_amount || 0);
+      if (item.status === "paid") {
+        grouped[driverId].paid += amount;
+      } else {
+        grouped[driverId].unpaid += amount;
+      }
     });
 
     $("commissionMessage").textContent="Жүргізушілер саны: " + Object.keys(grouped).length;
