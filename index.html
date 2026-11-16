@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ТҰЛПАР TAXI</title>
+<title>TULPAR TAXI</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -79,7 +79,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 <header>
   <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="brand">
-    <h2>🚕 ТҰЛПАР TAXI</h2>
+    <h2>🚕 TULPAR TAXI</h2>
     <p>ЖЕДЕЛ ТАКСИ ҚЫЗМЕТІ</p>
   </div>
 </header>
@@ -88,7 +88,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 
 <nav class="drawer" id="drawer">
   <div class="drawer-top">
-    <h2>ТҰЛПАР TAXI</h2>
+    <h2>TULPAR TAXI</h2>
     <button class="close-menu" onclick="toggleMenu()">×</button>
   </div>
   <button class="menu-item" onclick="menuGo('page1')">🚕 Такси шақыру</button>
@@ -336,7 +336,7 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
-// Тіркелу бөлігі (өзгеріссіз қалды)
+// Тіркелу бөлігі
 const carPhotoInput=document.getElementById('carPhoto');
 carPhotoInput.addEventListener('change',function(){const file=this.files[0],preview=document.getElementById('carPhotoPreview');if(!file){preview.style.display='none';return}if(file.size>3*1024*1024){alert('Фото 3 МБ-тан аспауы керек.');this.value='';preview.style.display='none';return}const imageUrl=URL.createObjectURL(file);preview.src=imageUrl;preview.style.display='block'});
 async function compressCarPhoto(file){const bitmap=await createImageBitmap(file);const maxSize=1280;const scale=Math.min(1,maxSize/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();return canvas.toDataURL('image/jpeg',0.78)}
