@@ -17,7 +17,6 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .brand{flex:1}
 .brand h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-0.5px}
 .brand p{margin:3px 0 0;color:var(--yellow);font-size:11px;font-weight:600}
-.online{font-size:11px;color:#48e5a1;font-weight:600;display:flex;align-items:center;gap:5px}
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#17191e;color:white;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.3)}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:15px}
@@ -37,7 +36,6 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .hint{font-size:13px;color:#6b7280;margin-bottom:12px}
 .gps-btn{width:100%;padding:13px;background:linear-gradient(135deg,#202329 0%,#2d3139 100%);color:white;border-radius:12px;font-weight:600;border:0;cursor:pointer;font-family:inherit;font-size:14px;margin-bottom:10px}
 
-/* Инпут және Х батырмасы үшін */
 .input-wrapper{position:relative;margin:6px 0}
 .input-wrapper input{width:100%;padding:15px;padding-right:45px;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;color:#171717;font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s}
 .input-wrapper input:focus{border-color:var(--yellow);background:white;box-shadow:0 0 0 3px rgba(255,204,0,0.15)}
@@ -72,9 +70,64 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .passenger-info{background:#eef2f7;padding:12px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
 .passenger-info b{color:#111}
 .edit-btn{background:transparent;border:0;color:#3b82f6;font-weight:600;cursor:pointer}
+
+/* === ГЕОЛОКАЦИЯ МОДАЛІ (Яндекс стилі) === */
+.geo-modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(5px); z-index: 9999;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+}
+.geo-modal-overlay.show { opacity: 1; pointer-events: auto; }
+.geo-modal {
+  background: #22232a; color: white; width: 100%; max-width: 500px;
+  border-radius: 24px 24px 0 0; padding: 30px 20px calc(30px + env(safe-area-inset-bottom));
+  transform: translateY(100%); transition: transform 0.3s ease;
+  text-align: left;
+}
+.geo-modal-overlay.show .geo-modal { transform: translateY(0); }
+.geo-modal h3 { font-size: 22px; font-weight: 800; margin: 0 0 16px 0; line-height: 1.3; }
+.geo-item { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
+.geo-item-icon { font-size: 24px; line-height: 1; }
+.geo-item-text { font-size: 15px; line-height: 1.4; color: #d1d5db; }
+.geo-item-text b { display: block; color: white; font-weight: 700; font-size: 16px; margin-bottom: 2px; }
+.btn-enable {
+  background: #5b8aff; color: white; border: 0; width: 100%; padding: 16px;
+  border-radius: 16px; font-size: 16px; font-weight: 700; margin-top: 24px; cursor: pointer;
+  font-family: inherit;
+}
+.btn-enable:disabled { opacity: 0.6; }
+.btn-skip {
+  background: transparent; color: #9ca3af; border: 0; width: 100%; padding: 16px;
+  font-size: 15px; font-weight: 600; margin-top: 10px; cursor: pointer;
+  font-family: inherit;
+}
 </style>
 </head>
 <body>
+
+<!-- ГЕОЛОКАЦИЯ ТЕРЕЗЕСІ -->
+<div class="geo-modal-overlay" id="geoModal">
+  <div class="geo-modal">
+    <h3>Тұлпар таксиді пайдалану үшін орналасқан жеріңізді қосыңыз</h3>
+    <div class="geo-item">
+      <div class="geo-item-icon">📍</div>
+      <div class="geo-item-text">
+        <b>Құрылғының орналасқан жері</b>
+        Жақын жердегі көліктерді табу үшін
+      </div>
+    </div>
+    <div class="geo-item">
+      <div class="geo-item-icon">🎯</div>
+      <div class="geo-item-text">
+        <b>Дәл геолокация</b>
+        Мінетін жерді дәл анықтау үшін
+      </div>
+    </div>
+    <button class="btn-enable" id="enableGpsBtn" onclick="enableGPS()">Қосу</button>
+    <button class="btn-skip" onclick="closeGeoModal()">Қолмен таңдау</button>
+  </div>
+</div>
 
 <header>
   <button class="menu-btn" onclick="toggleMenu()">☰</button>
@@ -102,7 +155,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   <div class="panel">
     <div class="title" id="mapTitle">Қай жерден мінесіз?</div>
     <div class="hint" id="hint">Картадан мінетін жерді таңдаңыз немесе GPS рұқсатын беріңіз.</div>
-    <button class="gps-btn" onclick="myLocation()">📍 Менің орналасқан жерім</button>
+    <button class="gps-btn" onclick="enableGPS()">📍 Менің орналасқан жерім</button>
     
     <div class="input-wrapper">
       <input id="from" placeholder="📍 Қай жерден мінесіз?" oninput="toggleClearBtn('from')">
@@ -152,13 +205,11 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
     <div class="title">👤 Жолаушы туралы ақпарат</div>
     <div class="summary" id="passengerSummary"></div>
     
-    <!-- Егер аты-телефоны сақталған болса, осы блок шығады -->
     <div id="savedPassenger" class="passenger-info" style="display:none">
       <div>👤 <b id="savedName"></b> <br><span style="font-size:12px;color:#666" id="savedPhone"></span></div>
       <button class="edit-btn" onclick="editPassenger()">Өзгерту</button>
     </div>
 
-    <!-- Егер сақталмаған болса, осы инпуттар шығады -->
     <div id="passengerInputs">
       <input id="name" placeholder="Аты-жөніңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
       <input id="phone" type="tel" placeholder="Телефон нөміріңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
@@ -210,7 +261,6 @@ let map,startPoint=null,endPoint=null,startMarker=null,endMarker=null,routeLine=
 let distanceKm=0,durationMin=0,routeReady=false,selectedCar='economy',currentPrices={};
 const prices={economy:{base:500,km:100},comfort:{base:700,km:140},plus:{base:1000,km:180}};
 
-// Жолаушы деректерін тексеру
 const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
 
@@ -247,11 +297,48 @@ function initMap(){
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
   map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearPoint('B');await setPoint('A',e.latlng)}});
   setTimeout(()=>map.invalidateSize(true),400);
+  
+  // Бет ашылғанда бірден Яндекс стиліндегі терезе шығады
   setTimeout(()=>{
-    if(!navigator.geolocation) return;
-    document.getElementById('hint').textContent='Орналасқан жеріңіз анықталуда...';
-    navigator.geolocation.getCurrentPosition(async pos=>{const p={lat:pos.coords.latitude,lng:pos.coords.longitude};map.setView(p,16);await setPoint('A',p);document.getElementById('hint').textContent='Енді баратын жерді таңдаңыз.'},()=>{document.getElementById('hint').textContent='GPS рұқсаты берілмеді.'},{enableHighAccuracy:true,timeout:8000});
-  },600);
+    document.getElementById('geoModal').classList.add('show');
+  }, 500);
+}
+
+// Геолокацияны қосу
+function enableGPS() {
+  const btn = document.getElementById('enableGpsBtn');
+  btn.textContent = "Анықталуда...";
+  btn.disabled = true;
+
+  if (!navigator.geolocation) {
+    alert("GPS қолжетімсіз");
+    btn.textContent = "Қосу";
+    btn.disabled = false;
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    async (pos) => {
+      const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      map.setView(p, 16);
+      await setPoint('A', p);
+      document.getElementById('hint').textContent = 'Енді баратын жерді таңдаңыз.';
+      closeGeoModal();
+      btn.textContent = "Қосу";
+      btn.disabled = false;
+    },
+    (err) => {
+      alert("GPS рұқсаты берілмеді. Телефон баптауларынан рұқсат беріңіз.");
+      btn.textContent = "Қосу";
+      btn.disabled = false;
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// Терезені жабу (Қолмен таңдау)
+function closeGeoModal() {
+  document.getElementById('geoModal').classList.remove('show');
 }
 
 function clearRoute(){routeReady=false;distanceKm=0;durationMin=0;if(routeLine){map.removeLayer(routeLine);routeLine=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}endPoint=null;document.getElementById('to').value='';document.getElementById('clearTo').classList.remove('show');updateContinue()}
@@ -272,7 +359,6 @@ function setupSearch(inputId,boxId,type){
     timer=setTimeout(async()=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q+' Үржар')}`);const data=await r.json();box.innerHTML='';data.forEach(item=>{const div=document.createElement('div');div.className='suggestion';div.textContent=item.display_name;div.onclick=async()=>{input.value=item.display_name;box.innerHTML='';const point={lat:Number(item.lat),lng:Number(item.lon)};if(type==='A')await setPoint('A',point,item.display_name);else await setPoint('B',point,item.display_name);map.setView(point,16)};box.appendChild(div)})}catch(e){box.innerHTML=''}},800);
   });
 }
-function myLocation(){if(!navigator.geolocation){alert('GPS қолжетімсіз');return}navigator.geolocation.getCurrentPosition(async pos=>{const p={lat:pos.coords.latitude,lng:pos.coords.longitude};map.setView(p,16);await setPoint('A',p)},()=>alert('GPS рұқсатын тексеріңіз.'))}
 
 async function getRoute(){
   if(!startPoint||!endPoint)return false;
@@ -289,7 +375,6 @@ function backToMap(){showPage('page1')}
 function continueToDetails(){
   document.getElementById('passengerSummary').innerHTML=`🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
   
-  // Жолаушы деректерін тексеру
   if(savedName && savedPhone) {
     document.getElementById('savedName').textContent = savedName;
     document.getElementById('savedPhone').textContent = savedPhone;
@@ -319,7 +404,6 @@ async function makeOrder(){
     name = document.getElementById('name').value.trim();
     phone = document.getElementById('phone').value.trim();
     if(!name || !phone) return alert('Аты-жөніңіз бен телефонды енгізіңіз.');
-    // Сақтап қою
     localStorage.setItem('tulpar_passenger_name', name);
     localStorage.setItem('tulpar_passenger_phone', phone);
   }
@@ -336,7 +420,6 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
-// Тіркелу бөлігі
 const carPhotoInput=document.getElementById('carPhoto');
 carPhotoInput.addEventListener('change',function(){const file=this.files[0],preview=document.getElementById('carPhotoPreview');if(!file){preview.style.display='none';return}if(file.size>3*1024*1024){alert('Фото 3 МБ-тан аспауы керек.');this.value='';preview.style.display='none';return}const imageUrl=URL.createObjectURL(file);preview.src=imageUrl;preview.style.display='block'});
 async function compressCarPhoto(file){const bitmap=await createImageBitmap(file);const maxSize=1280;const scale=Math.min(1,maxSize/Math.max(bitmap.width,bitmap.height));const canvas=document.createElement('canvas');canvas.width=Math.round(bitmap.width*scale);canvas.height=Math.round(bitmap.height*scale);const ctx=canvas.getContext('2d');ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);bitmap.close();return canvas.toDataURL('image/jpeg',0.78)}
