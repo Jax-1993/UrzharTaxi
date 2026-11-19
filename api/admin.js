@@ -82,10 +82,19 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, commissions: await cRes.json(), drivers: await dRes.json() });
   }
 
+  // === ЖАҢА: Барлық төленбеген комиссияларды өтеу ===
   if (action === "mark_paid" && req.method === "POST") {
-    const q = `driver_id=eq.${req.body.driver_id}&status=eq.unpaid&created_at=gte.${req.body.week_start}&created_at=lt.${req.body.week_end}`;
-    await fetch(`${URL}/rest/v1/driver_commissions?${q}`, { method: "PATCH", headers, body: JSON.stringify({ status: "paid", paid_at: new Date().toISOString() }) });
-    return res.status(200).json({ success: true });
+    const driverId = req.body.driver_id;
+    if (!driverId) return res.status(400).json({ success: false, message: "Жүргізуші ID қажет" });
+
+    const q = `driver_id=eq.${driverId}&status=eq.unpaid`;
+    const r = await fetch(`${URL}/rest/v1/driver_commissions?${q}`, { 
+      method: "PATCH", 
+      headers: { ...headers, Prefer: "return=representation" }, 
+      body: JSON.stringify({ status: "paid", paid_at: new Date().toISOString() }) 
+    });
+    const updated = await r.json();
+    return res.status(200).json({ success: true, count: updated.length });
   }
 
   if (action === "messages" && req.method === "GET") {
