@@ -53,7 +53,6 @@ function normalizePhone(phone) {
   return "+" + digits.slice(-11);
 }
 
-// Екі нүктенің арақашықтығын км-мен есептеу (Haversine формуласы)
 function getDistanceKm(lat1, lon1, lat2, lon2) {
   if (!lat1 || !lon1 || !lat2 || !lon2) return 999;
   const R = 6371;
@@ -99,7 +98,6 @@ export default async function handler(req, res) {
   const driverId = getDriverId(req, KEY);
   if (!driverId) return res.status(401).json({ success: false, message: "Сессия жоқ" });
 
-  // Жүргізушінің желідегі мәртебесін өзгерту
   if (action === "toggle_online" && req.method === "POST") {
     const { is_online } = req.body;
     await fetch(`${URL}/rest/v1/drivers?id=eq.${driverId}`, {
@@ -109,7 +107,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // Жүргізушінің ағымдағы орнын үнемі жаңартып отыру
   if (action === "update_location" && req.method === "POST") {
     const { latitude, longitude } = req.body;
     await fetch(`${URL}/rest/v1/drivers?id=eq.${driverId}`, {
@@ -139,34 +136,26 @@ export default async function handler(req, res) {
     });
   }
 
-  // === ТАПСЫРЫСТАРДЫ АҚЫЛДЫ ІЗДЕУ ===
   if (action === "orders" && req.method === "GET") {
-    // 1. Жүргізушінің ағымдағы орнын алу
     const dRes = await fetch(`${URL}/rest/v1/drivers?id=eq.${driverId}&select=current_latitude,current_longitude`, { headers });
     const driverData = (await dRes.json())[0] || {};
     const dLat = driverData.current_latitude;
     const dLon = driverData.current_longitude;
 
-    // 2. Барлық "searching" тапсырыстарды алу
     const nRes = await fetch(`${URL}/rest/v1/orders?status=eq.searching&select=*&order=created_at.asc`, { headers });
     const allNewOrders = await nRes.json();
 
-    // 3. Қашықтық пен уақыт бойынша сүзу
     const filteredNewOrders = allNewOrders.filter(order => {
-      if (!dLat || !dLon || !order.pickup_latitude) return true; // Егер GPS жоқ болса, бәрін көрсету
-      
+      if (!dLat || !dLon || !order.pickup_latitude) return true;
       const distance = getDistanceKm(dLat, dLon, order.pickup_latitude, order.pickup_longitude);
-      const minutesPassed = (new Date() - new Date(order.created_at)) / 60000; // Қанша минут өтті
-
-      let allowedRadius = 30; // Әдепкіде 30 км
-      if (minutesPassed < 1) allowedRadius = 2;       // 1 мин өтсе - 2 км
-      else if (minutesPassed < 2) allowedRadius = 10; // 2 мин өтсе - 10 км
-      else if (minutesPassed < 3) allowedRadius = 20; // 3 мин өтсе - 20 км
-
+      const minutesPassed = (new Date() - new Date(order.created_at)) / 60000;
+      let allowedRadius = 30;
+      if (minutesPassed < 1) allowedRadius = 2;
+      else if (minutesPassed < 2) allowedRadius = 10;
+      else if (minutesPassed < 3) allowedRadius = 20;
       return distance <= allowedRadius;
     });
 
-    // 4. Жүргізушінің өз сапарларын алу
     const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude&order=created_at.desc`, { headers });
     
     return res.status(200).json({ success: true, new_orders: filteredNewOrders, my_orders: await mRes.json() });
