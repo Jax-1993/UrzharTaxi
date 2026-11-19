@@ -9,9 +9,7 @@ export default async function handler(req, res) {
   const action = req.query?.action || req.body?.action;
   const headers = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
 
-  // Жолаушы картасында көрсету үшін желідегі жүргізушілер
   if (action === "online_drivers" && req.method === "GET") {
-    // Соңғы 5 минут ішінде орнын жаңартқандарды ғана аламыз
     const r = await fetch(`${URL}/rest/v1/drivers?is_online=eq.true&current_latitude=not.is.null&select=current_latitude,current_longitude,car_class`, { headers });
     const drivers = await r.json();
     return res.status(200).json({ success: true, drivers });
