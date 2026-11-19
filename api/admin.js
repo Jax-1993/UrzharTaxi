@@ -32,14 +32,19 @@ export default async function handler(req, res) {
   if (action === "applications" && req.method === "GET") {
     const r = await fetch(`${URL}/rest/v1/driver_applications?status=eq.pending&select=*`, { headers });
     const apps = await r.json();
+    
     const withPhotos = await Promise.all(apps.map(async a => {
-      let photo_url = null;
-      if (a.car_photo_path) {
-        const pr = await fetch(`${URL}/storage/v1/object/sign/driver-cars/${a.car_photo_path}`, { method: "POST", headers, body: JSON.stringify({ expiresIn: 3600 }) });
-        const pd = await pr.json();
-        if (pd.signedURL) photo_url = pd.signedURL.startsWith("http") ? pd.signedURL : `${URL}${pd.signedURL}`;
-      }
-      return { ...a, photo_url };
+      const urls = {};
+      const photoKeys = ['car_photo_path', 'id_card_front_path', 'id_card_back_path', 'driver_license_path', 'selfie_path'];
+      
+      await Promise.all(photoKeys.map(async key => {
+        if (a[key]) {
+          const pr = await fetch(`${URL}/storage/v1/object/sign/driver-cars/${a[key]}`, { method: "POST", headers, body: JSON.stringify({ expiresIn: 3600 }) });
+          const pd = await pr.json();
+          if (pd.signedURL) urls[key.replace('_path', '_url')] = pd.signedURL.startsWith("http") ? pd.signedURL : `${URL}${pd.signedURL}`;
+        }
+      }));
+      return { ...a, ...urls };
     }));
     return res.status(200).json({ success: true, applications: withPhotos });
   }
