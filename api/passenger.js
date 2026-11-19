@@ -6,8 +6,16 @@ export default async function handler(req, res) {
   res.setHeader("Content-Type", "application/json; charset=utf-8");
   const URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
   const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const action = req.query?.action;
+  const action = req.query?.action || req.body?.action;
   const headers = { apikey: KEY, Authorization: `Bearer ${KEY}`, "Content-Type": "application/json" };
+
+  // Жолаушы картасында көрсету үшін желідегі жүргізушілер
+  if (action === "online_drivers" && req.method === "GET") {
+    // Соңғы 5 минут ішінде орнын жаңартқандарды ғана аламыз
+    const r = await fetch(`${URL}/rest/v1/drivers?is_online=eq.true&current_latitude=not.is.null&select=current_latitude,current_longitude,car_class`, { headers });
+    const drivers = await r.json();
+    return res.status(200).json({ success: true, drivers });
+  }
 
   if (action === "location" && req.method === "POST") {
     const { orderId, trackingToken } = req.body;
@@ -15,7 +23,6 @@ export default async function handler(req, res) {
     const orders = await r.json();
     if (!orders.length) return res.status(404).json({ success: false });
     if (!orders[0].driver_current_latitude) return res.status(403).json({ success: false, message: "GPS күтілуде" });
-    
     return res.status(200).json({ success: true, driverLocation: { latitude: orders[0].driver_current_latitude, longitude: orders[0].driver_current_longitude } });
   }
 
