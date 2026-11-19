@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ҮРЖАР TAXI — Жүргізуші кабинеті</title>
+<title>TULPAR TAXI — Жүргізуші кабинеті</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -67,7 +67,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 <body>
 
 <header>
-  <h2>🚕 ҮРЖАР TAXI</h2>
+  <h2>🚕 TULPAR TAXI</h2>
   <div class="subtitle">Жүргізуші кабинеті</div>
   <button class="logout-btn" onclick="logout()">Шығу</button>
 </header>
@@ -119,6 +119,57 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 let gpsWatchId=null,gpsActive=false,gpsOrderId=null,lastSentAt=0;
 const GPS_INTERVAL=5000;
 let autoRefreshTimer=null,chatRefreshTimer=null;
+
+// === ДЫБЫС ДАЙЫНДАУ (Жаңа тапсырыс үшін) ===
+let audioCtx = null;
+function initAudio() {
+  try {
+    if (!audioCtx) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtx = new AudioContext();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume();
+    }
+  } catch (e) {}
+}
+// Пайдаланушы бетті бірінші басқанда дыбысты қосуға рұқсат аламыз
+document.body.addEventListener('click', initAudio, { once: true });
+document.body.addEventListener('touchstart', initAudio, { once: true });
+
+function playNewOrderSound() {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime;
+    // 3 рет қатты сигнал шығару
+    for (let i = 0; i < 3; i++) {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      
+      osc.type = 'square'; // Шикандай өткір дыбыс (назар аударарлық)
+      osc.frequency.value = 880; // Жоғары жиілік
+      
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      
+      const startTime = now + (i * 0.3); // 0.3 секунд үзіліспен
+      
+      gain.gain.setValueAtTime(0, startTime);
+      gain.gain.linearRampToValueAtTime(1, startTime + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.2);
+      
+      osc.start(startTime);
+      osc.stop(startTime + 0.2);
+    }
+    // Телефон дірілдеуі (егер қолдаса)
+    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500]);
+    
+  } catch (e) { console.log("Дыбыс шығару қатесі", e); }
+}
+// =============================================
+
+let lastOrderIds = []; // Соңғы тапсырыстардың ID-лерін есте сақтау
+let isFirstLoad = true;
 
 const money=n=>Number(n||0).toLocaleString("kk-KZ")+" ₸";
 
@@ -175,11 +226,13 @@ function renderOrder(order,containerId,isMyOrder){
 
   if(!isMyOrder){
     const acceptBtn=document.createElement("button");acceptBtn.className="btn-accept";acceptBtn.textContent="✅ ҚАБЫЛДАУ";acceptBtn.onclick=()=>acceptOrder(order.id,acceptBtn);item.appendChild(acceptBtn);
-  }else if(order.status==="accepted"||order.status==="in_progress"){
+  }else if(order.status === "accepted") {
+    const startBtn=document.createElement("button");startBtn.className="btn-accept";startBtn.style.background="linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%)";startBtn.textContent="🚕 САПАРДЫ БАСТАУ";startBtn.onclick=()=>startRide(order.id,startBtn);item.appendChild(startBtn);
+    const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
+  } else if(order.status === "in_progress") {
     const isGpsActive=gpsActive&&gpsOrderId===order.id;
     const gpsBtn=document.createElement("button");gpsBtn.className=isGpsActive?"btn-gps-stop":"btn-gps-start";gpsBtn.textContent=isGpsActive?"📡 GPS ТОҚТАТУ":"📡 GPS БАСТАУ";gpsBtn.onclick=()=>isGpsActive?stopGps():startGps(order.id);item.appendChild(gpsBtn);
     const completeBtn=document.createElement("button");completeBtn.className="btn-complete";completeBtn.textContent="🏁 САПАРДЫ АЯҚТАУ";completeBtn.onclick=()=>completeOrder(order.id,completeBtn);item.appendChild(completeBtn);
-    const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
   }
 
   const container=document.getElementById(containerId);
@@ -191,8 +244,24 @@ async function loadOrders(){
   const data=await api("/api/driver?action=orders");
   const newBox=document.getElementById("newOrders"),myBox=document.getElementById("myOrders");
   newBox.innerHTML="";myBox.innerHTML="";
+  
   const newOrders=Array.isArray(data.new_orders)?data.new_orders:[];
   const myOrders=Array.isArray(data.my_orders)?data.my_orders:[];
+  
+  // === ЖАҢА ТАПСЫРЫС КЕЛГЕНІН ТЕКСЕРУ ЖӘНЕ ДЫБЫС ШЫҒАРУ ===
+  const currentOrderIds = newOrders.map(o => o.id);
+  
+  if (!isFirstLoad) {
+    const hasNewOrder = currentOrderIds.some(id => !lastOrderIds.includes(id));
+    if (hasNewOrder) {
+      playNewOrderSound();
+    }
+  }
+  
+  lastOrderIds = currentOrderIds;
+  isFirstLoad = false;
+  // ====================================================
+
   if(!newOrders.length)newBox.innerHTML='<div class="empty">Әзірге жаңа тапсырыс жоқ</div>';else newOrders.forEach(o=>renderOrder(o,"newOrders",false));
   if(!myOrders.length)myBox.innerHTML='<div class="empty">Әзірге белсенді сапар жоқ</div>';else myOrders.forEach(o=>renderOrder(o,"myOrders",true));
 }
@@ -211,6 +280,23 @@ async function acceptOrder(orderId,btn){
     alert("❌ " + e.message);
     btn.disabled=false;
     btn.textContent="✅ ҚАБЫЛДАУ";
+  }
+}
+
+async function startRide(orderId,btn){
+  if(!confirm("Жолаушыға жеттіңіз бе? Сапарды бастайсыз ба?"))return;
+  btn.disabled=true;btn.textContent="Басталуда...";
+  try{
+    const r = await fetch("/api/driver?action=start_ride",{
+      method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({orderId})
+    });
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.message || "Бастау мүмкін болмады");
+    await loadOrders();
+  }catch(e){
+    alert("❌ " + e.message);
+    btn.disabled=false;
+    btn.textContent="🚕 САПАРДЫ БАСТАУ";
   }
 }
 
@@ -324,7 +410,7 @@ async function loadAll(){
 
 function startAutoRefresh(){
   if(autoRefreshTimer)clearInterval(autoRefreshTimer);
-  autoRefreshTimer=setInterval(()=>{loadOrders().catch(()=>{})},30000);
+  autoRefreshTimer=setInterval(()=>{loadOrders().catch(()=>{})},15000); // 15 секунд сайын тексереді
   if(chatRefreshTimer)clearInterval(chatRefreshTimer);
   chatRefreshTimer=setInterval(()=>{loadChat().catch(()=>{})},15000);
 }
