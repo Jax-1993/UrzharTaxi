@@ -187,10 +187,8 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   <div class="panel">
     <div class="title">🚘 Жүргізуші болып тіркелу</div>
     <p class="small" style="margin-bottom:15px;color:#d00;">Назар аударыңыз: Барлық құжаттар анық көрінуі керек!</p>
-    
     <input id="regName" placeholder="Аты-жөніңіз">
     <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз">
-    
     <h3 style="margin-top:20px; font-size:16px;">🚗 Көлік туралы ақпарат</h3>
     <input id="carBrand" placeholder="Көлік маркасы">
     <input id="carModel" placeholder="Көлік моделі">
@@ -201,27 +199,21 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
       <option value="comfort">Бизнес</option>
       <option value="comfort_plus">Бизнес+</option>
     </select>
-
     <h3 style="margin-top:20px; font-size:16px;">📸 Көліктің фотосы</h3>
     <input id="carPhoto" type="file" accept="image/jpeg,image/png,image/webp">
     <img id="carPhotoPreview">
-
     <h3 style="margin-top:20px; font-size:16px;">🪪 Жеке куәлік (алдыңғы беті)</h3>
     <input id="idCardFront" type="file" accept="image/*">
     <img id="idCardFrontPreview" class="doc-preview">
-
     <h3 style="margin-top:20px; font-size:16px;">🪪 Жеке куәлік (артқы беті)</h3>
     <input id="idCardBack" type="file" accept="image/*">
     <img id="idCardBackPreview" class="doc-preview">
-
     <h3 style="margin-top:20px; font-size:16px;">📄 Жүргізуші куәлігі</h3>
     <input id="driverLicense" type="file" accept="image/*">
     <img id="driverLicensePreview" class="doc-preview">
-
     <h3 style="margin-top:20px; font-size:16px;">🤳 Өз суретіңіз (Селфи)</h3>
     <input id="selfiePhoto" type="file" accept="image/*" capture="user">
     <img id="selfiePreview" class="doc-preview">
-
     <div id="driverRegisterMessage" class="small" style="margin:15px 0;font-weight:bold;"></div>
     <button class="main-btn" id="driverRegisterBtn" onclick="registerDriver()">ТІРКЕЛУ</button>
     <button class="back-btn" onclick="showPage('page1')">← Басты бет</button>
@@ -235,6 +227,7 @@ let distanceKm=0,durationMin=0,routeReady=false,selectedCar='economy',currentPri
 const prices={economy:{base:500,km:100},comfort:{base:700,km:140},plus:{base:1000,km:180}};
 const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
+let onlineDriverMarkers = [];
 
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
@@ -243,6 +236,7 @@ function goToDriver(){closeMenu();window.location.href='/driver-login.html'}
 function goToAdmin(){closeMenu();window.location.href='/admin.html'}
 function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);if(id==='page1'&&map)setTimeout(()=>map.invalidateSize(true),250)}
 function updateContinue(){document.getElementById('continueBtn').classList.toggle('show',!!(startPoint&&endPoint&&routeReady))}
+
 function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
 
 function clearPoint(type){
@@ -269,6 +263,34 @@ function initMap(){
   map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearPoint('B');await setPoint('A',e.latlng)}});
   setTimeout(()=>map.invalidateSize(true),400);
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
+  
+  // Желідегі көліктерді жүктеу
+  setTimeout(loadOnlineDrivers, 2000);
+  setInterval(loadOnlineDrivers, 10000);
+}
+
+async function loadOnlineDrivers() {
+  if (!map) return;
+  try {
+    const r = await fetch('/api/passenger?action=online_drivers');
+    const d = await r.json();
+    if (!d.success || !d.drivers) return;
+
+    onlineDriverMarkers.forEach(m => map.removeLayer(m));
+    onlineDriverMarkers = [];
+
+    d.drivers.forEach(driver => {
+      if (driver.current_latitude && driver.current_longitude) {
+        const marker = L.marker([Number(driver.current_latitude), Number(driver.current_longitude)], {
+          icon: L.divIcon({ 
+            html: '<div style="font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">🚕</div>', 
+            iconSize: [24, 24], iconAnchor: [12, 12] 
+          })
+        }).addTo(map).bindPopup('Такси');
+        onlineDriverMarkers.push(marker);
+      }
+    });
+  } catch (e) { console.error("Көліктерді жүктеу қатесі:", e); }
 }
 
 function enableGPS() {
@@ -347,7 +369,6 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
-// === ТІРКЕЛУ ЖӘНЕ ФОТОЛАРДЫ ӨҢДЕУ ===
 function setupPhotoInput(inputId, previewId) {
   document.getElementById(inputId).addEventListener('change', function() {
     const file = this.files[0], preview = document.getElementById(previewId);
@@ -365,7 +386,7 @@ setupPhotoInput('selfiePhoto', 'selfiePreview');
 
 async function compressImage(file) {
   const bitmap = await createImageBitmap(file);
-  const maxSize = 800; // Суреттерді кішірейту (жүктемені азайту үшін)
+  const maxSize = 800;
   const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(bitmap.width * scale);
@@ -401,7 +422,6 @@ async function registerDriver(){
   button.disabled=true; button.textContent='ӨТІНІМ ЖІБЕРІЛУДЕ...'; message.style.color='#555'; message.textContent='Фотолар өңделуде, күте тұрыңыз...';
 
   try{
-    // Барлық суреттерді қатар сығу
     const [carData, idFrontData, idBackData, licenseData, selfieData] = await Promise.all([
       compressImage(carPhoto), compressImage(idFront), compressImage(idBack), compressImage(license), compressImage(selfie)
     ]);
@@ -422,7 +442,6 @@ async function registerDriver(){
     if(!response.ok)throw new Error(result.error||'Қате');
     message.style.color='#07864f'; message.textContent='✅ Өтінім қабылданды! Әкімші тексеруін күтіңіз.';
     
-    // Форманы тазалау
     ['regName','regPhone','carBrand','carModel','carYear','carNumber','carPhoto','idCardFront','idCardBack','driverLicense','selfiePhoto'].forEach(id=>document.getElementById(id).value='');
     document.querySelectorAll('.doc-preview, #carPhotoPreview').forEach(img => img.style.display='none');
   }catch(error){
