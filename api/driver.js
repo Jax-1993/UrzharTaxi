@@ -104,7 +104,8 @@ export default async function handler(req, res) {
 
   if (action === "orders" && req.method === "GET") {
     const nRes = await fetch(`${URL}/rest/v1/orders?status=eq.searching&select=id,pickup_address,destination_address,car_class,distance_km,price,payment_method,created_at&order=created_at.asc`, { headers });
-    const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status&order=created_at.desc`, { headers });
+    // Картаға қажетті координаталарды да қосып аламыз
+    const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude&order=created_at.desc`, { headers });
     return res.status(200).json({ success: true, new_orders: await nRes.json(), my_orders: await mRes.json() });
   }
 
