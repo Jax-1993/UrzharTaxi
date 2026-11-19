@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ТҰЛПАР TAXI — Әкімші</title>
+<title>TULPAR TAXI — Әкімші</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -39,7 +39,9 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .application{background:linear-gradient(135deg,#243045 0%,#2a3650 100%);padding:16px;border-radius:14px;margin:12px 0;border:1px solid rgba(255,255,255,0.06)}
 .application h3{color:var(--yellow);font-size:15px;font-weight:800;margin:0 0 10px}
 .application .details{line-height:1.8;color:#cbd5e1;font-size:13px}
-.car-photo{width:100%;max-height:260px;object-fit:contain;background:#0a1320;border-radius:10px;margin-top:12px}
+.doc-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.doc-item{background:#0a1320;border-radius:10px;padding:4px;text-align:center;font-size:11px;color:#94a3b8}
+.doc-item img{width:100%;max-height:150px;object-fit:contain;border-radius:6px;margin-bottom:4px}
 .status-badge{display:inline-block;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:0.3px;margin:10px 0}
 .status-pending{background:rgba(255,204,0,0.15);color:#ffcc00}
 .password-box{background:linear-gradient(135deg,#0f2e22 0%,#142b27 100%);border:2px solid var(--green);border-radius:14px;padding:18px;margin:14px 0;text-align:center}
@@ -80,7 +82,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 <body>
 
 <header>
-  <h1>🛡 ТҰЛПАР TAXI</h1>
+  <h1>🛡 TULPAR TAXI</h1>
   <div class="subtitle">Әкімші кабинеті</div>
   <button class="logout-btn hidden" id="logoutBtn" onclick="logout()">Шығу</button>
 </header>
@@ -182,7 +184,13 @@ async function loadApplications(){
     const names={economy:"Эконом",comfort:"Бизнес",comfort_plus:"Бизнес+"};
     items.forEach(item=>{
       const card=document.createElement("div");card.className="application";card.dataset.phone=item.phone||"";
-      const photo=item.photo_url?'<img class="car-photo" src="'+esc(item.photo_url)+'">':'<p class="small">Фото жоқ</p>';
+      
+      const imgCar = item.car_photo_url ? `<div class="doc-item"><img src="${esc(item.car_photo_url)}">🚘 Көлік</div>` : '';
+      const imgIdF = item.id_card_front_url ? `<div class="doc-item"><img src="${esc(item.id_card_front_url)}">🪪 Куәлік (алды)</div>` : '';
+      const imgIdB = item.id_card_back_url ? `<div class="doc-item"><img src="${esc(item.id_card_back_url)}">🪪 Куәлік (арты)</div>` : '';
+      const imgLic = item.driver_license_url ? `<div class="doc-item"><img src="${esc(item.driver_license_url)}">📄 Жүргізуші куәлігі</div>` : '';
+      const imgSelf = item.selfie_url ? `<div class="doc-item"><img src="${esc(item.selfie_url)}">🤳 Селфи</div>` : '';
+
       card.innerHTML=`
         <h3>🚘 ${esc(item.full_name)}</h3>
         <div class="details">
@@ -191,7 +199,10 @@ async function loadApplications(){
           <b>Жылы:</b> ${esc(item.car_year||"—")}<br>
           <b>Нөмірі:</b> ${esc(item.car_number)}<br>
           <b>Санаты:</b> ${esc(names[item.car_class]||item.car_class)}
-        </div>${photo}
+        </div>
+        <div class="doc-grid">
+          ${imgCar} ${imgIdF} ${imgIdB} ${imgLic} ${imgSelf}
+        </div>
         <div class="status-badge status-pending">⏳ Күтуде</div><br>
         <button class="btn-approve" data-id="${esc(item.id)}" data-action="approve">✅ Мақұлдау</button>
         <button class="btn-reject" data-id="${esc(item.id)}" data-action="reject">❌ Қабылдамау</button>
@@ -261,25 +272,16 @@ async function loadCommissions(){
     const items=d.commissions||[];
     if(!items.length){$("commissionMessage").textContent="Комиссия жоқ";return}
     
-    // Деректерді жүргізуші бойынша біріктіру
     const grouped = {};
     items.forEach(item => {
-      if(!item.drivers) return; // Егер жүргізуші деректері болмаса, өткізіп жіберу
+      if(!item.drivers) return;
       const driverId = item.driver_id;
       if(!grouped[driverId]) {
-        grouped[driverId] = { 
-          name: item.drivers.full_name || "Белгісіз", 
-          phone: item.drivers.phone || "—", 
-          unpaid: 0, 
-          paid: 0 
-        };
+        grouped[driverId] = { name: item.drivers.full_name || "Белгісіз", phone: item.drivers.phone || "—", unpaid: 0, paid: 0 };
       }
       const amount = Number(item.commission_amount || 0);
-      if (item.status === "paid") {
-        grouped[driverId].paid += amount;
-      } else {
-        grouped[driverId].unpaid += amount;
-      }
+      if (item.status === "paid") { grouped[driverId].paid += amount; } 
+      else { grouped[driverId].unpaid += amount; }
     });
 
     $("commissionMessage").textContent="Жүргізушілер саны: " + Object.keys(grouped).length;
