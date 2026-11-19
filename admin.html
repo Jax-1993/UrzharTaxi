@@ -62,6 +62,7 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .money-item strong{font-size:15px;font-weight:800}
 .money-item .unpaid{color:#ffcc00}
 .money-item .paid{color:#19d995}
+.btn-mark-paid{background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);color:white;padding:12px 18px;border-radius:11px;font-weight:800;font-size:13px;width:100%;margin-top:10px;box-shadow:0 3px 10px rgba(22,189,121,0.3)}
 .chat-box{background:#0f1826;border-radius:12px;padding:12px;max-height:430px;overflow-y:auto;margin:14px 0;border:1px solid rgba(255,255,255,0.05)}
 .chat-message{padding:11px;margin:9px 0;border-radius:12px;max-width:88%;line-height:1.5;font-size:13px}
 .chat-admin{background:linear-gradient(135deg,#344768 0%,#3d5178 100%);margin-left:auto;border:1px solid #526b91}
@@ -200,9 +201,7 @@ async function loadApplications(){
           <b>Нөмірі:</b> ${esc(item.car_number)}<br>
           <b>Санаты:</b> ${esc(names[item.car_class]||item.car_class)}
         </div>
-        <div class="doc-grid">
-          ${imgCar} ${imgIdF} ${imgIdB} ${imgLic} ${imgSelf}
-        </div>
+        <div class="doc-grid">${imgCar} ${imgIdF} ${imgIdB} ${imgLic} ${imgSelf}</div>
         <div class="status-badge status-pending">⏳ Күтуде</div><br>
         <button class="btn-approve" data-id="${esc(item.id)}" data-action="approve">✅ Мақұлдау</button>
         <button class="btn-reject" data-id="${esc(item.id)}" data-action="reject">❌ Қабылдамау</button>
@@ -263,6 +262,7 @@ async function driverAction(id,action,btn){
   }catch(e){alert("Қате")}
 }
 
+// === ЖАҢА: КОМИССИЯЛАРДЫ ШЫҒАРУ ЖӘНЕ ТӨЛЕНДІ БЕЛГІЛЕУ ===
 async function loadCommissions(){
   $("commissionMessage").textContent="Жүктелуде...";$("commissions").innerHTML="";
   try{
@@ -277,7 +277,12 @@ async function loadCommissions(){
       if(!item.drivers) return;
       const driverId = item.driver_id;
       if(!grouped[driverId]) {
-        grouped[driverId] = { name: item.drivers.full_name || "Белгісіз", phone: item.drivers.phone || "—", unpaid: 0, paid: 0 };
+        grouped[driverId] = { 
+          name: item.drivers.full_name || "Белгісіз", 
+          phone: item.drivers.phone || "—", 
+          unpaid: 0, 
+          paid: 0 
+        };
       }
       const amount = Number(item.commission_amount || 0);
       if (item.status === "paid") { grouped[driverId].paid += amount; } 
@@ -286,7 +291,7 @@ async function loadCommissions(){
 
     $("commissionMessage").textContent="Жүргізушілер саны: " + Object.keys(grouped).length;
     
-    Object.values(grouped).forEach(item=>{
+    Object.entries(grouped).forEach(([driverId, item]) => {
       const card=document.createElement("div");card.className="commission-card";
       card.innerHTML=`
         <h3>🚘 ${esc(item.name)}</h3>
@@ -295,10 +300,33 @@ async function loadCommissions(){
           <div class="money-item"><span>Төленбеген</span><strong class="unpaid">${money(item.unpaid)}</strong></div>
           <div class="money-item"><span>Төленген</span><strong class="paid">${money(item.paid)}</strong></div>
         </div>
+        ${item.unpaid > 0 ? `<button class="btn-mark-paid" onclick="markDriverPaid('${driverId}', this)">✅ Осы қарызды өтеу</button>` : ''}
       `;
       $("commissions").appendChild(card);
     });
   }catch(e){$("commissionMessage").textContent="Қате"}
+}
+
+async function markDriverPaid(driverId, btn) {
+  if (!confirm("Осы жүргізушінің барлық төленбеген қарызын 'Төленді' деп белгілейсіз бе? Бұл әрекетті кері қайтару мүмкін емес.")) return;
+  
+  btn.disabled = true;
+  btn.textContent = "Өңделуде...";
+  
+  try {
+    const r = await fetch("/api/admin?action=mark_paid", {
+      method: "POST", credentials: "same-origin", headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ driver_id: driverId })
+    });
+    const d = await r.json();
+    if (!r.ok || !d.success) throw new Error(d.message || "Қате");
+    
+    await loadCommissions(); // Тізімді жаңарту
+  } catch (e) {
+    alert("❌ " + e.message);
+    btn.disabled = false;
+    btn.textContent = "✅ Осы қарызды өтеу";
+  }
 }
 
 async function loadMessages(){
