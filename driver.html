@@ -35,6 +35,7 @@ button{font-family:inherit;border:0;cursor:pointer;transition:transform 0.15s,op
 button:active:not(:disabled){transform:scale(0.97)}
 button:disabled{opacity:0.5;cursor:not-allowed}
 .btn-accept{background:linear-gradient(135deg,#16bd79 0%,#19d995 100%);color:white;padding:13px 18px;border-radius:11px;font-weight:800;font-size:14px;width:100%;margin-top:10px}
+.btn-arrive{background:linear-gradient(135deg,#8b5cf6 0%,#a78bfa 100%);color:white;padding:13px 18px;border-radius:11px;font-weight:800;font-size:14px;width:100%;margin-top:10px}
 .btn-complete{background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#111;padding:13px 18px;border-radius:11px;font-weight:800;font-size:14px;width:100%;margin-top:10px}
 .btn-cancel{background:linear-gradient(135deg,#e34b59 0%,#f05a68 100%);color:white;padding:13px 18px;border-radius:11px;font-weight:800;font-size:14px;width:100%;margin-top:8px}
 .btn-gps-start{background:linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%);color:white;padding:13px 18px;border-radius:11px;font-weight:800;font-size:14px;width:100%;margin-top:8px}
@@ -217,8 +218,6 @@ async function toggleOnlineMode() {
 async function sendOnlineLocation(pos) {
   if (!isOnline) return;
   const now = Date.now();
-  
-  // Координатаны localStorage-ке сақтау (карта осы жерден ашылуы үшін)
   localStorage.setItem('driver_last_lat', pos.coords.latitude);
   localStorage.setItem('driver_last_lng', pos.coords.longitude);
 
@@ -275,7 +274,10 @@ function renderOrder(order,containerId,isMyOrder){
 
   if(!isMyOrder){
     const acceptBtn=document.createElement("button");acceptBtn.className="btn-accept";acceptBtn.textContent="✅ ҚАБЫЛДАУ";acceptBtn.onclick=()=>acceptOrder(order.id,acceptBtn);item.appendChild(acceptBtn);
-  }else if(order.status === "accepted") {
+  }else if(order.status === "accepted" && !order.driver_arrived_at) {
+    const arriveBtn=document.createElement("button");arriveBtn.className="btn-arrive";arriveBtn.textContent="📍 ЖОЛАУШЫҒА КЕЛДІМ";arriveBtn.onclick=()=>arriveOrder(order.id,arriveBtn);item.appendChild(arriveBtn);
+    const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
+  } else if(order.status === "accepted" && order.driver_arrived_at) {
     const startBtn=document.createElement("button");startBtn.className="btn-accept";startBtn.style.background="linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%)";startBtn.textContent="🚕 САПАРДЫ БАСТАУ";startBtn.onclick=()=>startRide(order.id,startBtn);item.appendChild(startBtn);
     const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
   } else if(order.status === "in_progress") {
@@ -293,7 +295,6 @@ function updateDriverMap(order) {
   document.getElementById('mapCard').style.display = 'block';
 
   if (!map) {
-    // Соңғы сақталған координаталарды алу
     const savedLat = localStorage.getItem('driver_last_lat');
     const savedLng = localStorage.getItem('driver_last_lng');
     const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
@@ -388,8 +389,25 @@ async function acceptOrder(orderId,btn){
   }
 }
 
+async function arriveOrder(orderId,btn){
+  if(!confirm("Жолаушыға келдіңіз бе? Оған хабарлама жіберіледі (5 минут тегін күту)."))return;
+  btn.disabled=true;btn.textContent="Белгіленуде...";
+  try{
+    const r = await fetch("/api/driver?action=arrive",{
+      method:"POST", credentials:"include", headers:{"Content-Type":"application/json"}, body:JSON.stringify({orderId})
+    });
+    const d = await r.json();
+    if(!r.ok || !d.success) throw new Error(d.message || "Келгенін белгілеу мүмкін болмады");
+    await loadOrders();
+  }catch(e){
+    alert("❌ " + e.message);
+    btn.disabled=false;
+    btn.textContent="📍 ЖОЛАУШЫҒА КЕЛДІМ";
+  }
+}
+
 async function startRide(orderId,btn){
-  if(!confirm("Жолаушыға жеттіңіз бе? Сапарды бастайсыз ба?"))return;
+  if(!confirm("Сапарды бастайсыз ба?"))return;
   btn.disabled=true;btn.textContent="Басталуда...";
   try{
     const r = await fetch("/api/driver?action=start_ride",{
@@ -416,7 +434,9 @@ async function completeOrder(orderId,btn){
     if(!r.ok || !d.success) throw new Error(d.message || "Аяқтау мүмкін болмады");
     
     if(gpsActive&&gpsOrderId===orderId)stopGps();
-    alert("✅ Сапар аяқталды!\nТабыс: " + money(d.driver_earning) + "\nКомиссия: " + money(d.commission));
+    let msg = "✅ Сапар аяқталды!\nТабыс: " + money(d.driver_earning) + "\nКомиссия: " + money(d.commission);
+    if (d.waiting_fee && d.waiting_fee > 0) msg += "\n(Күту ақысы: " + money(d.waiting_fee) + " қосылды)";
+    alert(msg);
     await Promise.all([loadAll(),loadChat()]);
   }catch(e){
     alert("❌ " + e.message);
