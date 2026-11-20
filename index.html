@@ -71,7 +71,6 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .passenger-info b{color:#111}
 .edit-btn{background:transparent;border:0;color:#3b82f6;font-weight:600;cursor:pointer}
 
-/* ГЕОЛОКАЦИЯ МОДАЛІ */
 .geo-modal-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;}
 .geo-modal-overlay.show { opacity: 1; pointer-events: auto; }
 .geo-modal {background: #22232a; color: white; width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 30px 20px calc(30px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.3s ease; text-align: left;}
@@ -258,13 +257,19 @@ function clearPoint(type){
 }
 
 function initMap(){
-  map=L.map('map').setView([47.09,81.63],14);
+  // Соңғы сақталған координаталарды алу немесе Қазақстанның ортасы
+  const savedLat = localStorage.getItem('passenger_last_lat');
+  const savedLng = localStorage.getItem('passenger_last_lng');
+  const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
+  const initialZoom = (savedLat && savedLng) ? 14 : 5;
+
+  map=L.map('map').setView(initialCoords, initialZoom);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+  
   map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearPoint('B');await setPoint('A',e.latlng)}});
   setTimeout(()=>map.invalidateSize(true),400);
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
   
-  // Желідегі көліктерді жүктеу
   setTimeout(loadOnlineDrivers, 2000);
   setInterval(loadOnlineDrivers, 10000);
 }
@@ -297,9 +302,14 @@ function enableGPS() {
   const btn = document.getElementById('enableGpsBtn');
   btn.textContent = "Анықталуда..."; btn.disabled = true;
   if (!navigator.geolocation) { alert("GPS қолжетімсіз"); btn.textContent = "Қосу"; btn.disabled = false; return; }
+  
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      // Координатаны сақтау
+      localStorage.setItem('passenger_last_lat', p.lat);
+      localStorage.setItem('passenger_last_lng', p.lng);
+      
       map.setView(p, 16);
       await setPoint('A', p);
       document.getElementById('hint').textContent = 'Енді баратын жерді таңдаңыз.';
@@ -325,7 +335,7 @@ function setupSearch(inputId,boxId,type){
   const input=document.getElementById(inputId),box=document.getElementById(boxId);let timer;
   input.addEventListener('input',()=>{
     clearTimeout(timer); const q=input.value.trim(); if(q.length < 3) return;
-    timer=setTimeout(async()=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q+' Үржар')}`);const data=await r.json();box.innerHTML='';data.forEach(item=>{const div=document.createElement('div');div.className='suggestion';div.textContent=item.display_name;div.onclick=async()=>{input.value=item.display_name;box.innerHTML='';const point={lat:Number(item.lat),lng:Number(item.lon)};if(type==='A')await setPoint('A',point,item.display_name);else await setPoint('B',point,item.display_name);map.setView(point,16)};box.appendChild(div)})}catch(e){box.innerHTML=''}},800);
+    timer=setTimeout(async()=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q)}`);const data=await r.json();box.innerHTML='';data.forEach(item=>{const div=document.createElement('div');div.className='suggestion';div.textContent=item.display_name;div.onclick=async()=>{input.value=item.display_name;box.innerHTML='';const point={lat:Number(item.lat),lng:Number(item.lon)};if(type==='A')await setPoint('A',point,item.display_name);else await setPoint('B',point,item.display_name);map.setView(point,16)};box.appendChild(div)})}catch(e){box.innerHTML=''}},800);
   });
 }
 
