@@ -145,7 +145,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // ЖАҢАЛЫҚ: Статистикаға жүргізушінің рейтингі қосылды
   if (action === "stats" && req.method === "GET") {
     const [oRes, cRes, dRes] = await Promise.all([
       fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=eq.completed&select=price`, { headers }),
@@ -167,8 +166,8 @@ export default async function handler(req, res) {
       grossTotal: gross, 
       driverEarning: gross - commTotal, 
       commissionTotal: commTotal,
-      average_rating: driverInfo.average_rating || 0, // Жүргізушінің орташа бағасы
-      total_ratings: driverInfo.total_ratings || 0,   // Неше адам бағалағаны
+      average_rating: driverInfo.average_rating || 0,
+      total_ratings: driverInfo.total_ratings || 0,
       weekly: { 
         start: w.start.toISOString(), end: w.end.toISOString(), 
         unpaid: wComms.filter(c=>c.status==="unpaid").reduce((s,c)=>s+Number(c.commission_amount),0), 
@@ -183,18 +182,15 @@ export default async function handler(req, res) {
     const dLat = driverData.current_latitude;
     const dLon = driverData.current_longitude;
 
+    // БАРЛЫҚ ЖАҢА ТАПСЫРЫСТАРДЫ АЛАМЫЗ
     const nRes = await fetch(`${URL}/rest/v1/orders?status=eq.searching&select=*&order=created_at.asc`, { headers });
     const allNewOrders = await nRes.json();
 
+    // КЕШІГУДІ ТОҚТАТУ ҮШІН УАҚЫТ ШЕКТЕУІН АЛЫП ТАСТАДЫҚ (30 км-ге дейін бірден көрінеді)
     const filteredNewOrders = allNewOrders.filter(order => {
       if (!dLat || !dLon || !order.pickup_latitude) return true;
       const distance = getDistanceKm(dLat, dLon, order.pickup_latitude, order.pickup_longitude);
-      const minutesPassed = (new Date() - new Date(order.created_at)) / 60000;
-      let allowedRadius = 30;
-      if (minutesPassed < 1) allowedRadius = 2;
-      else if (minutesPassed < 2) allowedRadius = 10;
-      else if (minutesPassed < 3) allowedRadius = 20;
-      return distance <= allowedRadius;
+      return distance <= 30; // 30 км-ге дейінгілердің барлығын бірден көрсетеміз
     });
 
     const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude,driver_arrived_at,waiting_fee,waiting_minutes,free_wait_until&order=created_at.desc`, { headers });
