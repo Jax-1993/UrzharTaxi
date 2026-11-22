@@ -162,6 +162,7 @@ let map, driverMarker, pollTimer;
 let waitInterval = null;
 let arrivedTime = null;
 let notificationPlayed = false;
+let rideStartedAnnounced = false; // Жаңа флаг: сапар басталды ма?
 let selectedRating = 0;
 
 // Дыбыс пен вибрация (Жүргізуші келгенде)
@@ -190,6 +191,37 @@ function notifyArrival() {
       }
     }
   } catch (e) {}
+}
+
+// 🎤 ЖАҢА: Дауыстап хабарлау функциясы (Сапар басталғанда)
+function speakRideStarted() {
+  if (rideStartedAnnounced) return;
+  rideStartedAnnounced = true;
+
+  // Вибрация (мобильді телефондарда)
+  try {
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+  } catch (e) {}
+
+  // Дауыстап айту
+  try {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel(); // Ескі дыбыстарды тоқтату
+
+      const text = "Сапар басталды. Белдіктеріңізді тағып отырыңыздар.";
+      const utterance = new SpeechSynthesisUtterance(text);
+      
+      // Тілді орнату (Қазақша бар болса соны, болмаса орысша немесе әдепкі қолданады)
+      utterance.lang = 'kk-KZ'; 
+      utterance.rate = 0.9; // Айтылу жылдамдығы (сәл баяуырақ)
+      utterance.pitch = 1;  // Дауыс биіктігі
+      utterance.volume = 1; // Дыбыс деңгейі (максимум)
+      
+      window.speechSynthesis.speak(utterance);
+    }
+  } catch (e) {
+    console.error("Дауыс қатесі:", e);
+  }
 }
 
 function initMap() {
@@ -248,6 +280,10 @@ async function checkStatus() {
     } else if (d.order.status === "in_progress") {
       st.className = "status accepted";
       st.innerHTML = "🚕 Сапар басталды!";
+      
+      // 🎤 ЖАҢА: Сапар басталғанда дауыстап айту
+      speakRideStarted();
+
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       
@@ -272,7 +308,7 @@ async function checkStatus() {
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
 
-      // ЖАҢА: Бағалау терезесін шығару (егер бұрын бағаланбаған болса)
+      // Бағалау терезесін шығару (егер бұрын бағаланбаған болса)
       if (!d.order.rating && sessionStorage.getItem('rated_' + orderId) !== 'true') {
         document.getElementById("ratingModal").style.display = "flex";
       }
@@ -376,7 +412,6 @@ async function cancelOrder() {
 const stars = document.querySelectorAll('.star');
 const btnSubmit = document.getElementById('btnSubmitRating');
 
-// Жұлдызшаларды басу
 stars.forEach(star => {
   star.addEventListener('click', () => {
     selectedRating = parseInt(star.getAttribute('data-value'));
@@ -385,7 +420,6 @@ stars.forEach(star => {
   });
 });
 
-// Жұлдызшалардың түсін өзгерту
 function updateStars(rating) {
   stars.forEach(s => {
     if (parseInt(s.getAttribute('data-value')) <= rating) {
@@ -396,7 +430,6 @@ function updateStars(rating) {
   });
 }
 
-// Бағаны серверге жіберу
 async function submitRating() {
   if (selectedRating === 0) return;
   
@@ -412,14 +445,13 @@ async function submitRating() {
         orderId: orderId,
         rating: selectedRating,
         review: review,
-        trackingToken: token // API-де тексеру үшін
+        trackingToken: token
       })
     });
     
     const d = await r.json();
 
     if (r.ok && d.success) {
-      // Сәтті жіберілгенде терезенің мазмұнын өзгерту
       document.getElementById('ratingTitle').textContent = "Рахмет!";
       document.getElementById('ratingSubtitle').textContent = "Пікіріңіз біз үшін маңызды.";
       document.getElementById('starContainer').style.display = 'none';
@@ -428,7 +460,6 @@ async function submitRating() {
       btnSubmit.textContent = "Жабу";
       btnSubmit.disabled = false;
       
-      // Жабылған кезде басты бетке қайту
       btnSubmit.onclick = () => {
         document.getElementById('ratingModal').style.display = 'none';
         sessionStorage.setItem('rated_' + orderId, 'true');
