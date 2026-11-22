@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       if (destination_latitude) orderData.destination_latitude = Number(destination_latitude);
       if (destination_longitude) orderData.destination_longitude = Number(destination_longitude);
 
-      // Дерекқорға сақтау
+      // 1. Дерекқорға сақтау
       const r = await fetch(`${URL}/rest/v1/orders`, {
         method: "POST", headers: { ...headers, Prefer: "return=representation" },
         body: JSON.stringify(orderData)
@@ -48,29 +48,26 @@ export default async function handler(req, res) {
       const dbResult = await r.json();
       if (!r.ok || !dbResult[0]?.id) return res.status(502).json({ error: "Сақтау мүмкін болмады" });
 
-      // Telegram-ға хабарлама жіберу
+      // 2. Telegram-ға хабарлама жіберу (БҰНЫ КҮТПЕЙМІЗ, ФОНДЫҚ РЕЖИМДЕ ЖІБЕРЕМІЗ)
       const token = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
 
       if (token && chatId) {
-        try {
-          const message = "🚕 ҮРЖАР TAXI — ЖАҢА ТАПСЫРЫС\n\n" +
-            "👤 Жолаушы: " + name + "\n" +
-            "📞 Телефон: " + phone + "\n" +
-            "🟢 Қайдан: " + from + "\n" +
-            "🔴 Қайда: " + to + "\n" +
-            "🚘 Көлік: " + car + "\n" +
-            "📏 Қашықтық: " + distance + " км\n" +
-            "💰 Бағасы: " + price + " ₸\n" +
-            "💵 Төлем: " + (payment || "Қолма-қол");
+        const message = "🚕 ҮРЖАР TAXI — ЖАҢА ТАПСЫРЫС\n\n" +
+          "👤 Жолаушы: " + name + "\n" +
+          "📞 Телефон: " + phone + "\n" +
+          "🟢 Қайдан: " + from + "\n" +
+          "🔴 Қайда: " + to + "\n" +
+          "🚘 Көлік: " + car + "\n" +
+          "📏 Қашықтық: " + distance + " км\n" +
+          "💰 Бағасы: " + price + " ₸\n" +
+          "💵 Төлем: " + (payment || "Қолма-қол");
 
-          await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ chat_id: chatId, text: message })
-          });
-        } catch (e) { 
-          console.error("Telegram қатесі:", e.message); 
-        }
+        // await жоқ! Фондық режимде жіберіледі, жолаушыны күткізбейді
+        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, text: message })
+        }).catch(e => console.error("Telegram қатесі:", e.message));
       }
 
       return res.status(200).json({ success: true, orderId: dbResult[0].id, trackingToken });
@@ -93,7 +90,6 @@ export default async function handler(req, res) {
 
       const tokenHash = crypto.createHash("sha256").update(trackingToken).digest("hex");
 
-      // 1. Тапсырысты тексеру (токен дұрыспа, бағаланбаған ба?)
       const getOrderRes = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&select=id,driver_id,rating,passenger_tracking_token_hash`, { headers });
       const orders = await getOrderRes.json();
 
@@ -103,30 +99,26 @@ export default async function handler(req, res) {
 
       const order = orders[0];
 
-      // Токенді тексеру (тек осы тапсырыстың иесі бағалай алады)
       if (order.passenger_tracking_token_hash !== tokenHash) {
         return res.status(403).json({ error: "Рұқсат жоқ" });
       }
 
-      // Бұрын бағаланған ба?
       if (order.rating) {
         return res.status(400).json({ error: "Бұл тапсырыс бұрын бағаланған" });
       }
 
-      // 2. Тапсырыс кестесін жаңарту (баға мен статусты сақтау)
       const updateOrderRes = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}`, {
         method: "PATCH",
         headers,
         body: JSON.stringify({
           rating: Number(rating),
           review: review || null,
-          status: "completed" // Егер сапар аяқталмаған болса, осы жерде аяқталды деп белгілейміз
+          status: "completed"
         })
       });
 
       if (!updateOrderRes.ok) throw new Error("Тапсырысты жаңарту мүмкін болмады");
 
-      // 3. Жүргізушінің орташа рейтингін есептеу және жаңарту
       if (order.driver_id) {
         const getDriverRes = await fetch(`${URL}/rest/v1/drivers?id=eq.${order.driver_id}&select=average_rating,total_ratings`, { headers });
         const drivers = await getDriverRes.json();
@@ -137,14 +129,13 @@ export default async function handler(req, res) {
           const currentTotal = driver.total_ratings || 0;
 
           const newTotal = currentTotal + 1;
-          // Жаңа орташа бағаны есептеу: (Ескі орташа * Ескі саны + Жаңа баға) / Жаңа жалпы саны
           const newAvg = ((currentAvg * currentTotal) + Number(rating)) / newTotal;
 
           await fetch(`${URL}/rest/v1/drivers?id=eq.${order.driver_id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify({
-              average_rating: parseFloat(newAvg.toFixed(2)), // Мысалы 4.85
+              average_rating: parseFloat(newAvg.toFixed(2)),
               total_ratings: newTotal
             })
           });
@@ -158,7 +149,6 @@ export default async function handler(req, res) {
     }
   }
 
-  // Басқа әдістерге рұқсат жоқ
   else {
     res.setHeader("Allow", ["POST", "PATCH"]);
     return res.status(405).json({ error: "Тек POST немесе PATCH әдістері рұқсат етілген" });
