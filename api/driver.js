@@ -4,6 +4,31 @@ import { promisify } from "util";
 const scrypt = promisify(crypto.scrypt);
 const COOKIE_NAME = "urzhar_driver_session";
 
+// КҮТУ АҚЫСЫН ЕСЕПТЕУ ЕРЕЖЕЛЕРІ
+const WAIT_FREE_MS = 5 * 60 * 1000;   // 5 минут тегін
+const WAIT_RATE_PER_MIN = 10;         // ₸/минут
+
+function calculateWaitingFee(driverArrivedAt) {
+  if (!driverArrivedAt) return { minutes: 0, fee: 0, freeUntil: null };
+  const arrivedMs = new Date(driverArrivedAt).getTime();
+  if (isNaN(arrivedMs)) return { minutes: 0, fee: 0, freeUntil: null };
+  
+  const freeUntilMs = arrivedMs + WAIT_FREE_MS;
+  const now = Date.now();
+  
+  if (now < freeUntilMs) {
+    return { minutes: 0, fee: 0, freeUntil: new Date(freeUntilMs).toISOString() };
+  }
+  
+  const paidMs = now - freeUntilMs;
+  const paidMin = Math.floor(paidMs / 60000);
+  return { 
+    minutes: paidMin, 
+    fee: paidMin * WAIT_RATE_PER_MIN, 
+    freeUntil: new Date(freeUntilMs).toISOString() 
+  };
+}
+
 function createSession(driverId, secret) {
   const expires = Date.now() + 7 * 86400000;
   const sig = crypto.createHmac("sha256", secret).update(`urzhar-driver:${driverId}:${expires}`).digest("hex");
@@ -156,7 +181,8 @@ export default async function handler(req, res) {
       return distance <= allowedRadius;
     });
 
-    const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude,driver_arrived_at&order=created_at.desc`, { headers });
+    // ЖАҢА: waiting_fee, waiting_minutes, free_wait_until қосылды
+    const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude,driver_arrived_at,waiting_fee,waiting_minutes,free_wait_until&order=created_at.desc`, { headers });
     
     return res.status(200).json({ success: true, new_orders: filteredNewOrders, my_orders: await mRes.json() });
   }
@@ -172,7 +198,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // === ЖАҢА: Жүргізуші келді ===
   if (action === "arrive" && req.method === "POST") {
     const { orderId } = req.body;
     const r = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&driver_id=eq.${driverId}&status=eq.accepted`, {
@@ -184,29 +209,53 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ЖАҢА: Сапар басталғанда күту ақысын есептеп сақтаймыз
   if (action === "start_ride" && req.method === "POST") {
     const { orderId } = req.body;
+    
+    const oRes = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&driver_id=eq.${driverId}&status=eq.accepted&select=driver_arrived_at`, { headers });
+    const orders = await oRes.json();
+    if (!orders.length) return res.status(409).json({ success: false, message: "Сапарды бастау мүмкін емес" });
+
+    const wait = calculateWaitingFee(orders[0].driver_arrived_at);
+
     const r = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&driver_id=eq.${driverId}&status=eq.accepted`, {
       method: "PATCH", headers: { ...headers, Prefer: "return=representation" },
-      body: JSON.stringify({ status: "in_progress", in_progress_at: new Date().toISOString() })
+      body: JSON.stringify({ 
+        status: "in_progress", 
+        in_progress_at: new Date().toISOString(),
+        waiting_fee: wait.fee,
+        waiting_minutes: wait.minutes,
+        free_wait_until: wait.freeUntil
+      })
     });
     const updated = await r.json();
     if (!updated.length) return res.status(409).json({ success: false, message: "Сапарды бастау мүмкін емес" });
-    return res.status(200).json({ success: true });
+    
+    return res.status(200).json({ success: true, waiting_fee: wait.fee, waiting_minutes: wait.minutes });
   }
 
+  // ЖАҢА: Сапар аяқталғанда күту ақысын қайтарамыз
   if (action === "complete" && req.method === "POST") {
+    const { orderId } = req.body;
+
+    const oRes = await fetch(`${URL}/rest/v1/orders?id=eq.${orderId}&select=waiting_fee,waiting_minutes`, { headers });
+    const oData = await oRes.json();
+    const waitingFee = Number(oData[0]?.waiting_fee || 0);
+    const waitingMinutes = Number(oData[0]?.waiting_minutes || 0);
+
     const r = await fetch(`${URL}/rest/v1/rpc/complete_taxi_order`, {
-      method: "POST", headers, body: JSON.stringify({ p_order_id: req.body.orderId, p_driver_id: driverId })
+      method: "POST", headers, body: JSON.stringify({ p_order_id: orderId, p_driver_id: driverId })
     });
     const d = await r.json();
     if (!r.ok || !d.success) return res.status(409).json({ success: false, message: d.message || "Қате" });
-    return res.status(200).json(d);
+    
+    return res.status(200).json({ ...d, waiting_fee: waitingFee, waiting_minutes: waitingMinutes });
   }
 
   if (action === "cancel" && req.method === "POST") {
     await fetch(`${URL}/rest/v1/orders?id=eq.${req.body.orderId}&driver_id=eq.${driverId}&status=in.(accepted,in_progress)`, {
-      method: "PATCH", headers, body: JSON.stringify({ driver_id: null, status: "searching", accepted_at: null, in_progress_at: null, driver_arrived_at: null })
+      method: "PATCH", headers, body: JSON.stringify({ driver_id: null, status: "searching", accepted_at: null, in_progress_at: null, driver_arrived_at: null, waiting_fee: 0, waiting_minutes: 0 })
     });
     return res.status(200).json({ success: true });
   }
