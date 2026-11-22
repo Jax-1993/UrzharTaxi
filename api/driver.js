@@ -145,19 +145,35 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
+  // ЖАҢАЛЫҚ: Статистикаға жүргізушінің рейтингі қосылды
   if (action === "stats" && req.method === "GET") {
-    const [oRes, cRes] = await Promise.all([
+    const [oRes, cRes, dRes] = await Promise.all([
       fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=eq.completed&select=price`, { headers }),
-      fetch(`${URL}/rest/v1/driver_commissions?driver_id=eq.${driverId}&select=commission_amount,status,created_at`, { headers })
+      fetch(`${URL}/rest/v1/driver_commissions?driver_id=eq.${driverId}&select=commission_amount,status,created_at`, { headers }),
+      fetch(`${URL}/rest/v1/drivers?id=eq.${driverId}&select=average_rating,total_ratings`, { headers })
     ]);
-    const orders = await oRes.json(), comms = await cRes.json();
+    const orders = await oRes.json();
+    const comms = await cRes.json();
+    const driverInfo = (await dRes.json())[0] || {};
+
     const gross = orders.reduce((s, o) => s + Number(o.price || 0), 0);
     const commTotal = comms.reduce((s, c) => s + Number(c.commission_amount || 0), 0);
     const w = getAlmatyWeek(new Date());
     const wComms = comms.filter(c => new Date(c.created_at) >= w.start && new Date(c.created_at) < w.end);
+    
     return res.status(200).json({
-      success: true, ridesCount: orders.length, grossTotal: gross, driverEarning: gross - commTotal, commissionTotal: commTotal,
-      weekly: { start: w.start.toISOString(), end: w.end.toISOString(), unpaid: wComms.filter(c=>c.status==="unpaid").reduce((s,c)=>s+Number(c.commission_amount),0), paid: wComms.filter(c=>c.status==="paid").reduce((s,c)=>s+Number(c.commission_amount),0) }
+      success: true, 
+      ridesCount: orders.length, 
+      grossTotal: gross, 
+      driverEarning: gross - commTotal, 
+      commissionTotal: commTotal,
+      average_rating: driverInfo.average_rating || 0, // Жүргізушінің орташа бағасы
+      total_ratings: driverInfo.total_ratings || 0,   // Неше адам бағалағаны
+      weekly: { 
+        start: w.start.toISOString(), end: w.end.toISOString(), 
+        unpaid: wComms.filter(c=>c.status==="unpaid").reduce((s,c)=>s+Number(c.commission_amount),0), 
+        paid: wComms.filter(c=>c.status==="paid").reduce((s,c)=>s+Number(c.commission_amount),0) 
+      }
     });
   }
 
@@ -181,7 +197,6 @@ export default async function handler(req, res) {
       return distance <= allowedRadius;
     });
 
-    // ЖАҢА: waiting_fee, waiting_minutes, free_wait_until қосылды
     const mRes = await fetch(`${URL}/rest/v1/orders?driver_id=eq.${driverId}&status=in.(accepted,in_progress)&select=id,passenger_name,passenger_phone,pickup_address,destination_address,car_class,distance_km,price,status,created_at,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude,driver_arrived_at,waiting_fee,waiting_minutes,free_wait_until&order=created_at.desc`, { headers });
     
     return res.status(200).json({ success: true, new_orders: filteredNewOrders, my_orders: await mRes.json() });
@@ -209,7 +224,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true });
   }
 
-  // ЖАҢА: Сапар басталғанда күту ақысын есептеп сақтаймыз
   if (action === "start_ride" && req.method === "POST") {
     const { orderId } = req.body;
     
@@ -235,7 +249,6 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, waiting_fee: wait.fee, waiting_minutes: wait.minutes });
   }
 
-  // ЖАҢА: Сапар аяқталғанда күту ақысын қайтарамыз
   if (action === "complete" && req.method === "POST") {
     const { orderId } = req.body;
 
