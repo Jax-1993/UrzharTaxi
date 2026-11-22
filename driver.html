@@ -16,9 +16,6 @@ header{background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);padding:16px;t
 header h2{margin:0;color:var(--yellow);font-size:20px;font-weight:900}
 header .subtitle{color:var(--text-muted);font-size:12px;margin-top:3px;font-weight:500}
 .logout-btn{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15);padding:7px 12px;border-radius:9px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}
-.online-bar{background:#1c2536;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);position:sticky;top:65px;z-index:999}
-.online-btn{background:var(--red);color:white;border:0;padding:10px 18px;border-radius:10px;font-weight:800;font-size:13px;cursor:pointer;transition:0.2s;box-shadow:0 2px 8px rgba(0,0,0,0.3)}
-.online-btn.active{background:var(--green)}
 main{max-width:680px;margin:auto;padding:14px}
 .card{background:var(--card);border-radius:18px;padding:18px;margin:14px 0;border:1px solid var(--border);box-shadow:0 4px 16px rgba(0,0,0,0.15)}
 .card h3{margin:0 0 14px;color:var(--yellow);font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
@@ -83,14 +80,9 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 
 <header>
   <h2>🚕 TULPAR TAXI</h2>
-  <div class="subtitle">Жүргізуші кабинеті</div>
+  <div class="subtitle">Жүргізуші кабинеті (Авто-онлайн)</div>
   <button class="logout-btn" onclick="logout()">Шығу</button>
 </header>
-
-<div class="online-bar">
-  <div style="font-weight:700;color:#fff;font-size:14px;">Жүйедегі мәртебе:</div>
-  <button id="onlineToggleBtn" class="online-btn" onclick="toggleOnlineMode()">🔴 ЖЕЛІДЕ ЕМЕС</button>
-</div>
 
 <main>
   <div class="card">
@@ -203,28 +195,35 @@ async function api(url,options={}){
   return data;
 }
 
-async function toggleOnlineMode() {
-  isOnline = !isOnline;
-  const btn = document.getElementById('onlineToggleBtn');
+// --- АВТОМАТТЫ ТҮРДЕ ОНЛАЙН БОЛУ ---
+async function setDriverOnline() {
+  if (isOnline) return;
+  isOnline = true;
+  await fetch("/api/driver?action=toggle_online", {
+    method: "POST", credentials: "include", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ is_online: true })
+  }).catch(e => console.log(e));
 
-  if (isOnline) {
-    btn.style.background = 'var(--green)';
-    btn.textContent = '🟢 ЖЕЛІДЕ';
-    await fetch("/api/driver?action=toggle_online", {
-      method: "POST", credentials: "include", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ is_online: true })
-    });
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => sendOnlineLocation(pos), null, { enableHighAccuracy: true });
-      onlineWatchId = navigator.geolocation.watchPosition(pos => sendOnlineLocation(pos), null, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 });
-    }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => sendOnlineLocation(pos), null, { enableHighAccuracy: true });
+    onlineWatchId = navigator.geolocation.watchPosition(pos => sendOnlineLocation(pos), null, { enableHighAccuracy: true, timeout: 15000, maximumAge: 5000 });
+  }
+}
+
+// --- АВТОМАТТЫ ТҮРДЕ ОФЛАЙН БОЛУ ---
+async function setDriverOffline() {
+  if (!isOnline) return;
+  isOnline = false;
+  if (onlineWatchId) { navigator.geolocation.clearWatch(onlineWatchId); onlineWatchId = null; }
+  
+  const data = JSON.stringify({ is_online: false });
+  // Қосымша жабылып жатқанда сұраныс жетуі үшін sendBeacon қолданамыз
+  if (navigator.sendBeacon) {
+    navigator.sendBeacon('/api/driver?action=toggle_online', new Blob([data], {type: 'application/json'}));
   } else {
-    btn.style.background = 'var(--red)';
-    btn.textContent = '🔴 ЖЕЛІДЕ ЕМЕС';
-    if (onlineWatchId) { navigator.geolocation.clearWatch(onlineWatchId); onlineWatchId = null; }
-    await fetch("/api/driver?action=toggle_online", {
+    fetch("/api/driver?action=toggle_online", {
       method: "POST", credentials: "include", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({ is_online: false })
+      body: data, keepalive: true
     });
   }
 }
@@ -240,7 +239,7 @@ async function sendOnlineLocation(pos) {
   await fetch("/api/driver?action=update_location", {
     method: "POST", credentials: "include", headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude })
-  });
+  }).catch(e=>console.log(e));
 }
 
 async function loadStats(){
@@ -259,7 +258,6 @@ const CAR_LABELS={economy:"Эконом",comfort:"Бизнес",comfort_plus:"Б
 
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
-// КҮТУ ТАЙМЕРІН ІСКЕ ҚОСУ ФУНКЦИЯСЫ
 function startWaitTimer(order, el) {
   if (waitTimers[order.id]) clearInterval(waitTimers[order.id]);
   const arrivedMs = new Date(order.driver_arrived_at).getTime();
@@ -317,7 +315,6 @@ function renderOrder(order,containerId,isMyOrder){
     const arriveBtn=document.createElement("button");arriveBtn.className="btn-arrive";arriveBtn.textContent="📍 ЖОЛАУШЫҒА КЕЛДІМ";arriveBtn.onclick=()=>arriveOrder(order.id,arriveBtn);item.appendChild(arriveBtn);
     const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
   } else if(order.status === "accepted" && order.driver_arrived_at) {
-    // КҮТУ ТАЙМЕРІН КӨРСЕТУ БЛОГЫ
     const waitBlock=document.createElement("div");
     waitBlock.className="wait-block";waitBlock.id="wait_"+order.id;
     item.appendChild(waitBlock);
@@ -387,7 +384,6 @@ function updateDriverMap(order) {
 }
 
 async function loadOrders(){
-  // Ескі таймерлерді өшіру
   Object.values(waitTimers).forEach(clearInterval);
   waitTimers = {};
 
@@ -578,7 +574,7 @@ async function sendMessage(){
 async function logout(){
   if(!confirm("Жүйеден шығасыз ба?"))return;
   if(gpsActive)stopGps();
-  if(isOnline) await toggleOnlineMode();
+  await setDriverOffline(); // Шыққанда офлайн болады
   try{await fetch("/api/driver?action=logout",{credentials:"include"})}catch(e){}
   window.location.href="/driver-login.html";
 }
@@ -594,16 +590,26 @@ async function loadAll(){
 
 function startAutoRefresh(){
   if(autoRefreshTimer)clearInterval(autoRefreshTimer);
-  autoRefreshTimer=setInterval(()=>{loadOrders().catch(()=>{})},15000);
+  // Тапсырыс тез келуі үшін 15 секундтан 5 секундқа азайттым
+  autoRefreshTimer=setInterval(()=>{loadOrders().catch(()=>{})},5000); 
   if(chatRefreshTimer)clearInterval(chatRefreshTimer);
   chatRefreshTimer=setInterval(()=>{loadChat().catch(()=>{})},15000);
 }
 
-window.addEventListener("pagehide",()=>{if(autoRefreshTimer)clearInterval(autoRefreshTimer);if(chatRefreshTimer)clearInterval(chatRefreshTimer);if(gpsActive)stopGps();Object.values(waitTimers).forEach(clearInterval);});
+window.addEventListener("pagehide",()=>{
+  if(autoRefreshTimer)clearInterval(autoRefreshTimer);
+  if(chatRefreshTimer)clearInterval(chatRefreshTimer);
+  if(gpsActive)stopGps();
+  Object.values(waitTimers).forEach(clearInterval);
+  setDriverOffline(); // Бетті жапқанда офлайн болады
+});
 
 document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
 
-loadAll().then(()=>startAutoRefresh());
+// Бет ашылғанда автоматты онлайн боламыз
+setDriverOnline().then(() => {
+  loadAll().then(()=>startAutoRefresh());
+});
 </script>
 </body>
 </html>
