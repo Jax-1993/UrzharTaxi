@@ -67,6 +67,15 @@ button:disabled{opacity:0.5;cursor:not-allowed}
 .empty{background:rgba(255,255,255,0.03);padding:18px;border-radius:11px;text-align:center;color:var(--text-muted);font-size:13px;border:1px dashed rgba(255,255,255,0.1)}
 #mapCard{display:none; padding:14px;}
 #driverMap {height: 300px; border-radius:12px; margin-top:10px; z-index:1; background:#1a2536;}
+
+/* КҮТУ ТАЙМЕРІНІҢ СТИЛЬДЕРІ */
+.wait-block{margin:10px 0;font-size:14px;line-height:1.6;text-align:center}
+.wait-free{background:rgba(22,189,121,0.12);border:1px solid rgba(22,189,121,0.35);color:#8fffc8;padding:12px;border-radius:11px}
+.wait-paid{background:rgba(255,204,0,0.12);border:1px solid rgba(255,204,0,0.35);color:#ffdb4d;padding:12px;border-radius:11px;animation:pulsePaid 1.5s infinite}
+@keyframes pulsePaid{0%,100%{opacity:1}50%{opacity:0.65}}
+.wait-note{font-size:11px;color:#94a3b8;margin-top:5px}
+.wait-fee{font-size:12px;color:#ffdb4d;margin-top:5px;font-weight:600}
+
 @media(max-width:480px){main{padding:11px}.card{padding:15px}.stat strong{font-size:18px}}
 </style>
 </head>
@@ -143,6 +152,11 @@ let autoRefreshTimer=null,chatRefreshTimer=null;
 let map, driverMarker, pickupMarker, destinationMarker, routeLine;
 let lastOrderIds = [];
 let isFirstLoad = true;
+
+// КҮТУ ТАЙМЕРІНІҢ АЙНЫМАЛЫЛАРЫ
+let waitTimers = {};
+const WAIT_FREE_MS = 5 * 60 * 1000;
+const WAIT_RATE = 10;
 
 let audioCtx = null;
 function initAudio() {
@@ -245,6 +259,31 @@ const CAR_LABELS={economy:"Эконом",comfort:"Бизнес",comfort_plus:"Б
 
 function escapeHtml(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 
+// КҮТУ ТАЙМЕРІН ІСКЕ ҚОСУ ФУНКЦИЯСЫ
+function startWaitTimer(order, el) {
+  if (waitTimers[order.id]) clearInterval(waitTimers[order.id]);
+  const arrivedMs = new Date(order.driver_arrived_at).getTime();
+  if (isNaN(arrivedMs)) { el.innerHTML = ''; return; }
+  const freeUntil = arrivedMs + WAIT_FREE_MS;
+
+  const tick = () => {
+    const now = Date.now();
+    if (now < freeUntil) {
+      const rem = freeUntil - now;
+      const m = Math.floor(rem / 60000);
+      const s = Math.floor((rem % 60000) / 1000);
+      el.innerHTML = `<div class="wait-free">⏱ Тегін күту: <b>${m}:${String(s).padStart(2,'0')}</b><div class="wait-note">Одан кейін әр минут — 10 ₸</div></div>`;
+    } else {
+      const paidMs = now - freeUntil;
+      const paidMin = Math.floor(paidMs / 60000);
+      const fee = paidMin * WAIT_RATE;
+      el.innerHTML = `<div class="wait-paid">💰 Ақылы күту: <b>${paidMin} мин</b><div class="wait-fee">Күту ақысы: ${fee} ₸ (жолаушыға қосылуда)</div></div>`;
+    }
+  };
+  tick();
+  waitTimers[order.id] = setInterval(tick, 1000);
+}
+
 function renderOrder(order,containerId,isMyOrder){
   const item=document.createElement("div");item.className="order";
   const name=order.passenger_name||"Жолаушы";
@@ -278,6 +317,12 @@ function renderOrder(order,containerId,isMyOrder){
     const arriveBtn=document.createElement("button");arriveBtn.className="btn-arrive";arriveBtn.textContent="📍 ЖОЛАУШЫҒА КЕЛДІМ";arriveBtn.onclick=()=>arriveOrder(order.id,arriveBtn);item.appendChild(arriveBtn);
     const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
   } else if(order.status === "accepted" && order.driver_arrived_at) {
+    // КҮТУ ТАЙМЕРІН КӨРСЕТУ БЛОГЫ
+    const waitBlock=document.createElement("div");
+    waitBlock.className="wait-block";waitBlock.id="wait_"+order.id;
+    item.appendChild(waitBlock);
+    startWaitTimer(order, waitBlock);
+
     const startBtn=document.createElement("button");startBtn.className="btn-accept";startBtn.style.background="linear-gradient(135deg,#3b82f6 0%,#60a5fa 100%)";startBtn.textContent="🚕 САПАРДЫ БАСТАУ";startBtn.onclick=()=>startRide(order.id,startBtn);item.appendChild(startBtn);
     const cancelBtn=document.createElement("button");cancelBtn.className="btn-cancel";cancelBtn.textContent="❌ БАС ТАРТУ";cancelBtn.onclick=()=>cancelOrder(order.id,cancelBtn);item.appendChild(cancelBtn);
   } else if(order.status === "in_progress") {
@@ -342,6 +387,10 @@ function updateDriverMap(order) {
 }
 
 async function loadOrders(){
+  // Ескі таймерлерді өшіру
+  Object.values(waitTimers).forEach(clearInterval);
+  waitTimers = {};
+
   const data=await api("/api/driver?action=orders");
   const newBox=document.getElementById("newOrders"),myBox=document.getElementById("myOrders");
   newBox.innerHTML="";myBox.innerHTML="";
@@ -415,6 +464,9 @@ async function startRide(orderId,btn){
     });
     const d = await r.json();
     if(!r.ok || !d.success) throw new Error(d.message || "Бастау мүмкін болмады");
+    if(d.waiting_fee > 0) {
+      alert(`🚕 Сапар басталды!\nКүту ақысы: ${d.waiting_fee} ₸ (${d.waiting_minutes} мин) сапар құнына қосылды.`);
+    }
     await loadOrders();
   }catch(e){
     alert("❌ " + e.message);
@@ -435,7 +487,9 @@ async function completeOrder(orderId,btn){
     
     if(gpsActive&&gpsOrderId===orderId)stopGps();
     let msg = "✅ Сапар аяқталды!\nТабыс: " + money(d.driver_earning) + "\nКомиссия: " + money(d.commission);
-    if (d.waiting_fee && d.waiting_fee > 0) msg += "\n(Күту ақысы: " + money(d.waiting_fee) + " қосылды)";
+    if (d.waiting_fee && d.waiting_fee > 0) {
+        msg += "\n\n💰 Күту ақысы: " + money(d.waiting_fee) + " (" + d.waiting_minutes + " мин) қосылды";
+    }
     alert(msg);
     await Promise.all([loadAll(),loadChat()]);
   }catch(e){
@@ -455,6 +509,7 @@ async function cancelOrder(orderId,btn){
     const d = await r.json();
     if(!r.ok || !d.success) throw new Error(d.message || "Бас тарту мүмкін болмады");
     if(gpsActive&&gpsOrderId===orderId)stopGps();
+    if(waitTimers[orderId]){ clearInterval(waitTimers[orderId]); delete waitTimers[orderId]; }
     await loadOrders();
   }catch(e){
     alert("❌ " + e.message);
@@ -544,7 +599,7 @@ function startAutoRefresh(){
   chatRefreshTimer=setInterval(()=>{loadChat().catch(()=>{})},15000);
 }
 
-window.addEventListener("pagehide",()=>{if(autoRefreshTimer)clearInterval(autoRefreshTimer);if(chatRefreshTimer)clearInterval(chatRefreshTimer);if(gpsActive)stopGps()});
+window.addEventListener("pagehide",()=>{if(autoRefreshTimer)clearInterval(autoRefreshTimer);if(chatRefreshTimer)clearInterval(chatRefreshTimer);if(gpsActive)stopGps();Object.values(waitTimers).forEach(clearInterval);});
 
 document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
 
