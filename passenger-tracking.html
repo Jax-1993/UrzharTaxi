@@ -25,18 +25,18 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 
 /* КҮТУ ТАЙМЕРІ ҮШІН */
 .wait-timer-box {
-  background: linear-gradient(135deg, #2a1a1a 0%, #3a1f1f 100%);
-  border: 2px solid #e54848;
+  background: linear-gradient(135deg, #1a3d30 0%, #1d493d 100%);
+  border: 2px solid #16bd79;
   border-radius: 14px;
   padding: 20px;
   margin: 15px 0;
   text-align: center;
   display: none;
-  animation: pulse 1.5s infinite;
 }
-.wait-timer-box.free {
-  background: linear-gradient(135deg, #1a3d30 0%, #1d493d 100%);
-  border-color: #16bd79;
+.wait-timer-box.paid {
+  background: linear-gradient(135deg, #2a1a1a 0%, #3a1f1f 100%);
+  border-color: #e54848;
+  animation: pulse 1.5s infinite;
 }
 @keyframes pulse {
   0%, 100% { transform: scale(1); }
@@ -46,6 +46,20 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 .wait-timer { font-size: 36px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; margin: 10px 0; }
 .wait-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
 .wait-fee-text { font-size: 20px; font-weight: 800; color: #ffcc00; margin-top: 10px; display: none; }
+
+/* КҮТУ АҚЫСЫНЫҢ БЕЙДЖІ (Сапар басталғанда/аяқталғанда) */
+.wait-fee-badge {
+  background: linear-gradient(135deg, #3a2800 0%, #4a3300 100%);
+  border: 2px solid #ffcc00;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 15px 0;
+  text-align: center;
+  display: none;
+}
+.wait-fee-badge .title { font-size: 13px; color: #ffcc00; margin-bottom: 6px; font-weight: 700; }
+.wait-fee-badge .amount { font-size: 28px; font-weight: 900; color: #fff; }
+.wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 5px; }
 </style>
 </head>
 <body>
@@ -55,14 +69,20 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
     <h2>📍 Жүргізушіні бақылау</h2>
     <div id="status" class="status searching">Жүйеге қосылуда...</div>
     
-    <!-- КҮТУ ТАЙМЕРІ -->
+    <!-- КҮТУ ТАЙМЕРІ (Тірі режим) -->
     <div id="waitTimerBox" class="wait-timer-box">
       <div class="wait-title">🚕 Жүргізуші келді!</div>
       <div class="wait-timer" id="waitTimer">05:00</div>
       <div class="wait-desc" id="waitDesc">5 минут тегін күту уақыты.</div>
       <div class="wait-fee-text" id="waitFeeText">Күту ақысы: 0 ₸</div>
     </div>
-    <!-- =================== -->
+
+    <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ (Сапар басталғанда/аяқталғанда) -->
+    <div id="waitFeeBadge" class="wait-fee-badge">
+      <div class="title">💰 Күту ақысы</div>
+      <div class="amount" id="waitFeeAmount">0 ₸</div>
+      <div class="note" id="waitFeeNote">Сапар құнына қосылды</div>
+    </div>
 
     <div id="map"></div>
     <p class="small" id="updated">GPS дерегі күтілуде...</p>
@@ -81,6 +101,35 @@ const token = sessionStorage.getItem("urzhar_taxi_tracking_token");
 let map, driverMarker, pollTimer;
 let waitInterval = null;
 let arrivedTime = null;
+let notificationPlayed = false;
+
+// Дыбыс пен вибрация (Жүргізуші келгенде)
+function notifyArrival() {
+  if (notificationPlayed) return;
+  notificationPlayed = true;
+  try {
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 2; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const start = now + i * 0.4;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.8, start + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.3);
+        osc.start(start);
+        osc.stop(start + 0.3);
+      }
+    }
+  } catch (e) {}
+}
 
 function initMap() {
   const savedLat = localStorage.getItem('passenger_last_lat');
@@ -107,83 +156,124 @@ async function checkStatus() {
     if (!d.success) return;
 
     const st = document.getElementById("status");
+    const timerBox = document.getElementById("waitTimerBox");
+    const feeBadge = document.getElementById("waitFeeBadge");
     document.getElementById("cancelCard").style.display = "block";
 
-    // Жүргізуші келгенін тексеру
-    if (d.order.driver_arrived_at && !arrivedTime && d.order.status !== 'completed') {
+    // Жүргізуші келгенін тексеру (тек accepted кезінде)
+    if (d.order.driver_arrived_at && !arrivedTime && d.order.status === 'accepted') {
       arrivedTime = new Date(d.order.driver_arrived_at).getTime();
-      startWaitTimer();
+      startWaitTimer(d.order);
+      notifyArrival();
     }
 
     if (d.order.status === "searching") {
       st.className = "status searching";
       st.innerHTML = "🔍 Жүргізуші ізделуде...";
+      timerBox.style.display = "none";
+      feeBadge.style.display = "none";
+      
     } else if (d.order.status === "accepted") {
       st.className = "status accepted";
-      st.innerHTML = "✅ Жүргізуші тағайындалды! Жолда...";
+      if (d.order.driver_arrived_at) {
+        st.innerHTML = "🚕 Жүргізуші келді! Күтудеміз...";
+        timerBox.style.display = "block";
+      } else {
+        st.innerHTML = "✅ Жүргізуші тағайындалды! Жолда...";
+        timerBox.style.display = "none";
+      }
       loadLocation();
+      
     } else if (d.order.status === "in_progress") {
       st.className = "status accepted";
       st.innerHTML = "🚕 Сапар басталды!";
-      document.getElementById("waitTimerBox").style.display = "none"; // Таймерді жасыру
-      if(waitInterval) clearInterval(waitInterval);
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
+      
+      // Күту ақысын көрсету
+      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
+      const wm = Number(d.order.waiting_minutes || d.order.waiting?.minutes || 0);
+      if (wf > 0) {
+        feeBadge.style.display = "block";
+        document.getElementById("waitFeeAmount").textContent = `${wf} ₸`;
+        document.getElementById("waitFeeNote").textContent = `(${wm} мин ақылы күту — сапар құнына қосылды)`;
+      }
       loadLocation();
+      
     } else if (d.order.status === "completed") {
       st.className = "status accepted";
+      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
       st.innerHTML = "🏁 Сапар аяқталды. Рахмет!";
+      if (wf > 0) {
+        st.innerHTML += `<br><span style="color:#ffcc00;font-size:13px;margin-top:6px;display:inline-block">💰 Күту ақысы: ${wf} ₸ қосылды</span>`;
+      }
       document.getElementById("cancelCard").style.display = "none";
-      document.getElementById("waitTimerBox").style.display = "none";
-      if(waitInterval) clearInterval(waitInterval);
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
+      
     } else if (d.order.status === "cancelled") {
       st.className = "status searching";
       st.innerHTML = "❌ Тапсырыс тоқтатылды";
       document.getElementById("cancelCard").style.display = "none";
-      document.getElementById("waitTimerBox").style.display = "none";
-      if(waitInterval) clearInterval(waitInterval);
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
     }
   } catch (e) {}
 }
 
-function startWaitTimer() {
-  document.getElementById("waitTimerBox").style.display = "block";
-  document.getElementById("waitTimerBox").classList.add("free");
+function startWaitTimer(order) {
+  const timerBox = document.getElementById("waitTimerBox");
+  const timerEl = document.getElementById("waitTimer");
+  const descEl = document.getElementById("waitDesc");
+  const feeText = document.getElementById("waitFeeText");
+  
+  timerBox.style.display = "block";
   
   if (waitInterval) clearInterval(waitInterval);
-  
-  waitInterval = setInterval(() => {
-    const now = Date.now();
-    const diffSecs = Math.floor((now - arrivedTime) / 1000);
-    const freeSecs = 5 * 60; // 5 минут = 300 секунд
 
-    if (diffSecs < freeSecs) {
-      // Тегін уақыт
-      const remaining = freeSecs - diffSecs;
+  const FREE_SECS = 5 * 60; // 5 минут
+  const RATE = 10; // 10 теңге/минут
+
+  // Серверден келген freeUntil уақытын қолданамыз (дәлірек болу үшін)
+  let freeUntilMs = arrivedTime + (FREE_SECS * 1000);
+  if (order.waiting && order.waiting.freeUntil) {
+      freeUntilMs = new Date(order.waiting.freeUntil).getTime();
+  }
+
+  const tick = () => {
+    const now = Date.now();
+
+    if (now < freeUntilMs) {
+      // === ТЕГІН КҮТУ ===
+      const remaining = Math.floor((freeUntilMs - now) / 1000);
       const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
       const secs = String(remaining % 60).padStart(2, '0');
-      
-      document.getElementById("waitTimer").textContent = `${mins}:${secs}`;
-      document.getElementById("waitDesc").textContent = "5 минут тегін күту уақыты.";
-      document.getElementById("waitTimerBox").classList.add("free");
-      document.getElementById("waitFeeText").style.display = "none";
+
+      timerEl.textContent = `${mins}:${secs}`;
+      descEl.textContent = "5 минут тегін күту уақыты.";
+      timerBox.classList.remove("paid");
+      feeText.style.display = "none";
     } else {
-      // Ақылы уақыт
-      const paidSecs = diffSecs - freeSecs;
-      const paidMins = Math.floor(paidSecs / 60) + 1; // 1 минуттан бастап есептеледі
-      const fee = paidMins * 10; // Әр минут 10 теңге
-      
+      // === АҚЫЛЫ КҮТУ ===
+      const paidSecs = Math.floor((now - freeUntilMs) / 1000);
+      const paidMins = Math.floor(paidSecs / 60);
+      const fee = paidMins * RATE;
+
       const displayMins = String(Math.floor(paidSecs / 60)).padStart(2, '0');
       const displaySecs = String(paidSecs % 60).padStart(2, '0');
 
-      document.getElementById("waitTimer").textContent = `${displayMins}:${displaySecs}`;
-      document.getElementById("waitDesc").textContent = "Тегін уақыт бітті. Әр минут 10 ₸.";
-      document.getElementById("waitTimerBox").classList.remove("free");
-      document.getElementById("waitTimerBox").style.borderColor = "#e54848";
-      document.getElementById("waitFeeText").style.display = "block";
-      document.getElementById("waitFeeText").textContent = `Күту ақысы: ${fee} ₸`;
+      timerEl.textContent = `${displayMins}:${displaySecs}`;
+      descEl.textContent = "Тегін уақыт бітті. Әр минут 10 ₸.";
+      timerBox.classList.add("paid");
+      feeText.style.display = "block";
+      feeText.textContent = `Күту ақысы: ${fee} ₸ (${paidMins} мин)`;
     }
-  }, 1000);
+  };
+
+  tick();
+  waitInterval = setInterval(tick, 1000);
 }
 
 async function loadLocation() {
