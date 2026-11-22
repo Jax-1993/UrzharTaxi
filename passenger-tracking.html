@@ -1,48 +1,316 @@
-<!-- Бұл кодты passenger-tracking.html ішіне <head> бөлігіне қосыңыз -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ҮРЖАР TAXI — Бақылау</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:#101522;color:#fff;font-family:'Inter',sans-serif;min-height:100dvh}
+header{background:#ffd400;color:#111;padding:18px;text-align:center;font-weight:900;font-size:20px;border-bottom:2px solid #e5b800}
+main{max-width:650px;margin:auto;padding:16px}
+.card{background:#1c2536;padding:18px;border-radius:14px;margin-bottom:15px;border:1px solid #2e3a52}
+h2{margin:0 0 12px;font-size:18px;color:#ffcc00}
+.status{padding:12px;background:#243045;border-radius:9px;line-height:1.5;margin:12px 0;font-weight:600;text-align:center}
+.status.searching{color:#ffcc00}
+.status.accepted{color:#19d995}
+#map{width:100%;height:350px;border-radius:12px;background:#1a2536;margin-top:10px}
+button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
+.btn-cancel{background:#e54848;color:white}
+.btn-home{background:#2d3a52;color:white}
+.small{color:#c5cede;font-size:13px;line-height:1.5;text-align:center;margin-top:10px}
+
+/* КҮТУ ТАЙМЕРІ ҮШІН */
+.wait-timer-box {
+  background: linear-gradient(135deg, #1a3d30 0%, #1d493d 100%);
+  border: 2px solid #16bd79;
+  border-radius: 14px;
+  padding: 20px;
+  margin: 15px 0;
+  text-align: center;
+  display: none;
+}
+.wait-timer-box.paid {
+  background: linear-gradient(135deg, #2a1a1a 0%, #3a1f1f 100%);
+  border-color: #e54848;
+  animation: pulse 1.5s infinite;
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+.wait-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.wait-timer { font-size: 36px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; margin: 10px 0; }
+.wait-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
+.wait-fee-text { font-size: 20px; font-weight: 800; color: #ffcc00; margin-top: 10px; display: none; }
+
+/* КҮТУ АҚЫСЫНЫҢ БЕЙДЖІ (Сапар басталғанда/аяқталғанда) */
+.wait-fee-badge {
+  background: linear-gradient(135deg, #3a2800 0%, #4a3300 100%);
+  border: 2px solid #ffcc00;
+  border-radius: 12px;
+  padding: 14px;
+  margin: 15px 0;
+  text-align: center;
+  display: none;
+}
+.wait-fee-badge .title { font-size: 13px; color: #ffcc00; margin-bottom: 6px; font-weight: 700; }
+.wait-fee-badge .amount { font-size: 28px; font-weight: 900; color: #fff; }
+.wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+</style>
+</head>
+<body>
+<header>🚕 TULPAR TAXI — БАҚЫЛАУ</header>
+<main>
+  <div class="card">
+    <h2>📍 Жүргізушіні бақылау</h2>
+    <div id="status" class="status searching">Жүйеге қосылуда...</div>
+    
+    <!-- КҮТУ ТАЙМЕРІ (Тірі режим) -->
+    <div id="waitTimerBox" class="wait-timer-box">
+      <div class="wait-title">🚕 Жүргізуші келді!</div>
+      <div class="wait-timer" id="waitTimer">05:00</div>
+      <div class="wait-desc" id="waitDesc">5 минут тегін күту уақыты.</div>
+      <div class="wait-fee-text" id="waitFeeText">Күту ақысы: 0 ₸</div>
+    </div>
+
+    <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ (Сапар басталғанда/аяқталғанда) -->
+    <div id="waitFeeBadge" class="wait-fee-badge">
+      <div class="title">💰 Күту ақысы</div>
+      <div class="amount" id="waitFeeAmount">0 ₸</div>
+      <div class="note" id="waitFeeNote">Сапар құнына қосылды</div>
+    </div>
+
+    <div id="map"></div>
+    <p class="small" id="updated">GPS дерегі күтілуде...</p>
+  </div>
+  
+  <div class="card" id="cancelCard" style="display:none">
+    <button class="btn-cancel" onclick="cancelOrder()">❌ САПАРДАН БАС ТАРТУ</button>
+    <button class="btn-home" onclick="window.location.href='/index.html'">🏠 Басты бетке</button>
+  </div>
+</main>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<!-- Бұны <body> ішіне қосыңыз -->
-<div id="map" style="height: 400px; width: 100%; border-radius: 10px;"></div>
-<p id="driver-status" class="text-center mt-2">Жүргізуші іздестірілуде...</p>
-
 <script>
-    // Үржар ауданының шамамен координаттары (өз қалаңызға қарай өзгертіңіз)
-    const map = L.map('map').setView([47.0903, 81.6212], 14); 
+const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
+const token = sessionStorage.getItem("urzhar_taxi_tracking_token");
+let map, driverMarker, pollTimer;
+let waitInterval = null;
+let arrivedTime = null;
+let notificationPlayed = false;
 
-    // Картаның дизайны (OpenStreetMap тегін)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
+// Дыбыс пен вибрация (Жүргізуші келгенде)
+function notifyArrival() {
+  if (notificationPlayed) return;
+  notificationPlayed = true;
+  try {
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (AudioCtx) {
+      const ctx = new AudioCtx();
+      const now = ctx.currentTime;
+      for (let i = 0; i < 2; i++) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        const start = now + i * 0.4;
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.8, start + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.3);
+        osc.start(start);
+        osc.stop(start + 0.3);
+      }
+    }
+  } catch (e) {}
+}
 
-    let driverMarker = null;
+function initMap() {
+  const savedLat = localStorage.getItem('passenger_last_lat');
+  const savedLng = localStorage.getItem('passenger_last_lng');
+  const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
+  const initialZoom = (savedLat && savedLng) ? 14 : 5;
 
-    // Бұл функцияны API-ден жүргізушінің координаттарын алғанда шақырасыз
-    function updateDriverLocation(lat, lng) {
-        if (driverMarker) {
-            driverMarker.setLatLng([lat, lng]); // Маркерді жылжыту
-        } else {
-            // Жаңа маркер құру
-            driverMarker = L.marker([lat, lng]).addTo(map)
-                .bindPopup('Сіздің жүргізушіңіз').openPopup();
-        }
+  map = L.map("map").setView(initialCoords, initialZoom);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "© OpenStreetMap" }).addTo(map);
+}
+
+async function checkStatus() {
+  if (!orderId || !token) {
+    document.getElementById("status").textContent = "Тапсырыс табылмады. Басты бетке оралыңыз.";
+    return;
+  }
+  
+  try {
+    const r = await fetch("/api/passenger?action=status", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    const d = await r.json();
+    if (!d.success) return;
+
+    const st = document.getElementById("status");
+    const timerBox = document.getElementById("waitTimerBox");
+    const feeBadge = document.getElementById("waitFeeBadge");
+    document.getElementById("cancelCard").style.display = "block";
+
+    // Жүргізуші келгенін тексеру (тек accepted кезінде)
+    if (d.order.driver_arrived_at && !arrivedTime && d.order.status === 'accepted') {
+      arrivedTime = new Date(d.order.driver_arrived_at).getTime();
+      startWaitTimer(d.order);
+      notifyArrival();
     }
 
-    // Серверден мәртебені тексеру (әр 5 секунд сайын)
-    setInterval(async () => {
-        try {
-            const res = await fetch('/api/order?action=get_status'); // Бұл жерде өз API-іңіздің логикасы
-            const data = await res.json();
-            
-            if (data.status) {
-                document.getElementById('driver-status').innerText = "Мәртебе: " + data.status;
-            }
-            if (data.driverLat && data.driverLng) {
-                updateDriverLocation(data.driverLat, data.driverLng);
-            }
-        } catch (error) {
-            console.error("Қате:", error);
-        }
-    }, 5000);
+    if (d.order.status === "searching") {
+      st.className = "status searching";
+      st.innerHTML = "🔍 Жүргізуші ізделуде...";
+      timerBox.style.display = "none";
+      feeBadge.style.display = "none";
+      
+    } else if (d.order.status === "accepted") {
+      st.className = "status accepted";
+      if (d.order.driver_arrived_at) {
+        st.innerHTML = "🚕 Жүргізуші келді! Күтудеміз...";
+        timerBox.style.display = "block";
+      } else {
+        st.innerHTML = "✅ Жүргізуші тағайындалды! Жолда...";
+        timerBox.style.display = "none";
+      }
+      loadLocation();
+      
+    } else if (d.order.status === "in_progress") {
+      st.className = "status accepted";
+      st.innerHTML = "🚕 Сапар басталды!";
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
+      
+      // Күту ақысын көрсету
+      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
+      const wm = Number(d.order.waiting_minutes || d.order.waiting?.minutes || 0);
+      if (wf > 0) {
+        feeBadge.style.display = "block";
+        document.getElementById("waitFeeAmount").textContent = `${wf} ₸`;
+        document.getElementById("waitFeeNote").textContent = `(${wm} мин ақылы күту — сапар құнына қосылды)`;
+      }
+      loadLocation();
+      
+    } else if (d.order.status === "completed") {
+      st.className = "status accepted";
+      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
+      st.innerHTML = "🏁 Сапар аяқталды. Рахмет!";
+      if (wf > 0) {
+        st.innerHTML += `<br><span style="color:#ffcc00;font-size:13px;margin-top:6px;display:inline-block">💰 Күту ақысы: ${wf} ₸ қосылды</span>`;
+      }
+      document.getElementById("cancelCard").style.display = "none";
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
+      clearInterval(pollTimer);
+      
+    } else if (d.order.status === "cancelled") {
+      st.className = "status searching";
+      st.innerHTML = "❌ Тапсырыс тоқтатылды";
+      document.getElementById("cancelCard").style.display = "none";
+      timerBox.style.display = "none";
+      if (waitInterval) clearInterval(waitInterval);
+      clearInterval(pollTimer);
+    }
+  } catch (e) {}
+}
+
+function startWaitTimer(order) {
+  const timerBox = document.getElementById("waitTimerBox");
+  const timerEl = document.getElementById("waitTimer");
+  const descEl = document.getElementById("waitDesc");
+  const feeText = document.getElementById("waitFeeText");
+  
+  timerBox.style.display = "block";
+  
+  if (waitInterval) clearInterval(waitInterval);
+
+  const FREE_SECS = 5 * 60; // 5 минут
+  const RATE = 10; // 10 теңге/минут
+
+  // Серверден келген freeUntil уақытын қолданамыз (дәлірек болу үшін)
+  let freeUntilMs = arrivedTime + (FREE_SECS * 1000);
+  if (order.waiting && order.waiting.freeUntil) {
+      freeUntilMs = new Date(order.waiting.freeUntil).getTime();
+  }
+
+  const tick = () => {
+    const now = Date.now();
+
+    if (now < freeUntilMs) {
+      // === ТЕГІН КҮТУ ===
+      const remaining = Math.floor((freeUntilMs - now) / 1000);
+      const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
+      const secs = String(remaining % 60).padStart(2, '0');
+
+      timerEl.textContent = `${mins}:${secs}`;
+      descEl.textContent = "5 минут тегін күту уақыты.";
+      timerBox.classList.remove("paid");
+      feeText.style.display = "none";
+    } else {
+      // === АҚЫЛЫ КҮТУ ===
+      const paidSecs = Math.floor((now - freeUntilMs) / 1000);
+      const paidMins = Math.floor(paidSecs / 60);
+      const fee = paidMins * RATE;
+
+      const displayMins = String(Math.floor(paidSecs / 60)).padStart(2, '0');
+      const displaySecs = String(paidSecs % 60).padStart(2, '0');
+
+      timerEl.textContent = `${displayMins}:${displaySecs}`;
+      descEl.textContent = "Тегін уақыт бітті. Әр минут 10 ₸.";
+      timerBox.classList.add("paid");
+      feeText.style.display = "block";
+      feeText.textContent = `Күту ақысы: ${fee} ₸ (${paidMins} мин)`;
+    }
+  };
+
+  tick();
+  waitInterval = setInterval(tick, 1000);
+}
+
+async function loadLocation() {
+  try {
+    const r = await fetch("/api/passenger?action=location", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    const d = await r.json();
+    if (!d.success || !d.driverLocation) return;
+
+    const pt = [Number(d.driverLocation.latitude), Number(d.driverLocation.longitude)];
+    if (!driverMarker) {
+      driverMarker = L.marker(pt, {icon: L.divIcon({html: '<div style="font-size:32px">🚕</div>', iconSize: [32,32], iconAnchor: [16,16]})}).addTo(map);
+    } else {
+      driverMarker.setLatLng(pt);
+    }
+    map.setView(pt, 16);
+    document.getElementById("updated").textContent = "🔄 Соңғы жаңарту: " + new Date().toLocaleTimeString("kk-KZ");
+  } catch (e) {}
+}
+
+async function cancelOrder() {
+  if (!confirm("Сапардан бас тартасыз ба? (Егер күту уақыты өтсе, ақы алынуы мүмкін)")) return;
+  try {
+    await fetch("/api/passenger?action=cancel", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    alert("Тапсырыс тоқтатылды");
+    window.location.href = "/index.html";
+  } catch (e) { alert("Қате"); }
+}
+
+initMap();
+checkStatus();
+pollTimer = setInterval(checkStatus, 5000);
 </script>
+</body>
+</html>
