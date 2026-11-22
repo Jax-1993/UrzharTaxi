@@ -60,6 +60,49 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 .wait-fee-badge .title { font-size: 13px; color: #ffcc00; margin-bottom: 6px; font-weight: 700; }
 .wait-fee-badge .amount { font-size: 28px; font-weight: 900; color: #fff; }
 .wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+
+/* БАҒАЛАУ МОДАЛЬДІ ТЕРЕЗЕСІ (Yandex стилінде) */
+.rating-modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85); display: none;
+  justify-content: center; align-items: center; z-index: 9999;
+  backdrop-filter: blur(5px);
+}
+.rating-modal {
+  background: #1c2536; padding: 25px 20px; border-radius: 20px;
+  width: 90%; max-width: 400px; text-align: center;
+  border: 1px solid #2e3a52; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  animation: slideUp 0.3s ease-out;
+}
+@keyframes slideUp {
+  from { transform: translateY(50px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+.rating-modal h3 { margin: 0 0 8px; color: #fff; font-size: 22px; font-weight: 800; }
+.rating-modal p { color:#c5cede; font-size:14px; margin-bottom:20px; }
+.rating-stars {
+  display: flex; justify-content: center; gap: 10px; margin: 20px 0 25px;
+}
+.star {
+  font-size: 45px; color: #4a5568; cursor: pointer;
+  transition: color 0.2s, transform 0.2s; user-select: none;
+  line-height: 1;
+}
+.star:hover, .star.active { color: #ffd400; transform: scale(1.15); }
+.rating-review {
+  width: 100%; padding: 12px; border-radius: 10px;
+  background: #101522; border: 1px solid #2e3a52;
+  color: #fff; font-family: inherit; font-size: 14px;
+  resize: none; margin-bottom: 15px; outline: none;
+}
+.rating-review:focus { border-color: #ffd400; }
+.btn-submit-rating {
+  background: #ffd400; color: #111; font-weight: 900;
+  width: 100%; padding: 15px; border: none; border-radius: 10px;
+  font-size: 16px; cursor: pointer; transition: background 0.2s;
+}
+.btn-submit-rating:disabled { background: #4a5568; color: #94a3b8; cursor: not-allowed; }
+.btn-submit-rating:not(:disabled):hover { background: #e5b800; }
 </style>
 </head>
 <body>
@@ -94,6 +137,23 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
   </div>
 </main>
 
+<!-- БАҒАЛАУ ТЕРЕЗЕСІ (Yandex стилінде) -->
+<div id="ratingModal" class="rating-modal-overlay">
+  <div class="rating-modal">
+    <h3 id="ratingTitle">Сапар аяқталды!</h3>
+    <p id="ratingSubtitle">Жүргізушіні бағалаңыз</p>
+    <div class="rating-stars" id="starContainer">
+      <span class="star" data-value="1">★</span>
+      <span class="star" data-value="2">★</span>
+      <span class="star" data-value="3">★</span>
+      <span class="star" data-value="4">★</span>
+      <span class="star" data-value="5">★</span>
+    </div>
+    <textarea id="ratingReview" class="rating-review" rows="3" placeholder="Пікіріңіз (міндетті емес)"></textarea>
+    <button id="btnSubmitRating" class="btn-submit-rating" onclick="submitRating()" disabled>Жіберу</button>
+  </div>
+</div>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
@@ -102,6 +162,7 @@ let map, driverMarker, pollTimer;
 let waitInterval = null;
 let arrivedTime = null;
 let notificationPlayed = false;
+let selectedRating = 0;
 
 // Дыбыс пен вибрация (Жүргізуші келгенде)
 function notifyArrival() {
@@ -190,7 +251,6 @@ async function checkStatus() {
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       
-      // Күту ақысын көрсету
       const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
       const wm = Number(d.order.waiting_minutes || d.order.waiting?.minutes || 0);
       if (wf > 0) {
@@ -211,6 +271,11 @@ async function checkStatus() {
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
+
+      // ЖАҢА: Бағалау терезесін шығару (егер бұрын бағаланбаған болса)
+      if (!d.order.rating && sessionStorage.getItem('rated_' + orderId) !== 'true') {
+        document.getElementById("ratingModal").style.display = "flex";
+      }
       
     } else if (d.order.status === "cancelled") {
       st.className = "status searching";
@@ -233,10 +298,9 @@ function startWaitTimer(order) {
   
   if (waitInterval) clearInterval(waitInterval);
 
-  const FREE_SECS = 5 * 60; // 5 минут
-  const RATE = 10; // 10 теңге/минут
+  const FREE_SECS = 5 * 60;
+  const RATE = 10;
 
-  // Серверден келген freeUntil уақытын қолданамыз (дәлірек болу үшін)
   let freeUntilMs = arrivedTime + (FREE_SECS * 1000);
   if (order.waiting && order.waiting.freeUntil) {
       freeUntilMs = new Date(order.waiting.freeUntil).getTime();
@@ -246,7 +310,6 @@ function startWaitTimer(order) {
     const now = Date.now();
 
     if (now < freeUntilMs) {
-      // === ТЕГІН КҮТУ ===
       const remaining = Math.floor((freeUntilMs - now) / 1000);
       const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
       const secs = String(remaining % 60).padStart(2, '0');
@@ -256,7 +319,6 @@ function startWaitTimer(order) {
       timerBox.classList.remove("paid");
       feeText.style.display = "none";
     } else {
-      // === АҚЫЛЫ КҮТУ ===
       const paidSecs = Math.floor((now - freeUntilMs) / 1000);
       const paidMins = Math.floor(paidSecs / 60);
       const fee = paidMins * RATE;
@@ -306,6 +368,82 @@ async function cancelOrder() {
     alert("Тапсырыс тоқтатылды");
     window.location.href = "/index.html";
   } catch (e) { alert("Қате"); }
+}
+
+// ==========================================
+// БАҒАЛАУ ЖҮЙЕСІНІҢ ЛОГИКАСЫ
+// ==========================================
+const stars = document.querySelectorAll('.star');
+const btnSubmit = document.getElementById('btnSubmitRating');
+
+// Жұлдызшаларды басу
+stars.forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.getAttribute('data-value'));
+    updateStars(selectedRating);
+    btnSubmit.disabled = false;
+  });
+});
+
+// Жұлдызшалардың түсін өзгерту
+function updateStars(rating) {
+  stars.forEach(s => {
+    if (parseInt(s.getAttribute('data-value')) <= rating) {
+      s.classList.add('active');
+    } else {
+      s.classList.remove('active');
+    }
+  });
+}
+
+// Бағаны серверге жіберу
+async function submitRating() {
+  if (selectedRating === 0) return;
+  
+  btnSubmit.disabled = true;
+  btnSubmit.textContent = "Жіберілуде...";
+  const review = document.getElementById('ratingReview').value.trim();
+
+  try {
+    const r = await fetch("/api/order", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderId: orderId,
+        rating: selectedRating,
+        review: review,
+        trackingToken: token // API-де тексеру үшін
+      })
+    });
+    
+    const d = await r.json();
+
+    if (r.ok && d.success) {
+      // Сәтті жіберілгенде терезенің мазмұнын өзгерту
+      document.getElementById('ratingTitle').textContent = "Рахмет!";
+      document.getElementById('ratingSubtitle').textContent = "Пікіріңіз біз үшін маңызды.";
+      document.getElementById('starContainer').style.display = 'none';
+      document.getElementById('ratingReview').style.display = 'none';
+      
+      btnSubmit.textContent = "Жабу";
+      btnSubmit.disabled = false;
+      
+      // Жабылған кезде басты бетке қайту
+      btnSubmit.onclick = () => {
+        document.getElementById('ratingModal').style.display = 'none';
+        sessionStorage.setItem('rated_' + orderId, 'true');
+        window.location.href = '/index.html';
+      };
+    } else {
+      alert(d.error || "Қате орын алды, қайталап көріңіз.");
+      btnSubmit.disabled = false;
+      btnSubmit.textContent = "Жіберу";
+    }
+  } catch (e) {
+    alert("Желі қатесі. Интернетті тексеріңіз.");
+    btnSubmit.disabled = false;
+    btnSubmit.textContent = "Жіберу";
+  }
 }
 
 initMap();
