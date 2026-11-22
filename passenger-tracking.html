@@ -17,7 +17,8 @@ h2{margin:0 0 12px;font-size:18px;color:#ffcc00}
 .status{padding:12px;background:#243045;border-radius:9px;line-height:1.5;margin:12px 0;font-weight:600;text-align:center}
 .status.searching{color:#ffcc00}
 .status.accepted{color:#19d995}
-#map{width:100%;height:350px;border-radius:12px;background:#1a2536;margin-top:10px}
+.status.in_progress{color:#60a5fa}
+#map{width:100%;height:380px;border-radius:12px;background:#1a2536;margin-top:10px;z-index:1;}
 button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
 .btn-cancel{background:#e54848;color:white}
 .btn-home{background:#2d3a52;color:white}
@@ -47,7 +48,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 .wait-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
 .wait-fee-text { font-size: 20px; font-weight: 800; color: #ffcc00; margin-top: 10px; display: none; }
 
-/* КҮТУ АҚЫСЫНЫҢ БЕЙДЖІ (Сапар басталғанда/аяқталғанда) */
+/* КҮТУ АҚЫСЫНЫҢ БЕЙДЖІ */
 .wait-fee-badge {
   background: linear-gradient(135deg, #3a2800 0%, #4a3300 100%);
   border: 2px solid #ffcc00;
@@ -61,7 +62,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 .wait-fee-badge .amount { font-size: 28px; font-weight: 900; color: #fff; }
 .wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 5px; }
 
-/* БАҒАЛАУ МОДАЛЬДІ ТЕРЕЗЕСІ (Yandex стилінде) */
+/* БАҒАЛАУ МОДАЛЬДІ ТЕРЕЗЕСІ */
 .rating-modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.85); display: none;
@@ -80,27 +81,12 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 }
 .rating-modal h3 { margin: 0 0 8px; color: #fff; font-size: 22px; font-weight: 800; }
 .rating-modal p { color:#c5cede; font-size:14px; margin-bottom:20px; }
-.rating-stars {
-  display: flex; justify-content: center; gap: 10px; margin: 20px 0 25px;
-}
-.star {
-  font-size: 45px; color: #4a5568; cursor: pointer;
-  transition: color 0.2s, transform 0.2s; user-select: none;
-  line-height: 1;
-}
+.rating-stars { display: flex; justify-content: center; gap: 10px; margin: 20px 0 25px; }
+.star { font-size: 45px; color: #4a5568; cursor: pointer; transition: color 0.2s, transform 0.2s; user-select: none; line-height: 1; }
 .star:hover, .star.active { color: #ffd400; transform: scale(1.15); }
-.rating-review {
-  width: 100%; padding: 12px; border-radius: 10px;
-  background: #101522; border: 1px solid #2e3a52;
-  color: #fff; font-family: inherit; font-size: 14px;
-  resize: none; margin-bottom: 15px; outline: none;
-}
+.rating-review { width: 100%; padding: 12px; border-radius: 10px; background: #101522; border: 1px solid #2e3a52; color: #fff; font-family: inherit; font-size: 14px; resize: none; margin-bottom: 15px; outline: none; }
 .rating-review:focus { border-color: #ffd400; }
-.btn-submit-rating {
-  background: #ffd400; color: #111; font-weight: 900;
-  width: 100%; padding: 15px; border: none; border-radius: 10px;
-  font-size: 16px; cursor: pointer; transition: background 0.2s;
-}
+.btn-submit-rating { background: #ffd400; color: #111; font-weight: 900; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: background 0.2s; }
 .btn-submit-rating:disabled { background: #4a5568; color: #94a3b8; cursor: not-allowed; }
 .btn-submit-rating:not(:disabled):hover { background: #e5b800; }
 </style>
@@ -112,7 +98,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
     <h2>📍 Жүргізушіні бақылау</h2>
     <div id="status" class="status searching">Жүйеге қосылуда...</div>
     
-    <!-- КҮТУ ТАЙМЕРІ (Тірі режим) -->
+    <!-- КҮТУ ТАЙМЕРІ -->
     <div id="waitTimerBox" class="wait-timer-box">
       <div class="wait-title">🚕 Жүргізуші келді!</div>
       <div class="wait-timer" id="waitTimer">05:00</div>
@@ -120,7 +106,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
       <div class="wait-fee-text" id="waitFeeText">Күту ақысы: 0 ₸</div>
     </div>
 
-    <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ (Сапар басталғанда/аяқталғанда) -->
+    <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ -->
     <div id="waitFeeBadge" class="wait-fee-badge">
       <div class="title">💰 Күту ақысы</div>
       <div class="amount" id="waitFeeAmount">0 ₸</div>
@@ -137,7 +123,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
   </div>
 </main>
 
-<!-- БАҒАЛАУ ТЕРЕЗЕСІ (Yandex стилінде) -->
+<!-- БАҒАЛАУ ТЕРЕЗЕСІ -->
 <div id="ratingModal" class="rating-modal-overlay">
   <div class="rating-modal">
     <h3 id="ratingTitle">Сапар аяқталды!</h3>
@@ -158,12 +144,15 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 <script>
 const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
 const token = sessionStorage.getItem("urzhar_taxi_tracking_token");
-let map, driverMarker, pollTimer;
+let map, driverMarker, pickupMarker, destinationMarker, routeLine;
+let pollTimer;
 let waitInterval = null;
 let arrivedTime = null;
 let notificationPlayed = false;
-let rideStartedAnnounced = false; // Жаңа флаг: сапар басталды ма?
+let rideStartedAnnounced = false;
 let selectedRating = 0;
+let currentOrderStatus = "searching";
+let orderCoords = { pickup: null, destination: null };
 
 // Дыбыс пен вибрация (Жүргізуші келгенде)
 function notifyArrival() {
@@ -178,50 +167,31 @@ function notifyArrival() {
       for (let i = 0; i < 2; i++) {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.value = 880;
-        osc.connect(gain);
-        gain.connect(ctx.destination);
+        osc.type = 'sine'; osc.frequency.value = 880; osc.connect(gain); gain.connect(ctx.destination);
         const start = now + i * 0.4;
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.8, start + 0.05);
-        gain.gain.exponentialRampToValueAtTime(0.01, start + 0.3);
-        osc.start(start);
-        osc.stop(start + 0.3);
+        gain.gain.setValueAtTime(0, start); gain.gain.linearRampToValueAtTime(0.8, start + 0.05); gain.gain.exponentialRampToValueAtTime(0.01, start + 0.3);
+        osc.start(start); osc.stop(start + 0.3);
       }
     }
   } catch (e) {}
 }
 
-// 🎤 ЖАҢА: Дауыстап хабарлау функциясы (Сапар басталғанда)
+// 🎤 Дауыстап хабарлау функциясы (Сапар басталғанда)
 function speakRideStarted() {
   if (rideStartedAnnounced) return;
   rideStartedAnnounced = true;
-
-  // Вибрация (мобильді телефондарда)
   try {
     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
   } catch (e) {}
-
-  // Дауыстап айту
   try {
     if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // Ескі дыбыстарды тоқтату
-
+      window.speechSynthesis.cancel();
       const text = "Сапар басталды. Белдіктеріңізді тағып отырыңыздар.";
       const utterance = new SpeechSynthesisUtterance(text);
-      
-      // Тілді орнату (Қазақша бар болса соны, болмаса орысша немесе әдепкі қолданады)
-      utterance.lang = 'kk-KZ'; 
-      utterance.rate = 0.9; // Айтылу жылдамдығы (сәл баяуырақ)
-      utterance.pitch = 1;  // Дауыс биіктігі
-      utterance.volume = 1; // Дыбыс деңгейі (максимум)
-      
+      utterance.lang = 'kk-KZ'; utterance.rate = 0.9; utterance.pitch = 1; utterance.volume = 1;
       window.speechSynthesis.speak(utterance);
     }
-  } catch (e) {
-    console.error("Дауыс қатесі:", e);
-  }
+  } catch (e) { console.error("Дауыс қатесі:", e); }
 }
 
 function initMap() {
@@ -248,12 +218,23 @@ async function checkStatus() {
     const d = await r.json();
     if (!d.success) return;
 
+    currentOrderStatus = d.order.status;
     const st = document.getElementById("status");
     const timerBox = document.getElementById("waitTimerBox");
     const feeBadge = document.getElementById("waitFeeBadge");
     document.getElementById("cancelCard").style.display = "block";
 
-    // Жүргізуші келгенін тексеру (тек accepted кезінде)
+    // Координаталарды алу
+    if (d.order.pickup_latitude && !orderCoords.pickup) {
+      orderCoords.pickup = [Number(d.order.pickup_latitude), Number(d.order.pickup_longitude)];
+      pickupMarker = L.marker(orderCoords.pickup, {icon: L.divIcon({html: '<div style="font-size:28px;filter:drop-shadow(0 0 3px #000)">📍</div>', iconSize: [28,28], iconAnchor: [14,28]})}).addTo(map).bindPopup('Сіз осындасыз');
+    }
+    if (d.order.destination_latitude && !orderCoords.destination) {
+      orderCoords.destination = [Number(d.order.destination_latitude), Number(d.order.destination_longitude)];
+      destinationMarker = L.marker(orderCoords.destination, {icon: L.divIcon({html: '<div style="font-size:28px;filter:drop-shadow(0 0 3px #000)">🏁</div>', iconSize: [28,28], iconAnchor: [14,28]})}).addTo(map).bindPopup('Баратын жер');
+    }
+
+    // Жүргізуші келгенін тексеру
     if (d.order.driver_arrived_at && !arrivedTime && d.order.status === 'accepted') {
       arrivedTime = new Date(d.order.driver_arrived_at).getTime();
       startWaitTimer(d.order);
@@ -265,6 +246,7 @@ async function checkStatus() {
       st.innerHTML = "🔍 Жүргізуші ізделуде...";
       timerBox.style.display = "none";
       feeBadge.style.display = "none";
+      if (routeLine) { map.removeLayer(routeLine); routeLine = null; }
       
     } else if (d.order.status === "accepted") {
       st.className = "status accepted";
@@ -272,18 +254,15 @@ async function checkStatus() {
         st.innerHTML = "🚕 Жүргізуші келді! Күтудеміз...";
         timerBox.style.display = "block";
       } else {
-        st.innerHTML = "✅ Жүргізуші тағайындалды! Жолда...";
+        st.innerHTML = "✅ Жүргізуші тағайындалды! Келе жатыр...";
         timerBox.style.display = "none";
       }
-      loadLocation();
+      loadLocation(); // Бұл маршрутты сызады
       
     } else if (d.order.status === "in_progress") {
-      st.className = "status accepted";
+      st.className = "status in_progress";
       st.innerHTML = "🚕 Сапар басталды!";
-      
-      // 🎤 ЖАҢА: Сапар басталғанда дауыстап айту
       speakRideStarted();
-
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       
@@ -294,7 +273,7 @@ async function checkStatus() {
         document.getElementById("waitFeeAmount").textContent = `${wf} ₸`;
         document.getElementById("waitFeeNote").textContent = `(${wm} мин ақылы күту — сапар құнына қосылды)`;
       }
-      loadLocation();
+      loadLocation(); // Бұл маршрутты сызады
       
     } else if (d.order.status === "completed") {
       st.className = "status accepted";
@@ -308,7 +287,6 @@ async function checkStatus() {
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
 
-      // Бағалау терезесін шығару (егер бұрын бағаланбаған болса)
       if (!d.order.rating && sessionStorage.getItem('rated_' + orderId) !== 'true') {
         document.getElementById("ratingModal").style.display = "flex";
       }
@@ -324,6 +302,74 @@ async function checkStatus() {
   } catch (e) {}
 }
 
+// 🚕 ЖҮРГІЗУШІНІҢ ОРНЫН АЛУ ЖӘНЕ МАРШРУТ СЫЗУ
+async function loadLocation() {
+  try {
+    const r = await fetch("/api/passenger?action=location", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId, trackingToken: token })
+    });
+    const d = await r.json();
+    
+    // Егер жүргізуші GPS-ті әлі қоспаған болса, күте тұрамыз
+    if (!d.success || !d.driverLocation) {
+        document.getElementById("updated").textContent = "⏳ Жүргізушінің GPS дерегі күтілуде...";
+        return;
+    }
+
+    const driverPos = [Number(d.driverLocation.latitude), Number(d.driverLocation.longitude)];
+    
+    // 1. Машинаны жылжыту
+    if (!driverMarker) {
+      driverMarker = L.marker(driverPos, {icon: L.divIcon({html: '<div style="font-size:36px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.6))">🚕</div>', iconSize: [36,36], iconAnchor: [18,18]})}).addTo(map);
+    } else {
+      driverMarker.setLatLng(driverPos);
+    }
+
+    // 2. Маршрутты сызу
+    drawRoute(driverPos);
+
+    document.getElementById("updated").textContent = "🔄 Соңғы жаңарту: " + new Date().toLocaleTimeString("kk-KZ");
+  } catch (e) {}
+}
+
+// 🗺️ OSRM КӨМЕГІМЕН ЖОЛ СЫЗУ
+async function drawRoute(driverPos) {
+  let start = null;
+  let end = null;
+
+  if (currentOrderStatus === 'accepted' && orderCoords.pickup) {
+    start = driverPos;
+    end = orderCoords.pickup;
+  } else if (currentOrderStatus === 'in_progress' && orderCoords.destination) {
+    start = orderCoords.pickup || driverPos;
+    end = orderCoords.destination;
+  }
+
+  if (!start || !end) return;
+
+  try {
+    // OSRM API арқылы көлік жүретін жолды аламыз
+    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[1]},${start[0]};${end[1]},${end[0]}?overview=full&geometries=geojson`);
+    const data = await res.json();
+
+    if (data.code === 'Ok' && data.routes.length > 0) {
+      if (routeLine) map.removeLayer(routeLine); // Ескі жолды өшіру
+      
+      // Жаңа жолды салу (сары түсті)
+      routeLine = L.geoJSON(data.routes[0].geometry, {
+        style: { color: '#ffcc00', weight: 6, opacity: 0.8 }
+      }).addTo(map);
+
+      // Картаны барлық нүктелерді (машина, жолаушы, баратын жер) қамтитындай ыңғайлау
+      const bounds = L.latLngBounds([start, end]);
+      map.fitBounds(bounds, { padding: [50, 50] });
+    }
+  } catch (e) {
+    console.error("Маршрутты сызу қатесі:", e);
+  }
+}
+
 function startWaitTimer(order) {
   const timerBox = document.getElementById("waitTimerBox");
   const timerEl = document.getElementById("waitTimer");
@@ -331,7 +377,6 @@ function startWaitTimer(order) {
   const feeText = document.getElementById("waitFeeText");
   
   timerBox.style.display = "block";
-  
   if (waitInterval) clearInterval(waitInterval);
 
   const FREE_SECS = 5 * 60;
@@ -344,12 +389,10 @@ function startWaitTimer(order) {
 
   const tick = () => {
     const now = Date.now();
-
     if (now < freeUntilMs) {
       const remaining = Math.floor((freeUntilMs - now) / 1000);
       const mins = String(Math.floor(remaining / 60)).padStart(2, '0');
       const secs = String(remaining % 60).padStart(2, '0');
-
       timerEl.textContent = `${mins}:${secs}`;
       descEl.textContent = "5 минут тегін күту уақыты.";
       timerBox.classList.remove("paid");
@@ -358,10 +401,8 @@ function startWaitTimer(order) {
       const paidSecs = Math.floor((now - freeUntilMs) / 1000);
       const paidMins = Math.floor(paidSecs / 60);
       const fee = paidMins * RATE;
-
       const displayMins = String(Math.floor(paidSecs / 60)).padStart(2, '0');
       const displaySecs = String(paidSecs % 60).padStart(2, '0');
-
       timerEl.textContent = `${displayMins}:${displaySecs}`;
       descEl.textContent = "Тегін уақыт бітті. Әр минут 10 ₸.";
       timerBox.classList.add("paid");
@@ -369,29 +410,8 @@ function startWaitTimer(order) {
       feeText.textContent = `Күту ақысы: ${fee} ₸ (${paidMins} мин)`;
     }
   };
-
   tick();
   waitInterval = setInterval(tick, 1000);
-}
-
-async function loadLocation() {
-  try {
-    const r = await fetch("/api/passenger?action=location", {
-      method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId, trackingToken: token })
-    });
-    const d = await r.json();
-    if (!d.success || !d.driverLocation) return;
-
-    const pt = [Number(d.driverLocation.latitude), Number(d.driverLocation.longitude)];
-    if (!driverMarker) {
-      driverMarker = L.marker(pt, {icon: L.divIcon({html: '<div style="font-size:32px">🚕</div>', iconSize: [32,32], iconAnchor: [16,16]})}).addTo(map);
-    } else {
-      driverMarker.setLatLng(pt);
-    }
-    map.setView(pt, 16);
-    document.getElementById("updated").textContent = "🔄 Соңғы жаңарту: " + new Date().toLocaleTimeString("kk-KZ");
-  } catch (e) {}
 }
 
 async function cancelOrder() {
