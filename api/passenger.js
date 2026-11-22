@@ -24,11 +24,11 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, driverLocation: { latitude: orders[0].driver_current_latitude, longitude: orders[0].driver_current_longitude } });
   }
 
-  // ЖАҢАРТЫЛҒАН STATUS: Күту уақытын есептеп қайтарады
+  // ЖАҢАРТЫЛҒАН STATUS: Координаталар қосылды және күту уақыты есептеледі
   if (action === "status" && req.method === "POST") {
     const { orderId, trackingToken } = req.body;
     const r = await fetch(
-      `${URL}/rest/v1/orders?id=eq.${orderId}&passenger_tracking_token_hash=eq.${hashToken(trackingToken)}&select=status,pickup_address,destination_address,price,car_class,driver_arrived_at,waiting_fee,waiting_minutes,free_wait_until`,
+      `${URL}/rest/v1/orders?id=eq.${orderId}&passenger_tracking_token_hash=eq.${hashToken(trackingToken)}&select=status,pickup_address,destination_address,price,car_class,driver_arrived_at,waiting_fee,waiting_minutes,free_wait_until,pickup_latitude,pickup_longitude,destination_latitude,destination_longitude`,
       { headers }
     );
     const orders = await r.json();
