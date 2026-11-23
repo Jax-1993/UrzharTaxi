@@ -14,7 +14,7 @@
 body{margin:0;font-family:'Inter',sans-serif;background:#f2f3f5;color:#171717;-webkit-font-smoothing:antialiased}
 header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);color:white;display:flex;align-items:center;padding:0 15px;gap:14px;position:relative;z-index:1000;border-bottom:3px solid var(--yellow);box-shadow:0 2px 12px rgba(0,0,0,0.15)}
 .menu-btn{border:0;background:none;color:var(--yellow);font-size:28px;padding:5px;cursor:pointer}
-.brand{flex:1}
+.brand{flex:1; display:flex; align-items:center; gap:10px;}
 .brand h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-0.5px}
 .brand p{margin:3px 0 0;color:var(--yellow);font-size:11px;font-weight:600}
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#17191e;color:white;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.3)}
@@ -99,8 +99,12 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 <header>
   <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="brand">
-    <h2>🚕 TULPAR TAXI</h2>
-    <p>ЖЕДЕЛ ТАКСИ ҚЫЗМЕТІ</p>
+    <!-- Басты беттегі шынайы такси суреті -->
+    <img src="https://cdn-icons-png.flaticon.com/512/4337/4337328.png" style="width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))" alt="Taxi">
+    <div>
+      <h2>TULPAR TAXI</h2>
+      <p>ЖЕДЕЛ ТАКСИ ҚЫЗМЕТІ</p>
+    </div>
   </div>
 </header>
 
@@ -243,6 +247,14 @@ const destIcon = L.divIcon({
     iconAnchor: [19, 19]
 });
 
+// === ЖОЛАУШЫ КАРТАСЫНДАҒЫ ЖҮРГІЗУШІ (Жоғарыдан қарағандағы шынайы көлік суреті) ===
+const driverOnlineIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<img src="https://cdn-icons-png.flaticon.com/512/3204/3204997.png" style="width:42px; height:42px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: rotate(0deg);">`,
+    iconSize: [42, 42],
+    iconAnchor: [21, 21]
+});
+
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
 function menuGo(id){closeMenu();showPage(id)}
@@ -300,12 +312,10 @@ async function loadOnlineDrivers() {
 
     d.drivers.forEach(driver => {
       if (driver.current_latitude && driver.current_longitude) {
+        // Осы жерде шынайы көлік иконкасын қолданамыз
         const marker = L.marker([Number(driver.current_latitude), Number(driver.current_longitude)], {
-          icon: L.divIcon({ 
-            html: '<div style="font-size:24px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.4))">🚕</div>', 
-            iconSize: [24, 24], iconAnchor: [12, 12] 
-          })
-        }).addTo(map).bindPopup('Такси');
+          icon: driverOnlineIcon
+        }).addTo(map).bindPopup('Такси қозғалыста');
         onlineDriverMarkers.push(marker);
       }
     });
@@ -346,7 +356,6 @@ async function setPoint(type,ll,address){
     startPoint=p;
     if(startMarker)map.removeLayer(startMarker);
     
-    // Попаптың ішінде өзіміздің "Х" батырмамызды жасаймыз
     const popupHTML = `
       <div style="display:flex; justify-content:space-between; align-items:center; min-width:140px; gap:15px; font-family:'Inter',sans-serif;">
         <span style="font-weight:700; font-size:14px; color:#101114;">Мінетін жер</span>
@@ -356,7 +365,7 @@ async function setPoint(type,ll,address){
 
     startMarker=L.marker(ll, {icon: pickupIcon})
         .addTo(map)
-        .bindPopup(popupHTML, {closeButton: false}) // Leaflet-тің стандартты Х-ін өшіреміз
+        .bindPopup(popupHTML, {closeButton: false})
         .openPopup();
         
     document.getElementById('from').value=address||await reverseAddress(p);
@@ -516,7 +525,7 @@ async function registerDriver(){
   }catch(error){
     message.style.color='#d00'; message.textContent='❌ '+error.message;
   }finally{
-    button.disabled=false; button.textContent='ТІРКЕЛУ';
+    button.disabled = false; button.textContent='ТІРКЕЛУ';
   }
 }
 
