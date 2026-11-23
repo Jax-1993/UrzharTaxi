@@ -228,6 +228,21 @@ const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let onlineDriverMarkers = [];
 
+// === ЖАҢА ИКОНКАЛАР (Такси тоқтатып тұрған адам және Ту) ===
+const pickupIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color:#ffcc00; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🙋</div>`,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+});
+
+const destIcon = L.divIcon({
+    className: 'custom-div-icon',
+    html: `<div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
+    iconSize: [38, 38],
+    iconAnchor: [19, 19]
+});
+
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
 function menuGo(id){closeMenu();showPage(id)}
@@ -257,7 +272,6 @@ function clearPoint(type){
 }
 
 function initMap(){
-  // Соңғы сақталған координаталарды алу немесе Қазақстанның ортасы
   const savedLat = localStorage.getItem('passenger_last_lat');
   const savedLng = localStorage.getItem('passenger_last_lng');
   const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
@@ -306,7 +320,6 @@ function enableGPS() {
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      // Координатаны сақтау
       localStorage.setItem('passenger_last_lat', p.lat);
       localStorage.setItem('passenger_last_lng', p.lng);
       
@@ -324,10 +337,56 @@ function closeGeoModal() { document.getElementById('geoModal').classList.remove(
 
 function clearRoute(){routeReady=false;distanceKm=0;durationMin=0;if(routeLine){map.removeLayer(routeLine);routeLine=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}endPoint=null;document.getElementById('to').value='';document.getElementById('clearTo').classList.remove('show');updateContinue()}
 async function reverseAddress(p){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18`);const d=await r.json();return d.display_name||`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}catch(e){return `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}}
+
 async function setPoint(type,ll,address){
   const p={lat:ll.lat,lon:ll.lng};
-  if(type==='A'){clearRoute();startPoint=p;if(startMarker)map.removeLayer(startMarker);startMarker=L.marker(ll).addTo(map).bindPopup('Мінетін жер').openPopup();document.getElementById('from').value=address||await reverseAddress(p);document.getElementById('clearFrom').classList.add('show');document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз'}
-  else{endPoint=p;routeReady=false;if(endMarker)map.removeLayer(endMarker);endMarker=L.marker(ll).addTo(map).bindPopup('Баратын жер').openPopup();document.getElementById('to').value=address||await reverseAddress(p);document.getElementById('clearTo').classList.add('show');document.getElementById('mapTitle').textContent='Бағыт есептелуде...';const ok=await getRoute();document.getElementById('mapTitle').textContent=ok?'Бағыт дайын!':'Бағытты есептеу мүмкін болмады'}
+  
+  if(type==='A'){
+    clearRoute();
+    startPoint=p;
+    if(startMarker)map.removeLayer(startMarker);
+    
+    // Попаптың ішінде өзіміздің "Х" батырмамызды жасаймыз
+    const popupHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; min-width:140px; gap:15px; font-family:'Inter',sans-serif;">
+        <span style="font-weight:700; font-size:14px; color:#101114;">Мінетін жер</span>
+        <button onclick="clearPoint('A')" style="background:#f0f0f0; border:none; border-radius:50%; width:24px; height:24px; color:#666; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+      </div>
+    `;
+
+    startMarker=L.marker(ll, {icon: pickupIcon})
+        .addTo(map)
+        .bindPopup(popupHTML, {closeButton: false}) // Leaflet-тің стандартты Х-ін өшіреміз
+        .openPopup();
+        
+    document.getElementById('from').value=address||await reverseAddress(p);
+    document.getElementById('clearFrom').classList.add('show');
+    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
+    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз немесе іздеу жолағын қолданыңыз.';
+  }
+  else{
+    endPoint=p;
+    routeReady=false;
+    if(endMarker)map.removeLayer(endMarker);
+    
+    const popupHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; min-width:140px; gap:15px; font-family:'Inter',sans-serif;">
+        <span style="font-weight:700; font-size:14px; color:#101114;">Баратын жер</span>
+        <button onclick="clearPoint('B')" style="background:#f0f0f0; border:none; border-radius:50%; width:24px; height:24px; color:#666; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+      </div>
+    `;
+
+    endMarker=L.marker(ll, {icon: destIcon})
+        .addTo(map)
+        .bindPopup(popupHTML, {closeButton: false})
+        .openPopup();
+        
+    document.getElementById('to').value=address||await reverseAddress(p);
+    document.getElementById('clearTo').classList.add('show');
+    document.getElementById('mapTitle').textContent='Бағыт есептелуде...';
+    const ok=await getRoute();
+    document.getElementById('mapTitle').textContent=ok?'Бағыт дайын!':'Бағытты есептеу мүмкін болмады';
+  }
   updateContinue();
 }
 
