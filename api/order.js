@@ -5,7 +5,11 @@ export default async function handler(req, res) {
 
   const URL = process.env.SUPABASE_URL?.replace(/\/$/, "");
   const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!URL || !KEY) return res.status(500).json({ error: "Сервер баптауы жоқ" });
+  
+  if (!URL || !KEY) {
+    console.error("Қате: Supabase URL немесе KEY жоқ");
+    return res.status(500).json({ error: "Сервер баптауы жоқ" });
+  }
 
   const headers = {
     "Content-Type": "application/json",
@@ -45,10 +49,15 @@ export default async function handler(req, res) {
         method: "POST", headers: { ...headers, Prefer: "return=representation" },
         body: JSON.stringify(orderData)
       });
+      
       const dbResult = await r.json();
-      if (!r.ok || !dbResult[0]?.id) return res.status(502).json({ error: "Сақтау мүмкін болмады" });
+      
+      if (!r.ok || !dbResult[0]?.id) {
+        console.error("Supabase сақтау қатесі:", dbResult);
+        return res.status(502).json({ error: "Сақтау мүмкін болмады" });
+      }
 
-      // 2. Telegram-ға хабарлама жіберу (БҰНЫ КҮТПЕЙМІЗ, ФОНДЫҚ РЕЖИМДЕ ЖІБЕРЕМІЗ)
+      // 2. Telegram-ға хабарлама жіберу
       const token = process.env.TELEGRAM_BOT_TOKEN;
       const chatId = process.env.TELEGRAM_CHAT_ID;
 
@@ -63,14 +72,30 @@ export default async function handler(req, res) {
           "💰 Бағасы: " + price + " ₸\n" +
           "💵 Төлем: " + (payment || "Қолма-қол");
 
-        // await жоқ! Фондық режимде жіберіледі, жолаушыны күткізбейді
-        fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ chat_id: chatId, text: message })
-        }).catch(e => console.error("Telegram қатесі:", e.message));
+        try {
+          // МҰНДА AWAIT ҚОСЫЛДЫ! Vercel функциясы хат жіберілмейінше жабылмайды.
+          const tgRes = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+            method: "POST", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ chat_id: chatId, text: message })
+          });
+
+          if (!tgRes.ok) {
+            const tgError = await tgRes.json();
+            console.error("Telegram API қатесі:", tgError);
+          } else {
+            console.log("Телеграмға хабарлама сәтті жіберілді!");
+          }
+        } catch (tgErr) {
+          console.error("Telegram желілік қатесі:", tgErr.message);
+        }
+      } else {
+        console.error("Telegram токен немесе Чат ID орнатылмаған!");
       }
 
+      // Жолаушыға сәтті жауап қайтару
       return res.status(200).json({ success: true, orderId: dbResult[0].id, trackingToken });
+      
     } catch (e) { 
       console.error("Сервер қатесі:", e);
       return res.status(500).json({ error: "Сервер қатесі" }); 
