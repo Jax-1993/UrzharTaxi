@@ -15,6 +15,10 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 /* Картаны толық экранға жаю */
 #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
 
+/* Жоғарғы ортадағы Бренд (Tulpar Taxi + Машина) */
+.top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(30,32,38,0.9); color: white; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.4); backdrop-filter: blur(5px); pointer-events: none; letter-spacing: 0.5px;}
+.top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
+
 /* Орталық маркер (Яндекс стилінде) */
 .center-pin {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 50; pointer-events: auto; cursor: pointer; display: none; flex-direction: column; align-items: center; transition: transform 0.1s;}
 .center-pin:active {transform: translate(-50%, -100%) scale(0.9);}
@@ -22,28 +26,28 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .center-pin-label {background: white; padding: 8px 14px; border-radius: 12px; font-weight: 800; font-size: 14px; color: black; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative; white-space: nowrap;}
 .center-pin-label::after {content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: white transparent transparent transparent;}
 .center-pin-icon {width: 46px; height: 46px; background: var(--blue); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); transition: background 0.3s;}
-/* Маркер басуға болатынын білдіретін пульсация */
 .center-pin.show .center-pin-icon {animation: pulse 2s infinite;}
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
 /* Жоғарғы қалқымалы панель */
 .top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)}
 .menu-btn-floating{pointer-events:auto;background:rgba(30,32,38,0.9);border:none;color:white;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px)}
-.address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:2px}
+.address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:45px;} /* Брендтің астында тұру үшін төмен түсірдік */
 .address-info p{margin:0;font-size:12px;font-weight:600;color:#e5e7eb}
-.address-info h2{margin:2px 0 0;font-size:20px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.address-info h2{margin:2px 0 0;font-size:18px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Төменгі қалқымалы батырмалар */
 .floating-actions{position:absolute;bottom:170px;left:15px;right:15px;z-index:100;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
 .yellow-qajet{pointer-events:auto;background:var(--yellow);color:#111;border:none;padding:12px 20px;border-radius:25px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(255,204,0,0.4);cursor:pointer}
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
-.gps-btn-round{background:rgba(30,32,38,0.9);color:white;border:none;width:45px;height:45px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
+.gps-btn-round{background:rgba(30,32,38,0.9);color:white;border:none;width:45px;height:45px;border-radius:50%;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer;transition:transform 0.2s;}
+.gps-btn-round:active{transform:scale(0.9);}
 
 /* Төменгі қараңғы панель */
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease;pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
-.input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s}
+.input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:pointer;}
 .input-wrapper input::placeholder{color:#9ca3af}
 .input-wrapper input:focus{background:#3a3d46; box-shadow: 0 0 0 2px var(--blue);}
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
@@ -53,11 +57,6 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .main-dark-btn:active{background:#3a3d46}
 .main-dark-btn:disabled{opacity:0.5}
 .btn-arrow{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
-
-/* Ұсыныстар */
-.suggestions{background:var(--dark-input);border-radius:16px;overflow:hidden;margin-bottom:12px;max-height:200px;overflow-y:auto; position: absolute; width: calc(100% - 30px); z-index: 200;}
-.suggestion{padding:15px;border-bottom:1px solid #3a3d46;font-size:14px;color:#e5e7eb;cursor:pointer}
-.suggestion:hover{background:#3a3d46}
 
 /* Басқа беттер үшін жалпы стильдер */
 .page{display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#f2f3f5; z-index:200; overflow-y:auto;}
@@ -140,13 +139,19 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 <section id="page1" class="page active" style="background: transparent;">
   <div id="map"></div>
 
-  <!-- ОРТАЛЫҚ МАРКЕР (БАСҚАНДА ТАҢДАЛАДЫ) -->
+  <!-- Жоғарғы Ортадағы Бренд -->
+  <div class="top-brand">
+    <img src="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" alt="Tulpar Taxi Car">
+    <span>Tulpar Taxi</span>
+  </div>
+
+  <!-- ОРТАЛЫҚ МАРКЕР -->
   <div id="centerPin" class="center-pin show" onclick="confirmCenterPoint()">
     <div class="center-pin-label" id="centerPinLabel">Мінетін жер</div>
     <div class="center-pin-icon" id="centerPinIcon">🚶‍♂️</div>
   </div>
 
-  <!-- Жоғарғы қалқымалы бөлік -->
+  <!-- Жоғарғы қалқымалы бөлік (Мәзір және Мекенжай) -->
   <div class="top-overlay">
     <button class="menu-btn-floating" onclick="toggleMenu()">☰</button>
     <div class="address-info">
@@ -160,7 +165,8 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
     <button class="yellow-qajet">★ Сізге QAJET</button>
     <div class="right-btns">
       <button class="dark-pill">☎ Қолдау</button>
-      <button class="gps-btn-round" onclick="enableGPS()">➤</button>
+      <!-- КОМПАС (GPS) БАТЫРМАСЫ -->
+      <button class="gps-btn-round" onclick="flyToGPS()" title="Менің орнымды табу">🧭</button>
     </div>
   </div>
 
@@ -290,8 +296,6 @@ let startMarker=null, endMarker=null, routeLine=null;
 let userGpsMarker = null;
 let distanceKm=0, durationMin=0, routeReady=false, selectedCar='economy', currentPrices={};
 
-// Бағалар: Сіз айтқандай 1 км = 100 теңге (Эконом үшін). 
-// Бизнес пен Бизнес+ сәл қымбаттау болады.
 const prices = {
     economy: { base: 0, km: 100 }, 
     comfort: { base: 200, km: 150 }, 
@@ -324,8 +328,6 @@ function showPage(id){
     }
 }
 
-function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
-
 // === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
 function initMap(){
   const savedLat = localStorage.getItem('passenger_last_lat');
@@ -340,10 +342,8 @@ function initMap(){
       key: DG_API_KEY
   });
 
-  // Картаның төменгі жағында панель бар, сондықтан орталықты жоғарырақ ығыстырамыз
   map.setPadding({ top: 100, bottom: 250, left: 0, right: 0 });
 
-  // Карта жылжыған кезде (тек мекенжай жазуын жаңартамыз)
   map.on('moveend', () => {
       if(mapMode === 'route_ready') return;
       
@@ -370,45 +370,63 @@ async function confirmCenterPoint() {
     const addr = await reverseAddress(p);
 
     if (mapMode === 'pickup') {
-        // 1. Мінетін жерді таңдадық
         startPoint = p;
         document.getElementById('from').value = addr;
         document.getElementById('clearFrom').classList.add('show');
         
-        // Маркер қою
         if(startMarker) startMarker.destroy();
+        
+        // 🚨 МАРКЕРГЕ "✕" БЕЛГІСІН ҚОСУ (Жоғарысына)
         startMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
-            html: `<div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div>`,
-            anchor: [0.5, 0.5]
+            html: `
+            <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
+                <div onclick="clearPoint('A')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
+                <div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div>
+            </div>`,
+            anchor: [0.5, 1]
         });
 
-        // Режимді ауыстыру
         mapMode = 'destination';
         document.getElementById('centerPinLabel').textContent = 'Баратын жер';
         document.getElementById('centerPinIcon').textContent = '🏁';
         document.getElementById('centerPinIcon').style.background = '#101114';
         
     } else if (mapMode === 'destination') {
-        // 2. Баратын жерді таңдадық
         endPoint = p;
         document.getElementById('to').value = addr;
         document.getElementById('clearTo').classList.add('show');
 
-        // Маркер қою
         if(endMarker) endMarker.destroy();
+        
+        // 🚨 БАРАТЫН ЖЕР МАРКЕРІНЕ ДЕ "✕" ҚОСУ
         endMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
-            html: `<div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
-            anchor: [0.5, 0.5]
+            html: `
+            <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
+                <div onclick="clearPoint('B')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
+                <div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>
+            </div>`,
+            anchor: [0.5, 1]
         });
 
-        // Орталық маркерді жасыру
         document.getElementById('centerPin').classList.remove('show');
         mapMode = 'route_ready';
 
-        // Бағытты сызу және бағаны есептеу
         await getRoute();
+    }
+}
+
+// === ЖЫЛДАМАЛЫ КОМПАС (GPS-ке бару) ===
+function flyToGPS() {
+    if (userGpsMarker) {
+        // Егер GPS бұрын табылған болса, сол жерге жылдам ұшу
+        const coords = userGpsMarker.getCoordinates();
+        map.setCenter(coords);
+        map.setZoom(16);
+    } else {
+        // Егер GPS табылмаған болса, іздеуді бастау
+        enableGPS();
     }
 }
 
@@ -424,11 +442,11 @@ function enableGPS() {
       localStorage.setItem('passenger_last_lat', p.lat);
       localStorage.setItem('passenger_last_lng', p.lng);
       
-      // Нақты тұрған жерге көк нүкте қою (Ана домалақ емес, картадағы белгі)
+      // Нақты тұрған жерге көк нүкте қою
       if(userGpsMarker) userGpsMarker.destroy();
       userGpsMarker = new mapgl.HtmlMarker(map, {
           coordinates: [p.lng, p.lat],
-          html: `<div style="background-color:#2563eb; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(37,99,235,0.8);"></div>`,
+          html: `<div style="background-color:#2563eb; width:18px; height:18px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(37,99,235,0.8);"></div>`,
           anchor: [0.5, 0.5]
       });
 
@@ -460,7 +478,6 @@ function clearPoint(type){
     startPoint = null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
     if(startMarker){ startMarker.destroy(); startMarker=null; }
     clearRoute();
-    // Режимді қайтадан "Мінетін жерге" ауыстыру
     mapMode = 'pickup';
     document.getElementById('centerPin').classList.add('show');
     document.getElementById('centerPinLabel').textContent = 'Мінетін жер';
@@ -470,7 +487,6 @@ function clearPoint(type){
     endPoint = null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
     if(endMarker){ endMarker.destroy(); endMarker=null; }
     clearRoute();
-    // Режимді "Баратын жерге" ауыстыру
     mapMode = 'destination';
     document.getElementById('centerPin').classList.add('show');
     document.getElementById('centerPinLabel').textContent = 'Баратын жер';
@@ -490,7 +506,6 @@ function updateButtonState() {
     const btn = document.getElementById('continueBtn');
     if(startPoint && endPoint && routeReady){
         btn.disabled = false;
-        // Батырмада бағаны да көрсетеміз
         btn.innerHTML = `Такси қажет! (${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸) <div class="btn-arrow" style="background:#fff; color:#000;">→</div>`;
     } else {
         btn.disabled = true;
@@ -533,7 +548,6 @@ async function getRoute(){
       
       if(routeLine) routeLine.destroy();
       
-      // Сызықты сызу (Көк түсті, zIndex арқылы жоғары қою)
       routeLine = new mapgl.Polyline(map, {
           coordinates: route.geometry.coordinates,
           width: 7,
@@ -541,7 +555,6 @@ async function getRoute(){
           zIndex: 10
       });
 
-      // Картаны екі нүктені қамтитындай етіп ыңғайлау
       const coords = route.geometry.coordinates;
       const lats = coords.map(c => c[1]);
       const lngs = coords.map(c => c[0]);
@@ -551,9 +564,7 @@ async function getRoute(){
           padding: {top: 100, bottom: 300, left: 50, right: 50}
       });
 
-      // Бағаны есептеу
       calculatePrices();
-
       routeReady=true; updateButtonState(); return true;
   }catch(e){
       console.error("Маршрут алу қатесі:", e);
@@ -582,7 +593,7 @@ function selectCar(k){
     selectedCar=k;
     document.querySelectorAll('.car').forEach(c=>c.classList.remove('selected'));
     document.getElementById(k).classList.add('selected');
-    updateButtonState(); // Батырмадағы бағаны жаңарту
+    updateButtonState();
 }
 
 function continueToDetails(){
@@ -596,7 +607,6 @@ function editPassenger(){document.getElementById('savedPassenger').style.display
 
 function backToMap(){
     showPage('page1');
-    // Картаны қайта көрсеткенде ыңғайлау
     setTimeout(() => {
         map.setZoom(map.getZoom());
     }, 100);
@@ -622,7 +632,7 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
-// Суреттерді жүктеу және өңдеу логикасы (Жүргізуші тіркелуі үшін)
+// Суреттерді жүктеу және өңдеу логикасы
 function setupPhotoInput(inputId, previewId) {
   document.getElementById(inputId).addEventListener('change', function() {
     const file = this.files[0], preview = document.getElementById(previewId);
@@ -652,7 +662,6 @@ async function compressImage(file) {
 }
 
 async function registerDriver(){
-  // ... (Бұл бөлік өзгерген жоқ, алдыңғы кодтағыдай)
   const name=document.getElementById('regName').value.trim();
   const phone=document.getElementById('regPhone').value.trim();
   const brand=document.getElementById('carBrand').value.trim();
