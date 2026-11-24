@@ -42,11 +42,11 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
 
-/* 🚨 ЖАҢА: GPS/Компас батырмасы (Экранның оң жағында қалқып тұрады) */
+/* GPS/Компас батырмасы (Экранның оң жағында қалқып тұрады) */
 .gps-floating-btn {
     position: absolute;
     right: 15px;
-    bottom: 250px; /* Төменгі панельден жоғарырақ тұрады */
+    bottom: 250px;
     z-index: 150;
     background: white;
     color: #3b82f6;
@@ -75,9 +75,9 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
 .clear-btn.show{display:flex}
 
-.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.2s}
+.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.2s; min-height: 60px;}
 .main-dark-btn:active{background:#3a3d46}
-.main-dark-btn:disabled{opacity:0.5}
+.main-dark-btn:disabled{opacity:0.5; cursor: not-allowed;}
 .btn-arrow{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
 
 /* Басқа беттер үшін жалпы стильдер */
@@ -182,7 +182,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
     </div>
   </div>
 
-  <!-- 🚨 GPS/Компас батырмасы (Жеке қалқымалы) -->
+  <!-- GPS/Компас батырмасы -->
   <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
 
   <!-- Төменгі қалқымалы батырмалар -->
@@ -203,9 +203,9 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
       <input id="to" placeholder="🏁 Қайда барасыз?" readonly onclick="focusDestination()">
       <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
     </div>
-    <!-- Такси шақыру батырмасы -->
-    <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()">
-      Мекенжайды таңдаңыз <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
+    <!-- 🚨 ТҮЗЕТІЛГЕН: Батырманың іші бос тұрады, тек баға шыққанда толады -->
+    <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()" disabled>
+      <span></span><div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
     </button>
   </div>
 </section>
@@ -329,7 +329,6 @@ const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let onlineDriverMarkers = [];
 
-// Карта режимі: 'pickup' (мінетін жер) немесе 'destination' (баратын жер)
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
@@ -351,7 +350,6 @@ function showPage(id){
     }
 }
 
-// === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
 function initMap(){
   const savedLat = localStorage.getItem('passenger_last_lat');
   const savedLng = localStorage.getItem('passenger_last_lng');
@@ -384,7 +382,6 @@ function initMap(){
   setTimeout(() => map.emit('moveend'), 1000);
 }
 
-// === ОРТАЛЫҚ МАРКЕРДІ БАСҚАНДА (ТАҢДАУ) ===
 async function confirmCenterPoint() {
     if (mapMode === 'route_ready') return;
 
@@ -438,10 +435,9 @@ async function confirmCenterPoint() {
     }
 }
 
-// === 🚨 ЖАҢА: КОМПАС (GPS) БАТЫРМАСЫНЫҢ ЛОГИКАСЫ ===
 function flyToGPS() {
     const btn = document.getElementById('gpsBtn');
-    btn.classList.add('loading'); // Айналмалы эффект қосады
+    btn.classList.add('loading');
     
     if (!navigator.geolocation) {
         alert("Браузеріңіз GPS-ті қолдамайды.");
@@ -454,10 +450,8 @@ function flyToGPS() {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
             
-            // Егер бұрын GPS белгісі болса, оны жою
             if(userGpsMarker) userGpsMarker.destroy();
             
-            // Адамның тұрған жеріне (көк нүкте) маркер қою
             userGpsMarker = new mapgl.HtmlMarker(map, {
                 coordinates: [lng, lat],
                 html: `
@@ -468,7 +462,6 @@ function flyToGPS() {
                 anchor: [0.5, 0.5]
             });
 
-            // Картаны сол жерге жылжыту
             map.setCenter([lng, lat]);
             map.setZoom(16);
             
@@ -482,7 +475,6 @@ function flyToGPS() {
     );
 }
 
-// === GPS БЕЛГІСІН ОРНАТУ (Модальді терезеден шақырылады) ===
 function enableGPS() {
   const btn = document.getElementById('enableGpsBtn');
   btn.textContent = "Анықталуда..."; btn.disabled = true;
@@ -523,10 +515,8 @@ async function reverseAddress(p){
     }
 }
 
-// === 🚨 ТҮЗЕТІЛГЕН: ТАЗАЛАУ (CLEAR) ЛОГИКАСЫ ===
 function clearPoint(type){
   if(type==='A'){
-    // "Мінетін жердің" ✕ басылса, БАРЛЫҒЫ өшуі керек (себебі бастау нүктесі жоқ)
     startPoint = null; endPoint = null;
     document.getElementById('from').value=''; document.getElementById('to').value='';
     document.getElementById('clearFrom').classList.remove('show'); document.getElementById('clearTo').classList.remove('show');
@@ -543,7 +533,6 @@ function clearPoint(type){
     document.getElementById('centerPinIcon').style.background = 'var(--blue)';
     
   } else if (type==='B') {
-    // "Баратын жердің" ✕ басылса, тек БАРАТЫН ЖЕР өшуі керек
     endPoint = null;
     document.getElementById('to').value='';
     document.getElementById('clearTo').classList.remove('show');
@@ -567,16 +556,17 @@ function clearRoute(){
     updateButtonState();
 }
 
+// 🚨 ТҮЗЕТІЛГЕН: Батырмадағы артық жазуларды өшіріп, тек бағаны қалдыру
 function updateButtonState() {
     const btn = document.getElementById('continueBtn');
     if(startPoint && endPoint && routeReady){
         btn.disabled = false;
-        btn.innerHTML = `Такси қажет! (${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸) <div class="btn-arrow" style="background:#fff; color:#000;">→</div>`;
+        // Батырмада тек баға мен көрсеткі қалады
+        btn.innerHTML = `${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸ <div class="btn-arrow" style="background:#fff; color:#000;">→</div>`;
     } else {
         btn.disabled = true;
-        if(!startPoint) btn.innerHTML = `Мінетін жерді таңдаңыз <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
-        else if(!endPoint) btn.innerHTML = `Баратын жерді таңдаңыз <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
-        else btn.innerHTML = `Есептелуде... <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
+        // Батырма бос тұрады, тек сұр көрсеткі қалады (ешқандай жазу жоқ)
+        btn.innerHTML = `<span></span> <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
     }
 }
 
@@ -598,7 +588,6 @@ function focusDestination() {
     document.getElementById('centerPinIcon').style.background = '#101114';
 }
 
-// === БАҒЫТТЫ СЫЗУ ЖӘНЕ БАҒАНЫ ЕСЕПТЕУ ===
 async function getRoute(){
   if(!startPoint||!endPoint)return false;
   try{
@@ -697,7 +686,6 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
-// Суреттерді жүктеу және өңдеу логикасы
 function setupPhotoInput(inputId, previewId) {
   document.getElementById(inputId).addEventListener('change', function() {
     const file = this.files[0], preview = document.getElementById(previewId);
