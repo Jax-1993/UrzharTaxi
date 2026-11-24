@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--yellow:#ffcc00;--green:#16bd79;--red:#e34b59;--gray-bg:#101522;--card:#1c2536;--card-light:#243045;--border:#2e3a52;--text-muted:#94a3b8}
@@ -132,8 +131,14 @@ button:disabled{opacity:0.5;cursor:not-allowed}
   </div>
 </main>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- 2GIS MapGL скриптін қосу -->
+<script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
+// ==========================================
+// БҰЛ ЖЕРГЕ 2GIS API КІЛТІҢІЗДІ ҚОЙЫҢЫЗ!
+// ==========================================
+const DG_API_KEY = 'СІЗДІҢ_2GIS_API_КІЛТІҢІЗ';
+
 let gpsWatchId=null,gpsActive=false,gpsOrderId=null,lastSentAt=0;
 let isOnline = false;
 let onlineWatchId = null;
@@ -217,7 +222,6 @@ async function setDriverOffline() {
   if (onlineWatchId) { navigator.geolocation.clearWatch(onlineWatchId); onlineWatchId = null; }
   
   const data = JSON.stringify({ is_online: false });
-  // Қосымша жабылып жатқанда сұраныс жетуі үшін sendBeacon қолданамыз
   if (navigator.sendBeacon) {
     navigator.sendBeacon('/api/driver?action=toggle_online', new Blob([data], {type: 'application/json'}));
   } else {
@@ -333,51 +337,85 @@ function renderOrder(order,containerId,isMyOrder){
   container.appendChild(item);
 }
 
+// === 2GIS КАРТАСЫН ЖАҢАРТУ ===
 function updateDriverMap(order) {
   document.getElementById('mapCard').style.display = 'block';
+
+  const pickupLngLat = [Number(order.pickup_longitude), Number(order.pickup_latitude)];
+  const destLngLat = [Number(order.destination_longitude), Number(order.destination_latitude)];
 
   if (!map) {
     const savedLat = localStorage.getItem('driver_last_lat');
     const savedLng = localStorage.getItem('driver_last_lng');
-    const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
-    const initialZoom = (savedLat && savedLng) ? 14 : 5;
+    const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
+    const initialZoom = (savedLat && savedLng) ? 14 : 11;
 
-    map = L.map('driverMap').setView(initialCoords, initialZoom);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+    map = new mapgl.Map('driverMap', {
+        center: initialCoords,
+        zoom: initialZoom,
+        key: DG_API_KEY
+    });
   }
-  setTimeout(() => { map.invalidateSize(); }, 300);
+  // 2GIS картасының өлшемін жаңарту
+  setTimeout(() => { map.setZoom(map.getZoom()); }, 300);
 
-  const pickupLatLng = [Number(order.pickup_latitude), Number(order.pickup_longitude)];
-  const destLatLng = [Number(order.destination_latitude), Number(order.destination_longitude)];
+  if (pickupMarker) pickupMarker.destroy();
+  if (destinationMarker) destinationMarker.destroy();
+  if (routeLine) routeLine.destroy();
 
-  if (pickupMarker) map.removeLayer(pickupMarker);
-  if (destinationMarker) map.removeLayer(destinationMarker);
-  if (routeLine) map.removeLayer(routeLine);
+  // Жолаушының маркері
+  pickupMarker = new mapgl.HtmlMarker(map, {
+      coordinates: pickupLngLat,
+      html: `<div style="background-color:#ffcc00; padding:6px 12px; border-radius:8px; font-weight:bold; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.3); font-size:13px; white-space:nowrap;">📍 Жолаушы</div>`,
+      anchor: [0.5, 1]
+  });
 
-  pickupMarker = L.marker(pickupLatLng).addTo(map).bindPopup('📍 Жолаушы');
-  destinationMarker = L.marker(destLatLng).addTo(map).bindPopup('🏁 Баратын жер');
+  // Баратын жердің маркері
+  destinationMarker = new mapgl.HtmlMarker(map, {
+      coordinates: destLngLat,
+      html: `<div style="background-color:#101114; color:white; padding:6px 12px; border-radius:8px; font-weight:bold; border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,0.3); font-size:13px; white-space:nowrap;">🏁 Баратын жер</div>`,
+      anchor: [0.5, 1]
+  });
 
-  fetch(`https://router.project-osrm.org/route/v1/driving/${pickupLatLng[1]},${pickupLatLng[0]};${destLatLng[1]},${destLatLng[0]}?overview=full&geometries=geojson`)
+  // OSRM арқылы бағытты сұрау
+  fetch(`https://router.project-osrm.org/route/v1/driving/${pickupLngLat[0]},${pickupLngLat[1]};${destLngLat[0]},${destLngLat[1]}?overview=full&geometries=geojson`)
     .then(r => r.json())
     .then(d => {
       if (d.code === 'Ok' && d.routes.length > 0) {
-        routeLine = L.geoJSON(d.routes[0].geometry, { style: { color: '#ffcc00', weight: 6 } }).addTo(map);
-        map.fitBounds(routeLine.getBounds(), { padding: [30, 30] });
+        // 2GIS Polyline сызу
+        routeLine = new mapgl.Polyline(map, {
+            coordinates: d.routes[0].geometry.coordinates,
+            width: 6,
+            color: '#ffcc00'
+        });
+        
+        // Бағытқа сай картаны ыңғайлау
+        const coords = d.routes[0].geometry.coordinates;
+        const lats = coords.map(c => c[1]);
+        const lngs = coords.map(c => c[0]);
+        map.fitBounds({
+            southWest: [Math.min(...lngs), Math.min(...lats)],
+            northEast: [Math.max(...lngs), Math.max(...lats)],
+            padding: 50
+        });
       }
     }).catch(e => console.log(e));
 
+  // Жүргізушінің өз орнын анықтау
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
-      const latlng = [pos.coords.latitude, pos.coords.longitude];
+      const latlng = [pos.coords.longitude, pos.coords.latitude];
       localStorage.setItem('driver_last_lat', pos.coords.latitude);
       localStorage.setItem('driver_last_lng', pos.coords.longitude);
       
       if (!driverMarker) {
-        driverMarker = L.marker(latlng, {
-          icon: L.divIcon({ html: '<div style="font-size:32px;filter:drop-shadow(0 0 5px rgba(0,0,0,0.5))">🚕</div>', iconSize: [32, 32], iconAnchor: [16, 16] })
-        }).addTo(map).bindPopup('Сіз');
+        driverMarker = new mapgl.HtmlMarker(map, {
+            coordinates: latlng,
+            html: '<div style="font-size:32px;filter:drop-shadow(0 0 5px rgba(0,0,0,0.8))">🚕</div>',
+            anchor: [0.5, 0.5]
+        });
       } else {
-        driverMarker.setLatLng(latlng);
+        driverMarker.setCoordinates(latlng);
       }
     });
   }
@@ -407,9 +445,9 @@ async function loadOrders(){
   } else {
     document.getElementById('mapCard').style.display = 'none';
     if (map) {
-      if (routeLine) map.removeLayer(routeLine);
-      if (pickupMarker) map.removeLayer(pickupMarker);
-      if (destinationMarker) map.removeLayer(destinationMarker);
+      if (routeLine) { routeLine.destroy(); routeLine = null; }
+      if (pickupMarker) { pickupMarker.destroy(); pickupMarker = null; }
+      if (destinationMarker) { destinationMarker.destroy(); destinationMarker = null; }
     }
   }
 
@@ -590,7 +628,6 @@ async function loadAll(){
 
 function startAutoRefresh(){
   if(autoRefreshTimer)clearInterval(autoRefreshTimer);
-  // Тапсырыс тез келуі үшін 15 секундтан 5 секундқа азайттым
   autoRefreshTimer=setInterval(()=>{loadOrders().catch(()=>{})},5000); 
   if(chatRefreshTimer)clearInterval(chatRefreshTimer);
   chatRefreshTimer=setInterval(()=>{loadChat().catch(()=>{})},15000);
@@ -601,12 +638,11 @@ window.addEventListener("pagehide",()=>{
   if(chatRefreshTimer)clearInterval(chatRefreshTimer);
   if(gpsActive)stopGps();
   Object.values(waitTimers).forEach(clearInterval);
-  setDriverOffline(); // Бетті жапқанда офлайн болады
+  setDriverOffline(); 
 });
 
 document.getElementById("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendMessage()}});
 
-// Бет ашылғанда автоматты онлайн боламыз
 setDriverOnline().then(() => {
   loadAll().then(()=>startAutoRefresh());
 });
