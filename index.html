@@ -9,14 +9,78 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--yellow:#ffcc00;--black:#101114;--green:#16bd79}
-body{margin:0;font-family:'Inter',sans-serif;background:#f2f3f5;color:#171717;-webkit-font-smoothing:antialiased}
-header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);color:white;display:flex;align-items:center;padding:0 15px;gap:14px;position:relative;z-index:1000;border-bottom:3px solid var(--yellow);box-shadow:0 2px 12px rgba(0,0,0,0.15)}
-.menu-btn{border:0;background:none;color:var(--yellow);font-size:28px;padding:5px;cursor:pointer}
-.brand{flex:1; display:flex; align-items:center; gap:10px;}
-.brand h2{margin:0;font-size:20px;font-weight:900;letter-spacing:-0.5px}
-.brand p{margin:3px 0 0;color:var(--yellow);font-size:11px;font-weight:600}
-.drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#17191e;color:white;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.3)}
+:root{--yellow:#ffcc00;--black:#101114;--green:#16bd79;--dark-panel:#1c1d22;--dark-input:#2c2e36;--blue:#3b82f6}
+body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#171717;-webkit-font-smoothing:antialiased;overflow:hidden;height:100vh;width:100vw}
+
+/* Картаны толық экранға жаю */
+#map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
+
+/* Жоғарғы қалқымалы панель (Мәзір және Мекенжай) */
+.top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)}
+.menu-btn-floating{pointer-events:auto;background:rgba(30,32,38,0.9);border:none;color:white;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px)}
+.address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:2px}
+.address-info p{margin:0;font-size:12px;font-weight:600;color:#e5e7eb}
+.address-info h2{margin:2px 0 0;font-size:20px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Төменгі қалқымалы батырмалар */
+.floating-actions{position:absolute;bottom:150px;left:15px;right:15px;z-index:100;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.yellow-qajet{pointer-events:auto;background:var(--yellow);color:#111;border:none;padding:12px 20px;border-radius:25px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(255,204,0,0.4);cursor:pointer}
+.right-btns{display:flex;gap:10px;pointer-events:auto}
+.dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
+.gps-btn-round{background:rgba(30,32,38,0.9);color:white;border:none;width:45px;height:45px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
+
+/* Төменгі қараңғы панель (Кірістер және Такси шақыру батырмасы) */
+.bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease;pointer-events:auto}
+.input-wrapper{position:relative;margin-bottom:12px}
+.input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s}
+.input-wrapper input::placeholder{color:#9ca3af}
+.input-wrapper input:focus{background:#3a3d46}
+.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
+.clear-btn.show{display:flex}
+
+.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.2s}
+.main-dark-btn:active{background:#3a3d46}
+.main-dark-btn:disabled{opacity:0.5}
+.btn-arrow{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+
+/* Ұсыныстар (іздеу нәтижелері) */
+.suggestions{background:var(--dark-input);border-radius:16px;overflow:hidden;margin-bottom:12px;max-height:200px;overflow-y:auto;}
+.suggestion{padding:15px;border-bottom:1px solid #3a3d46;font-size:14px;color:#e5e7eb;cursor:pointer}
+.suggestion:hover{background:#3a3d46}
+
+/* Басқа беттер үшін жалпы стильдер */
+.page{display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#f2f3f5; z-index:200; overflow-y:auto;}
+.page.active{display:block; animation:slideIn 0.3s ease}
+@keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.panel{background:white;padding:20px;border-radius:24px 24px 0 0;min-height:100%; padding-bottom:100px;}
+.title{font-size:22px;font-weight:800;margin-bottom:15px}
+.hint{font-size:13px;color:#6b7280;margin-bottom:12px}
+.small{font-size:12px;color:#6b7280;line-height:1.5}
+
+.route-summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);border:1px solid #f0d875;padding:15px;border-radius:16px;font-size:14px;line-height:1.8;margin-bottom:20px}
+.car{display:flex;gap:12px;background:white;padding:12px;border:2px solid #e8ebef;border-radius:18px;margin:12px 0;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.06);transition:all 0.2s}
+.car.selected{border:3px solid var(--yellow);background:#fffbed;transform:scale(1.01)}
+.car img{width:115px;height:88px;object-fit:cover;border-radius:12px}
+.car-info{flex:1}
+.car-info h3{margin:0 0 4px;font-size:17px;font-weight:800}
+.car-info p{font-size:12px;color:#6b7280;margin:2px 0}
+.price{font-size:20px;font-weight:900;color:#181818;margin-top:6px}
+.summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);padding:15px;border-radius:16px;margin:12px 0;line-height:1.9;border:1px solid #f0d875}
+.status{text-align:center;padding:40px 15px}
+.status h2{color:#169e68;font-size:24px;font-weight:900;margin-bottom:10px}
+
+.bottom-action{position:fixed;bottom:0;left:0;width:100%;background:white;padding:15px 15px calc(15px + env(safe-area-inset-bottom));z-index:300;border-top:1px solid #eee}
+.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:16px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35);border:0;cursor:pointer}
+.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px;border:0;cursor:pointer}
+
+/* Жүргізуші тіркелу беті */
+#driverRegister .panel {border-radius: 0;}
+#driverRegister input, #driverRegister select {width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px}
+#driverRegister h3 {margin-top:20px; font-size:16px;}
+#carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
+
+/* Мәзір (Drawer) */
+.drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#17191e;color:white;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.5)}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333;padding-bottom:15px}
 .drawer h2{color:var(--yellow);font-weight:800;font-size:18px;margin:0}
@@ -24,53 +88,9 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .menu-item{width:100%;display:block;text-align:left;background:#262930;color:white;margin-top:12px;padding:15px;border-radius:12px;font-size:15px;border:0;cursor:pointer;font-family:inherit;font-weight:500}
 .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:2500;backdrop-filter:blur(2px)}
 .overlay.open{display:block}
-.page{display:none}
-.page.active{display:block;animation:slideIn 0.3s ease}
-#page1.active{display:flex;flex-direction:column}
-@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
-.map-area{height:57vh;min-height:330px;max-height:650px;flex-shrink:0;position:relative}
-#map{height:100%;width:100%;background:#dce9e9}
-.panel{background:white;padding:18px;border-radius:24px 24px 0 0;position:relative;box-shadow:0 -8px 30px rgba(0,0,0,0.08)}
-.title{font-size:20px;font-weight:800;margin-bottom:12px}
-.hint{font-size:13px;color:#6b7280;margin-bottom:12px}
-.gps-btn{width:100%;padding:13px;background:linear-gradient(135deg,#202329 0%,#2d3139 100%);color:white;border-radius:12px;font-weight:600;border:0;cursor:pointer;font-family:inherit;font-size:14px;margin-bottom:10px}
 
-.input-wrapper{position:relative;margin:6px 0}
-.input-wrapper input{width:100%;padding:15px;padding-right:45px;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;color:#171717;font-size:15px;font-family:inherit;outline:none;transition:border-color 0.2s}
-.input-wrapper input:focus{border-color:var(--yellow);background:white;box-shadow:0 0 0 3px rgba(255,204,0,0.15)}
-.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#e1e4e8;border:0;width:24px;height:24px;border-radius:50%;color:#666;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
-.clear-btn.show{display:flex}
-
-.suggestions{background:#f0fff8;border:2px solid var(--green);border-radius:14px;overflow:hidden;margin:8px 0 14px;animation:fadeIn 0.2s ease}
-.suggestions:empty{display:none}
-.suggestion{padding:15px 12px;border-bottom:1px solid #c8efdc;font-size:13px;line-height:1.5;cursor:pointer;background:#f0fff8}
-.suggestion:hover{background:#e0f9ec}
-.small{font-size:12px;color:#6b7280;line-height:1.5}
-.bottom-action{position:sticky;bottom:0;background:white;padding:12px 15px calc(14px + env(safe-area-inset-bottom));z-index:100;border-top:1px solid #eee}
-.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:14px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35);border:0;cursor:pointer}
-.main-btn:disabled{opacity:0.5;box-shadow:none}
-.continue-btn{display:none}.continue-btn.show{display:block}
-#page2,#page3,#page4{min-height:calc(100dvh - 65px)}
-#page2{background:#f2f3f5}
-#page2 .panel,#page3 .panel{border-radius:0;padding-bottom:10px}
-.route-summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);border:1px solid #f0d875;padding:14px;border-radius:14px;font-size:13px;line-height:1.8;margin-bottom:15px}
-.car{display:flex;gap:12px;background:white;padding:12px;border:2px solid #e8ebef;border-radius:18px;margin:12px 0;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.06)}
-.car.selected{border:3px solid var(--yellow);background:#fffbed;transform:scale(1.01)}
-.car img{width:115px;height:88px;object-fit:cover;border-radius:12px}
-.car-info{flex:1}
-.car-info h3{margin:0 0 4px;font-size:17px;font-weight:800}
-.car-info p{font-size:12px;color:#6b7280;margin:2px 0}
-.price{font-size:20px;font-weight:900;color:#181818;margin-top:6px}
-.summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);padding:15px;border-radius:14px;margin:12px 0;line-height:1.9;border:1px solid #f0d875}
-.status{text-align:center;padding:40px 15px}
-.status h2{color:#169e68;font-size:24px;font-weight:900;margin-bottom:10px}
-.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px;border:0;cursor:pointer}
-#carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
-.passenger-info{background:#eef2f7;padding:12px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
-.passenger-info b{color:#111}
-.edit-btn{background:transparent;border:0;color:#3b82f6;font-weight:600;cursor:pointer}
-
-.geo-modal-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;}
+/* GPS Модальді терезесі */
+.geo-modal-overlay {position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: 9999; display: flex; align-items: flex-end; justify-content: center; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;}
 .geo-modal-overlay.show { opacity: 1; pointer-events: auto; }
 .geo-modal {background: #22232a; color: white; width: 100%; max-width: 500px; border-radius: 24px 24px 0 0; padding: 30px 20px calc(30px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 0.3s ease; text-align: left;}
 .geo-modal-overlay.show .geo-modal { transform: translateY(0); }
@@ -85,6 +105,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 </head>
 <body>
 
+<!-- GPS Рұқсат сұрау терезесі -->
 <div class="geo-modal-overlay" id="geoModal">
   <div class="geo-modal">
     <h3>Тұлпар таксиді пайдалану үшін орналасқан жеріңізді қосыңыз</h3>
@@ -95,19 +116,8 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   </div>
 </div>
 
-<header>
-  <button class="menu-btn" onclick="toggleMenu()">☰</button>
-  <div class="brand">
-    <img src="https://cdn-icons-png.flaticon.com/512/4337/4337328.png" style="width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))" alt="Taxi">
-    <div>
-      <h2>TULPAR TAXI</h2>
-      <p>ЖЕДЕЛ ТАКСИ ҚЫЗМЕТІ</p>
-    </div>
-  </div>
-</header>
-
+<!-- Жанама мәзір -->
 <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
-
 <nav class="drawer" id="drawer">
   <div class="drawer-top">
     <h2>TULPAR TAXI</h2>
@@ -119,50 +129,81 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
 </nav>
 
-<section id="page1" class="page active">
-  <div class="map-area"><div id="map"></div></div>
-  <div class="panel">
-    <div class="title" id="mapTitle">Қай жерден мінесіз?</div>
-    <div class="hint" id="hint">Картадан мінетін жерді таңдаңыз немесе GPS рұқсатын беріңіз.</div>
-    <button class="gps-btn" onclick="enableGPS()">📍 Менің орналасқан жерім</button>
+<!-- БАСТЫ БЕТ (КАРТА ЖӘНЕ ҚАЛҚЫМАЛЫ ЭЛЕМЕНТТЕР) -->
+<section id="page1" class="page active" style="background: transparent;">
+  <div id="map"></div>
+
+  <!-- Жоғарғы қалқымалы бөлік -->
+  <div class="top-overlay">
+    <button class="menu-btn-floating" onclick="toggleMenu()">☰</button>
+    <div class="address-info">
+      <p>Сіздің мекенжайыңыз ></p>
+      <h2 id="currentAddressText">Анықталуда...</h2>
+    </div>
+  </div>
+
+  <!-- Төменгі қалқымалы батырмалар -->
+  <div class="floating-actions">
+    <button class="yellow-qajet">★ Сізге QAJET</button>
+    <div class="right-btns">
+      <button class="dark-pill">☎ Қолдау</button>
+      <button class="gps-btn-round" onclick="enableGPS()">➤</button>
+    </div>
+  </div>
+
+  <!-- Ең төменгі қараңғы панель -->
+  <div class="bottom-panel" id="bottomPanel">
     <div class="input-wrapper">
       <input id="from" placeholder="📍 Қай жерден мінесіз?" oninput="toggleClearBtn('from')">
       <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
     </div>
     <div id="suggestFrom" class="suggestions"></div>
+
     <div class="input-wrapper">
       <input id="to" placeholder="🏁 Қайда барасыз?" oninput="toggleClearBtn('to')">
       <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
     </div>
     <div id="suggestTo" class="suggestions"></div>
-    <div class="small">Алдымен мінетін жерді, содан кейін баратын жерді белгілеңіз.</div>
-  </div>
-  <div class="bottom-action">
-    <button id="continueBtn" class="main-btn continue-btn" onclick="continueToCars()">ЖАЛҒАСТЫРУ →</button>
+
+    <!-- Такси шақыру батырмасы -->
+    <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()">
+      Такси қажет! <div class="btn-arrow">→</div>
+    </button>
   </div>
 </section>
 
+<!-- 2-БЕТ: КӨЛІК ТАҢДАУ -->
 <section id="page2" class="page">
   <div class="panel">
     <div class="title">🚘 Көлігіңізді таңдаңыз</div>
     <div class="route-summary" id="routeSummary"></div>
-    <div class="car selected" id="economy" onclick="selectCar('economy')"><img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop"><div class="car-info"><h3>Эконом</h3><p>Күнделікті сапарға</p><div class="price" id="priceEconomy">— ₸</div></div></div>
-    <div class="car" id="comfort" onclick="selectCar('comfort')"><img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600&auto=format&fit=crop"><div class="car-info"><h3>Бизнес</h3><p>Кең әрі жайлы көлік</p><div class="price" id="priceComfort">— ₸</div></div></div>
-    <div class="car" id="plus" onclick="selectCar('plus')"><img src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&auto=format&fit=crop"><div class="car-info"><h3>Бизнес+</h3><p>Жоғары санатты көлік</p><div class="price" id="pricePlus">— ₸</div></div></div>
+    <div class="car selected" id="economy" onclick="selectCar('economy')">
+        <img src="https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=600&auto=format&fit=crop">
+        <div class="car-info"><h3>Эконом</h3><p>Күнделікті сапарға</p><div class="price" id="priceEconomy">— ₸</div></div>
+    </div>
+    <div class="car" id="comfort" onclick="selectCar('comfort')">
+        <img src="https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=600&auto=format&fit=crop">
+        <div class="car-info"><h3>Бизнес</h3><p>Кең әрі жайлы көлік</p><div class="price" id="priceComfort">— ₸</div></div>
+    </div>
+    <div class="car" id="plus" onclick="selectCar('plus')">
+        <img src="https://images.unsplash.com/photo-1563720223185-11003d516935?w=600&auto=format&fit=crop">
+        <div class="car-info"><h3>Бизнес+</h3><p>Жоғары санатты көлік</p><div class="price" id="pricePlus">— ₸</div></div>
+    </div>
   </div>
   <div class="bottom-action">
     <button class="main-btn" onclick="continueToDetails()">ЖАЛҒАСТЫРУ →</button>
-    <button class="back-btn" onclick="backToMap()">← Картаға қайту</button>
+    <button class="back-btn" onclick="showPage('page1')">← Картаға қайту</button>
   </div>
 </section>
 
+<!-- 3-БЕТ: ЖОЛАУШЫ АҚПАРАТЫ -->
 <section id="page3" class="page">
   <div class="panel">
     <div class="title">👤 Жолаушы туралы ақпарат</div>
     <div class="summary" id="passengerSummary"></div>
-    <div id="savedPassenger" class="passenger-info" style="display:none">
+    <div id="savedPassenger" class="passenger-info" style="display:none; background:#eef2f7; padding:15px; border-radius:16px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
       <div>👤 <b id="savedName"></b> <br><span style="font-size:12px;color:#666" id="savedPhone"></span></div>
-      <button class="edit-btn" onclick="editPassenger()">Өзгерту</button>
+      <button class="edit-btn" onclick="editPassenger()" style="background:none;border:none;color:#3b82f6;font-weight:bold;">Өзгерту</button>
     </div>
     <div id="passengerInputs">
       <input id="name" placeholder="Аты-жөніңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
@@ -175,47 +216,53 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   </div>
 </section>
 
+<!-- 4-БЕТ: ТАПСЫРЫС СӘТТІ -->
 <section id="page4" class="page">
-  <div class="status">
-    <h2>✅ Тапсырыс жіберілді!</h2>
-    <p>Жүргізушінің тағайындалуы күтілуде...</p>
-    <div class="summary" id="finalSummary"></div>
-    <p class="small" style="margin-top:15px">⏳ Бақылау бетіне өтуде...</p>
+  <div class="panel" style="background:transparent;">
+    <div class="status">
+        <h2>✅ Тапсырыс жіберілді!</h2>
+        <p>Жүргізушінің тағайындалуы күтілуде...</p>
+        <div class="summary" id="finalSummary"></div>
+        <p class="small" style="margin-top:15px">⏳ Бақылау бетіне өтуде...</p>
+    </div>
   </div>
 </section>
 
+<!-- ЖҮРГІЗУШІ ТІРКЕЛУ БЕТІ -->
 <section id="driverRegister" class="page">
   <div class="panel">
     <div class="title">🚘 Жүргізуші болып тіркелу</div>
     <p class="small" style="margin-bottom:15px;color:#d00;">Назар аударыңыз: Барлық құжаттар анық көрінуі керек!</p>
-    <input id="regName" placeholder="Аты-жөніңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <h3 style="margin-top:20px; font-size:16px;">🚗 Көлік туралы ақпарат</h3>
-    <input id="carBrand" placeholder="Көлік маркасы" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <input id="carModel" placeholder="Көлік моделі" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <input id="carYear" type="number" placeholder="Шыққан жылы" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <input id="carNumber" placeholder="Мемлекеттік нөмірі" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
-    <select id="carClass" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    <input id="regName" placeholder="Аты-жөніңіз">
+    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз">
+    <h3>🚗 Көлік туралы ақпарат</h3>
+    <input id="carBrand" placeholder="Көлік маркасы">
+    <input id="carModel" placeholder="Көлік моделі">
+    <input id="carYear" type="number" placeholder="Шыққан жылы">
+    <input id="carNumber" placeholder="Мемлекеттік нөмірі">
+    <select id="carClass">
       <option value="economy">Эконом</option>
       <option value="comfort">Бизнес</option>
       <option value="comfort_plus">Бизнес+</option>
     </select>
-    <h3 style="margin-top:20px; font-size:16px;">📸 Көліктің фотосы</h3>
+    <h3>📸 Көліктің фотосы</h3>
     <input id="carPhoto" type="file" accept="image/jpeg,image/png,image/webp">
     <img id="carPhotoPreview">
-    <h3 style="margin-top:20px; font-size:16px;">🪪 Жеке куәлік (алдыңғы беті)</h3>
+    <h3>🪪 Жеке куәлік (алдыңғы беті)</h3>
     <input id="idCardFront" type="file" accept="image/*">
     <img id="idCardFrontPreview" class="doc-preview">
-    <h3 style="margin-top:20px; font-size:16px;">🪪 Жеке куәлік (артқы беті)</h3>
+    <h3>🪪 Жеке куәлік (артқы беті)</h3>
     <input id="idCardBack" type="file" accept="image/*">
     <img id="idCardBackPreview" class="doc-preview">
-    <h3 style="margin-top:20px; font-size:16px;">📄 Жүргізуші куәлігі</h3>
+    <h3>📄 Жүргізуші куәлігі</h3>
     <input id="driverLicense" type="file" accept="image/*">
     <img id="driverLicensePreview" class="doc-preview">
-    <h3 style="margin-top:20px; font-size:16px;">🤳 Өз суретіңіз (Селфи)</h3>
+    <h3>🤳 Өз суретіңіз (Селфи)</h3>
     <input id="selfiePhoto" type="file" accept="image/*" capture="user">
     <img id="selfiePreview" class="doc-preview">
     <div id="driverRegisterMessage" class="small" style="margin:15px 0;font-weight:bold;"></div>
+  </div>
+  <div class="bottom-action">
     <button class="main-btn" id="driverRegisterBtn" onclick="registerDriver()">ТІРКЕЛУ</button>
     <button class="back-btn" onclick="showPage('page1')">← Басты бет</button>
   </div>
@@ -247,12 +294,17 @@ function goToAdmin(){closeMenu();window.location.href='/admin.html'}
 function showPage(id){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
-    window.scrollTo(0,0);
-    // 2GIS картасын өлшемін жаңарту үшін
-    if(id==='page1'&&map){ setTimeout(()=>map.setZoom(map.getZoom()), 250); } 
+    
+    // Карта тек 1-бетте көрінуі үшін (қалған беттер ақ фонмен жабылады)
+    if(id==='page1'&&map){ 
+        setTimeout(()=>map.setZoom(map.getZoom()), 100); 
+        document.getElementById('map').style.display = 'block';
+    } else {
+        // Қалған беттерде картаны жасыру (егер page1-де болмасақ)
+        if(id !== 'page1') document.getElementById('map').style.display = 'none';
+    }
 }
 
-function updateContinue(){document.getElementById('continueBtn').classList.toggle('show',!!(startPoint&&endPoint&&routeReady))}
 function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
 
 // === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
@@ -260,7 +312,6 @@ function initMap(){
   const savedLat = localStorage.getItem('passenger_last_lat');
   const savedLng = localStorage.getItem('passenger_last_lng');
   
-  // 2GIS координаталарды [Lng, Lat] (Ұзындық, Ендік) түрінде алады!
   const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
   const initialZoom = (savedLat && savedLng) ? 14 : 11;
 
@@ -270,7 +321,6 @@ function initMap(){
       key: DG_API_KEY
   });
 
-  // Картаға басқан кездегі оқиға
   map.on('click', async (e) => {
       const ll = { lat: e.lngLat[1], lng: e.lngLat[0] };
       if(!startPoint) await setPoint('A', ll);
@@ -291,7 +341,6 @@ async function loadOnlineDrivers() {
     const d = await r.json();
     if (!d.success || !d.drivers) return;
 
-    // Ескі маркерлерді өшіру
     onlineDriverMarkers.forEach(m => m.destroy());
     onlineDriverMarkers = [];
 
@@ -300,7 +349,7 @@ async function loadOnlineDrivers() {
         const marker = new mapgl.HtmlMarker(map, {
             coordinates: [Number(driver.current_longitude), Number(driver.current_latitude)],
             html: `<img src="https://cdn-icons-png.flaticon.com/512/3204/3204997.png" style="width:42px; height:42px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: rotate(0deg);">`,
-            anchor: [0.5, 0.5] // Ортасынан тұрады
+            anchor: [0.5, 0.5]
         });
         onlineDriverMarkers.push(marker);
       }
@@ -323,7 +372,6 @@ function enableGPS() {
       map.setZoom(16);
       
       await setPoint('A', p);
-      document.getElementById('hint').textContent = 'Енді баратын жерді таңдаңыз.';
       closeGeoModal();
       btn.textContent = "Қосу"; btn.disabled = false;
     },
@@ -340,10 +388,9 @@ function clearRoute(){
     endPoint=null;
     document.getElementById('to').value='';
     document.getElementById('clearTo').classList.remove('show');
-    updateContinue();
+    updateButtonState();
 }
 
-// Атауын анықтау (Nominatim-ді қалдырдық, ол жақсы істейді)
 async function reverseAddress(p){
     try{
         const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lng}&zoom=18`);
@@ -357,19 +404,28 @@ async function reverseAddress(p){
 function clearPoint(type){
   if(type==='A'){
     startPoint=null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
+    document.getElementById('currentAddressText').textContent = 'Анықталуда...';
     if(startMarker){ startMarker.destroy(); startMarker=null; }
     clearRoute();
-    document.getElementById('mapTitle').textContent='Қай жерден мінесіз?';
-    document.getElementById('hint').textContent='Картадан мінетін жерді таңдаңыз.';
   } else {
     endPoint=null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
     if(endMarker){ endMarker.destroy(); endMarker=null; }
     if(routeLine){ routeLine.destroy(); routeLine=null; }
     distanceKm=0; routeReady=false;
-    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
-    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз.';
   }
-  updateContinue();
+  updateButtonState();
+}
+
+// Батырманың күйін жаңарту (Жасыл немесе Сұр)
+function updateButtonState() {
+    const btn = document.getElementById('continueBtn');
+    if(startPoint && endPoint && routeReady){
+        btn.disabled = false;
+        btn.innerHTML = `Такси қажет! <div class="btn-arrow" style="background:#fff; color:#000;">→</div>`;
+    } else {
+        btn.disabled = true;
+        btn.innerHTML = `Мекенжайды таңдаңыз <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
+    }
 }
 
 // === НҮКТЕЛЕРДІ (МАРКЕРЛЕРДІ) ОРНАТУ ===
@@ -381,16 +437,22 @@ async function setPoint(type,ll,address){
     startPoint=p;
     if(startMarker) startMarker.destroy();
     
+    // Суреттегідей көк маркер жасау
     startMarker = new mapgl.HtmlMarker(map, {
         coordinates: [p.lon, p.lat],
-        html: `<div style="background-color:#ffcc00; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🙋</div>`,
-        anchor: [0.5, 0.5]
+        html: `
+        <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
+            <div style="background:white; padding:6px 12px; border-radius:12px; font-weight:800; font-size:14px; color:black; white-space:nowrap; margin-bottom:8px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">Көлік ~7 мин</div>
+            <div style="background:#3b82f6; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.4);">🚶‍♂️</div>
+        </div>`,
+        anchor: [0.5, 0.9]
     });
         
-    document.getElementById('from').value=address || await reverseAddress(p);
+    const addr = address || await reverseAddress(p);
+    document.getElementById('from').value=addr;
+    // Жоғарғы жақтағы үлкен мәтінді өзгерту
+    document.getElementById('currentAddressText').textContent = addr.split(',')[0]; 
     document.getElementById('clearFrom').classList.add('show');
-    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
-    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз немесе іздеу жолағын қолданыңыз.';
   }
   else{
     endPoint=p;
@@ -399,17 +461,15 @@ async function setPoint(type,ll,address){
     
     endMarker = new mapgl.HtmlMarker(map, {
         coordinates: [p.lon, p.lat],
-        html: `<div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
+        html: `<div style="background-color:#101114; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
         anchor: [0.5, 0.5]
     });
         
     document.getElementById('to').value=address || await reverseAddress(p);
     document.getElementById('clearTo').classList.add('show');
-    document.getElementById('mapTitle').textContent='Бағыт есептелуде...';
-    const ok=await getRoute();
-    document.getElementById('mapTitle').textContent=ok?'Бағыт дайын!':'Бағытты есептеу мүмкін болмады';
+    await getRoute();
   }
-  updateContinue();
+  updateButtonState();
 }
 
 function setupSearch(inputId,boxId,type){
@@ -445,7 +505,6 @@ function setupSearch(inputId,boxId,type){
 async function getRoute(){
   if(!startPoint||!endPoint)return false;
   try{
-      // OSRM арқылы бағытты аламыз
       const url=`https://router.project-osrm.org/route/v1/driving/${startPoint.lon},${startPoint.lat};${endPoint.lon},${endPoint.lat}?overview=full&geometries=geojson`;
       const r=await fetch(url);
       const d=await r.json();
@@ -457,24 +516,22 @@ async function getRoute(){
       
       if(routeLine) routeLine.destroy();
       
-      // 2GIS Polyline құру
       routeLine = new mapgl.Polyline(map, {
-          coordinates: route.geometry.coordinates, // OSRM [lng, lat] формат қайтарады, 2GIS те соны күтеді!
+          coordinates: route.geometry.coordinates,
           width: 7,
-          color: '#f2b900'
+          color: '#3b82f6' // Көк сызық
       });
 
-      // Картаны бағытқа сай ыңғайлау (fitBounds)
       const coords = route.geometry.coordinates;
       const lats = coords.map(c => c[1]);
       const lngs = coords.map(c => c[0]);
       map.fitBounds({
           southWest: [Math.min(...lngs), Math.min(...lats)],
           northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: 50
+          padding: {top: 100, bottom: 250, left: 50, right: 50} // Панельдерге кедергі жасамас үшін
       });
 
-      routeReady=true; updateContinue(); return true;
+      routeReady=true; updateButtonState(); return true;
   }catch(e){
       console.error(e);
       return false;
@@ -486,7 +543,6 @@ function safe(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;'
 
 function continueToCars(){if(!routeReady){alert('Алдымен бағытты таңдаңыз.');return}calculatePrices();document.getElementById('routeSummary').innerHTML=`📍 ${safe(document.getElementById('from').value)}<br>🏁 ${safe(document.getElementById('to').value)}<br>📏 ${distanceKm.toFixed(1)} км`;showPage('page2')}
 function selectCar(k){selectedCar=k;document.querySelectorAll('.car').forEach(c=>c.classList.remove('selected'));document.getElementById(k).classList.add('selected')}
-function backToMap(){showPage('page1')}
 
 function continueToDetails(){
   document.getElementById('passengerSummary').innerHTML=`🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
@@ -516,6 +572,7 @@ async function makeOrder(){
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
 
+// Суреттерді жүктеу логикасы
 function setupPhotoInput(inputId, previewId) {
   document.getElementById(inputId).addEventListener('change', function() {
     const file = this.files[0], preview = document.getElementById(previewId);
@@ -598,7 +655,12 @@ async function registerDriver(){
   }
 }
 
-document.addEventListener('DOMContentLoaded',()=>{initMap();setupSearch('from','suggestFrom','A');setupSearch('to','suggestTo','B')});
+document.addEventListener('DOMContentLoaded',()=>{
+    initMap();
+    setupSearch('from','suggestFrom','A');
+    setupSearch('to','suggestTo','B');
+    updateButtonState();
+});
 </script>
 </body>
 </html>
