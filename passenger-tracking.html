@@ -2,82 +2,76 @@
 <html lang="kk">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>ҮРЖАР TAXI — Бақылау</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-body{margin:0;background:#101522;color:#fff;font-family:'Inter',sans-serif;min-height:100dvh}
-header{background:#ffd400;color:#111;padding:18px;text-align:center;font-weight:900;font-size:20px;border-bottom:2px solid #e5b800}
-main{max-width:650px;margin:auto;padding:16px}
-.card{background:#1c2536;padding:18px;border-radius:14px;margin-bottom:15px;border:1px solid #2e3a52}
-h2{margin:0 0 12px;font-size:18px;color:#ffcc00}
-.status{padding:12px;background:#243045;border-radius:9px;line-height:1.5;margin:12px 0;font-weight:600;text-align:center}
-.status.searching{color:#ffcc00}
-.status.accepted{color:#19d995}
-.status.in_progress{color:#60a5fa}
-#map{width:100%;height:380px;border-radius:12px;background:#1a2536;margin-top:10px;z-index:1;}
-button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-size:16px;font-weight:800;cursor:pointer;font-family:inherit}
-.btn-cancel{background:#e54848;color:white}
-.btn-home{background:#2d3a52;color:white}
-.small{color:#c5cede;font-size:13px;line-height:1.5;text-align:center;margin-top:10px}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+body { margin: 0; padding: 0; background: #101522; color: #fff; font-family: 'Inter', sans-serif; height: 100dvh; overflow: hidden; }
 
-/* КҮТУ ТАЙМЕРІ ҮШІН */
+/* КАРТА ТОЛЫҚ ЭКРАНДА */
+#map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+
+/* ҚАЛҚЫМАЛЫ ПАНЕЛЬДЕР (FLOATING UI) */
+.floating-panel {
+    position: absolute; left: 15px; right: 15px; z-index: 10;
+    background: rgba(28, 37, 54, 0.95); /* Қара-көк мөлдір фон */
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border-radius: 16px; border: 1px solid #2e3a52;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+    padding: 15px;
+}
+
+/* ЖОҒАРҒЫ ПАНЕЛЬ */
+.top-panel { top: 20px; }
+.top-panel h2 { margin: 0 0 10px; font-size: 16px; color: #ffcc00; text-align: center; }
+.status { padding: 12px; background: #243045; border-radius: 9px; line-height: 1.5; font-weight: 600; text-align: center; font-size: 15px; }
+.status.searching { color: #ffcc00; }
+.status.accepted { color: #19d995; }
+.status.in_progress { color: #60a5fa; }
+
+/* ТӨМЕНГІ ПАНЕЛЬ */
+.bottom-panel { bottom: 20px; padding-bottom: 25px; /* iPhone үшін төменгі саф */ }
+
+/* КҮТУ ТАЙМЕРІ */
 .wait-timer-box {
   background: linear-gradient(135deg, #1a3d30 0%, #1d493d 100%);
-  border: 2px solid #16bd79;
-  border-radius: 14px;
-  padding: 20px;
-  margin: 15px 0;
-  text-align: center;
-  display: none;
+  border: 2px solid #16bd79; border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center; display: none;
 }
-.wait-timer-box.paid {
-  background: linear-gradient(135deg, #2a1a1a 0%, #3a1f1f 100%);
-  border-color: #e54848;
-  animation: pulse 1.5s infinite;
-}
-@keyframes pulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.02); }
-}
-.wait-title { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
-.wait-timer { font-size: 36px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; margin: 10px 0; }
-.wait-desc { font-size: 13px; color: #cbd5e1; line-height: 1.5; }
-.wait-fee-text { font-size: 20px; font-weight: 800; color: #ffcc00; margin-top: 10px; display: none; }
+.wait-timer-box.paid { background: linear-gradient(135deg, #2a1a1a 0%, #3a1f1f 100%); border-color: #e54848; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+.wait-title { font-size: 14px; font-weight: 800; margin-bottom: 5px; }
+.wait-timer { font-size: 32px; font-weight: 900; color: #fff; font-variant-numeric: tabular-nums; margin: 5px 0; }
+.wait-desc { font-size: 12px; color: #cbd5e1; line-height: 1.4; }
+.wait-fee-text { font-size: 18px; font-weight: 800; color: #ffcc00; margin-top: 8px; display: none; }
 
 /* КҮТУ АҚЫСЫНЫҢ БЕЙДЖІ */
 .wait-fee-badge {
   background: linear-gradient(135deg, #3a2800 0%, #4a3300 100%);
-  border: 2px solid #ffcc00;
-  border-radius: 12px;
-  padding: 14px;
-  margin: 15px 0;
-  text-align: center;
-  display: none;
+  border: 2px solid #ffcc00; border-radius: 12px; padding: 12px; margin-bottom: 15px; text-align: center; display: none;
 }
-.wait-fee-badge .title { font-size: 13px; color: #ffcc00; margin-bottom: 6px; font-weight: 700; }
-.wait-fee-badge .amount { font-size: 28px; font-weight: 900; color: #fff; }
-.wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+.wait-fee-badge .title { font-size: 13px; color: #ffcc00; margin-bottom: 4px; font-weight: 700; }
+.wait-fee-badge .amount { font-size: 24px; font-weight: 900; color: #fff; }
+.wait-fee-badge .note { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+/* БАТЫРМАЛАР */
+button { width: 100%; border: 0; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; margin-top: 10px; transition: opacity 0.2s; }
+button:active { opacity: 0.8; }
+.btn-cancel { background: #e54848; color: white; margin-top: 0; }
+.btn-home { background: #2d3a52; color: white; }
 
 /* БАҒАЛАУ МОДАЛЬДІ ТЕРЕЗЕСІ */
 .rating-modal-overlay {
   position: fixed; top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0, 0, 0, 0.85); display: none;
-  justify-content: center; align-items: center; z-index: 9999;
-  backdrop-filter: blur(5px);
+  justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);
 }
 .rating-modal {
-  background: #1c2536; padding: 25px 20px; border-radius: 20px;
-  width: 90%; max-width: 400px; text-align: center;
-  border: 1px solid #2e3a52; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-  animation: slideUp 0.3s ease-out;
+  background: #1c2536; padding: 25px 20px; border-radius: 20px; width: 90%; max-width: 400px;
+  text-align: center; border: 1px solid #2e3a52; box-shadow: 0 10px 30px rgba(0,0,0,0.5); animation: slideUp 0.3s ease-out;
 }
-@keyframes slideUp {
-  from { transform: translateY(50px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
+@keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 .rating-modal h3 { margin: 0 0 8px; color: #fff; font-size: 22px; font-weight: 800; }
 .rating-modal p { color:#c5cede; font-size:14px; margin-bottom:20px; }
 .rating-stars { display: flex; justify-content: center; gap: 10px; margin: 20px 0 25px; }
@@ -85,42 +79,42 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 .star:hover, .star.active { color: #ffd400; transform: scale(1.15); }
 .rating-review { width: 100%; padding: 12px; border-radius: 10px; background: #101522; border: 1px solid #2e3a52; color: #fff; font-family: inherit; font-size: 14px; resize: none; margin-bottom: 15px; outline: none; }
 .rating-review:focus { border-color: #ffd400; }
-.btn-submit-rating { background: #ffd400; color: #111; font-weight: 900; width: 100%; padding: 15px; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; transition: background 0.2s; }
+.btn-submit-rating { background: #ffd400; color: #111; font-weight: 900; }
 .btn-submit-rating:disabled { background: #4a5568; color: #94a3b8; cursor: not-allowed; }
-.btn-submit-rating:not(:disabled):hover { background: #e5b800; }
 </style>
 </head>
 <body>
-<header>🚕 TULPAR TAXI — БАҚЫЛАУ</header>
-<main>
-  <div class="card">
-    <h2>📍 Жүргізушіні бақылау</h2>
-    <div id="status" class="status searching">Жүйеге қосылуда...</div>
-    
-    <!-- КҮТУ ТАЙМЕРІ -->
-    <div id="waitTimerBox" class="wait-timer-box">
-      <div class="wait-title">🚕 Жүргізуші келді!</div>
-      <div class="wait-timer" id="waitTimer">05:00</div>
-      <div class="wait-desc" id="waitDesc">5 минут тегін күту уақыты.</div>
-      <div class="wait-fee-text" id="waitFeeText">Күту ақысы: 0 ₸</div>
-    </div>
 
-    <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ -->
-    <div id="waitFeeBadge" class="wait-fee-badge">
-      <div class="title">💰 Күту ақысы</div>
-      <div class="amount" id="waitFeeAmount">0 ₸</div>
-      <div class="note" id="waitFeeNote">Сапар құнына қосылды</div>
-    </div>
+<!-- КАРТА -->
+<div id="map"></div>
 
-    <div id="map"></div>
-    <p class="small" id="updated">GPS дерегі күтілуде...</p>
-  </div>
+<!-- ЖОҒАРҒЫ ҚАЛҚЫМАЛЫ ПАНЕЛЬ -->
+<div class="floating-panel top-panel">
+  <h2>📍 Жүргізушіні бақылау</h2>
+  <div id="status" class="status searching">Жүйеге қосылуда...</div>
+</div>
+
+<!-- ТӨМЕНГІ ҚАЛҚЫМАЛЫ ПАНЕЛЬ -->
+<div class="floating-panel bottom-panel" id="bottomPanel">
   
-  <div class="card" id="cancelCard" style="display:none">
-    <button class="btn-cancel" onclick="cancelOrder()">❌ САПАРДАН БАС ТАРТУ</button>
-    <button class="btn-home" onclick="window.location.href='/index.html'">🏠 Басты бетке</button>
+  <!-- КҮТУ ТАЙМЕРІ -->
+  <div id="waitTimerBox" class="wait-timer-box">
+    <div class="wait-title">🚕 Жүргізуші келді!</div>
+    <div class="wait-timer" id="waitTimer">05:00</div>
+    <div class="wait-desc" id="waitDesc">5 минут тегін күту уақыты.</div>
+    <div class="wait-fee-text" id="waitFeeText">Күту ақысы: 0 ₸</div>
   </div>
-</main>
+
+  <!-- КҮТУ АҚЫСЫНЫҢ НӘТИЖЕСІ -->
+  <div id="waitFeeBadge" class="wait-fee-badge">
+    <div class="title">💰 Күту ақысы</div>
+    <div class="amount" id="waitFeeAmount">0 ₸</div>
+    <div class="note" id="waitFeeNote">Сапар құнына қосылды</div>
+  </div>
+
+  <button class="btn-cancel" id="btnCancelOrder" onclick="cancelOrder()">❌ САПАРДАН БАС ТАРТУ</button>
+  <button class="btn-home" onclick="window.location.href='/index.html'">🏠 Басты бетке</button>
+</div>
 
 <!-- БАҒАЛАУ ТЕРЕЗЕСІ -->
 <div id="ratingModal" class="rating-modal-overlay">
@@ -142,9 +136,7 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 <!-- 2GIS MapGL скриптін қосу -->
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
-// =========================================================
 // 🚨 ОСЫ ЖЕРГЕ ӨЗ 2GIS API КІЛТІҢІЗДІ ҚОЯСЫЗ 🚨
-// =========================================================
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7';
 
 const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
@@ -157,7 +149,7 @@ let notificationPlayed = false;
 let rideStartedAnnounced = false;
 let selectedRating = 0;
 let currentOrderStatus = "searching";
-let orderCoords = { pickup: null, destination: null }; // Бұл жерде [Lng, Lat] сақталады
+let orderCoords = { pickup: null, destination: null };
 
 // Дыбыс пен вибрация (Жүргізуші келгенде)
 function notifyArrival() {
@@ -187,8 +179,6 @@ function speakRideStarted() {
   rideStartedAnnounced = true;
   try {
     if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-  } catch (e) {}
-  try {
     if ('speechSynthesis' in window) {
       window.speechSynthesis.cancel();
       const text = "Сапар басталды. Белдіктеріңізді тағып отырыңыздар.";
@@ -196,17 +186,15 @@ function speakRideStarted() {
       utterance.lang = 'kk-KZ'; utterance.rate = 0.9; utterance.pitch = 1; utterance.volume = 1;
       window.speechSynthesis.speak(utterance);
     }
-  } catch (e) { console.error("Дауыс қатесі:", e); }
+  } catch (e) {}
 }
 
 // === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
 function initMap() {
   const savedLat = localStorage.getItem('passenger_last_lat');
   const savedLng = localStorage.getItem('passenger_last_lng');
-  
-  // 2GIS координаталарды [Lng, Lat] түрінде алады
   const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
-  const initialZoom = (savedLat && savedLng) ? 14 : 11;
+  const initialZoom = (savedLat && savedLng) ? 15 : 12;
 
   map = new mapgl.Map("map", {
       center: initialCoords,
@@ -218,6 +206,7 @@ function initMap() {
 async function checkStatus() {
   if (!orderId || !token) {
     document.getElementById("status").textContent = "Тапсырыс табылмады. Басты бетке оралыңыз.";
+    document.getElementById("btnCancelOrder").style.display = "none";
     return;
   }
   
@@ -233,28 +222,22 @@ async function checkStatus() {
     const st = document.getElementById("status");
     const timerBox = document.getElementById("waitTimerBox");
     const feeBadge = document.getElementById("waitFeeBadge");
-    document.getElementById("cancelCard").style.display = "block";
 
     // Координаталарды алу (2GIS үшін [Lng, Lat])
     if (d.order.pickup_latitude && !orderCoords.pickup) {
       orderCoords.pickup = [Number(d.order.pickup_longitude), Number(d.order.pickup_latitude)];
-      
       pickupMarker = new mapgl.HtmlMarker(map, {
           coordinates: orderCoords.pickup,
-          html: '<div style="font-size:28px;filter:drop-shadow(0 0 3px #000)">📍</div>',
+          html: '<div style="font-size:32px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.5))">📍</div>',
           anchor: [0.5, 1]
       });
-
-      // Картаны бірден жолаушының орнына центрлеу
       map.setCenter(orderCoords.pickup);
-      map.setZoom(15);
     }
     if (d.order.destination_latitude && !orderCoords.destination) {
       orderCoords.destination = [Number(d.order.destination_longitude), Number(d.order.destination_latitude)];
-      
       destinationMarker = new mapgl.HtmlMarker(map, {
           coordinates: orderCoords.destination,
-          html: '<div style="font-size:28px;filter:drop-shadow(0 0 3px #000)">🏁</div>',
+          html: '<div style="font-size:32px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.5))">🏁</div>',
           anchor: [0.5, 1]
       });
     }
@@ -282,7 +265,7 @@ async function checkStatus() {
         st.innerHTML = "✅ Жүргізуші тағайындалды! Келе жатыр...";
         timerBox.style.display = "none";
       }
-      loadLocation(); // Бұл маршрутты сызады
+      loadLocation();
       
     } else if (d.order.status === "in_progress") {
       st.className = "status in_progress";
@@ -291,26 +274,28 @@ async function checkStatus() {
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       
-      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
-      const wm = Number(d.order.waiting_minutes || d.order.waiting?.minutes || 0);
+      const wf = Number(d.order.waiting_fee || 0);
+      const wm = Number(d.order.waiting_minutes || 0);
       if (wf > 0) {
         feeBadge.style.display = "block";
         document.getElementById("waitFeeAmount").textContent = `${wf} ₸`;
         document.getElementById("waitFeeNote").textContent = `(${wm} мин ақылы күту — сапар құнына қосылды)`;
       }
-      loadLocation(); // Бұл маршрутты сызады
+      loadLocation();
       
     } else if (d.order.status === "completed") {
       st.className = "status accepted";
-      const wf = Number(d.order.waiting_fee || d.order.waiting?.fee || 0);
+      const wf = Number(d.order.waiting_fee || 0);
       st.innerHTML = "🏁 Сапар аяқталды. Рахмет!";
       if (wf > 0) {
         st.innerHTML += `<br><span style="color:#ffcc00;font-size:13px;margin-top:6px;display:inline-block">💰 Күту ақысы: ${wf} ₸ қосылды</span>`;
       }
-      document.getElementById("cancelCard").style.display = "none";
+      
+      document.getElementById("bottomPanel").style.display = "none"; // Батырмаларды жасыру
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
+      if (routeLine) routeLine.destroy(); // Маршрутты өшіру
 
       if (!d.order.rating && sessionStorage.getItem('rated_' + orderId) !== 'true') {
         document.getElementById("ratingModal").style.display = "flex";
@@ -319,12 +304,14 @@ async function checkStatus() {
     } else if (d.order.status === "cancelled") {
       st.className = "status searching";
       st.innerHTML = "❌ Тапсырыс тоқтатылды";
-      document.getElementById("cancelCard").style.display = "none";
+      document.getElementById("bottomPanel").style.display = "none";
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error("Status API қатесі:", e);
+  }
 }
 
 // 🚕 ЖҮРГІЗУШІНІҢ ОРНЫН АЛУ ЖӘНЕ МАРШРУТ СЫЗУ
@@ -336,31 +323,25 @@ async function loadLocation() {
     });
     const d = await r.json();
     
-    // Егер жүргізуші GPS-ті әлі қоспаған болса, күте тұрамыз
-    if (!d.success || !d.driverLocation) {
-        document.getElementById("updated").textContent = "⏳ Жүргізушінің GPS дерегі күтілуде...";
-        return;
-    }
+    if (!d.success || !d.driverLocation) return;
 
-    // 2GIS үшін [Lng, Lat]
     const driverPos = [Number(d.driverLocation.longitude), Number(d.driverLocation.latitude)];
     
-    // 1. Машинаны жылжыту
     if (!driverMarker) {
       driverMarker = new mapgl.HtmlMarker(map, {
           coordinates: driverPos,
-          html: '<div style="font-size:36px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.6))">🚕</div>',
+          html: '<div style="font-size:38px;filter:drop-shadow(0 4px 4px rgba(0,0,0,0.6))">🚕</div>',
           anchor: [0.5, 0.5]
       });
     } else {
       driverMarker.setCoordinates(driverPos);
     }
 
-    // 2. Маршрутты сызу
     drawRoute(driverPos);
 
-    document.getElementById("updated").textContent = "🔄 Соңғы жаңарту: " + new Date().toLocaleTimeString("kk-KZ");
-  } catch (e) {}
+  } catch (e) {
+    console.error("Location API қатесі:", e);
+  }
 }
 
 // 🗺️ OSRM КӨМЕГІМЕН ЖОЛ СЫЗУ
@@ -368,6 +349,7 @@ async function drawRoute(driverPos) {
   let start = null;
   let end = null;
 
+  // Егер сапар басталса, маршрут: Алу нүктесінен -> Бару нүктесіне
   if (currentOrderStatus === 'accepted' && orderCoords.pickup) {
     start = driverPos;
     end = orderCoords.pickup;
@@ -379,22 +361,20 @@ async function drawRoute(driverPos) {
   if (!start || !end) return;
 
   try {
-    // OSRM API арқылы көлік жүретін жолды аламыз (start және end [Lng, Lat] болып тұр)
     const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`);
     const data = await res.json();
 
     if (data.code === 'Ok' && data.routes.length > 0) {
-      if (routeLine) routeLine.destroy(); // Ескі жолды өшіру
+      if (routeLine) routeLine.destroy();
       
-      // Жаңа жолды салу (2GIS Polyline)
       routeLine = new mapgl.Polyline(map, {
           coordinates: data.routes[0].geometry.coordinates,
-          width: 6,
-          color: '#ffcc00',
-          opacity: 0.8
+          width: 7,
+          color: '#60a5fa', // Яндекс стиліндегі көк маршрут
+          opacity: 0.9
       });
 
-      // Картаны барлық нүктелерді қамтитындай ыңғайлау
+      // Картаны панельдерге кедергі жасамайтындай етіп ыңғайлау (Padding)
       const coords = data.routes[0].geometry.coordinates;
       const lats = coords.map(c => c[1]);
       const lngs = coords.map(c => c[0]);
@@ -402,7 +382,7 @@ async function drawRoute(driverPos) {
       map.fitBounds({
           southWest: [Math.min(...lngs), Math.min(...lats)],
           northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: 50
+          padding: { top: 160, bottom: 250, left: 50, right: 50 } // Жоғарғы және төменгі панельдер үшін
       });
     }
   } catch (e) {
@@ -461,6 +441,7 @@ async function cancelOrder() {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId, trackingToken: token })
     });
+    sessionStorage.removeItem("urzhar_taxi_order_id");
     alert("Тапсырыс тоқтатылды");
     window.location.href = "/index.html";
   } catch (e) { alert("Қате"); }
@@ -501,12 +482,7 @@ async function submitRating() {
     const r = await fetch("/api/order", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        orderId: orderId,
-        rating: selectedRating,
-        review: review,
-        trackingToken: token
-      })
+      body: JSON.stringify({ orderId, rating: selectedRating, review, trackingToken: token })
     });
     
     const d = await r.json();
@@ -523,6 +499,7 @@ async function submitRating() {
       btnSubmit.onclick = () => {
         document.getElementById('ratingModal').style.display = 'none';
         sessionStorage.setItem('rated_' + orderId, 'true');
+        sessionStorage.removeItem("urzhar_taxi_order_id"); // Тапсырысты тазалау
         window.location.href = '/index.html';
       };
     } else {
@@ -537,6 +514,7 @@ async function submitRating() {
   }
 }
 
+// Іске қосу
 initMap();
 checkStatus();
 pollTimer = setInterval(checkStatus, 5000);
