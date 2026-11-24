@@ -65,7 +65,18 @@ html, body {
 .gps-floating-btn.loading { animation: spin 1s linear infinite; pointer-events: none; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
-/* Төменгі қараңғы панель (Анимациясыз, бірден шығады) */
+/* БЕЛСЕНДІ ТАПСЫРЫС БАННЕРІ */
+#activeOrderBanner {
+    display: none; position: absolute; bottom: 190px; left: 15px; right: 15px; z-index: 200;
+    background: linear-gradient(135deg, #16bd79 0%, #0f9f63 100%);
+    color: white; padding: 16px; border-radius: 16px; text-align: center;
+    font-weight: 800; font-size: 16px; box-shadow: 0 6px 20px rgba(22, 189, 121, 0.4);
+    cursor: pointer; animation: pulseBanner 2s infinite;
+    border: 2px solid #1edb8b;
+}
+@keyframes pulseBanner { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
+/* Төменгі қараңғы панель */
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
 .input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:pointer;}
@@ -183,6 +194,11 @@ html, body {
 
   <!-- GPS/Компас батырмасы -->
   <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
+
+  <!-- БЕЛСЕНДІ ТАПСЫРЫС БАННЕРІ (Жаңа қосылды) -->
+  <div id="activeOrderBanner" onclick="goToTracking()">
+    🚕 Белсенді тапсырысыңыз бар. Бақылауға өту →
+  </div>
 
   <!-- Төменгі қалқымалы батырмалар (Тек Қолдау) -->
   <div class="floating-actions">
@@ -334,6 +350,23 @@ let onlineDriverMarkers = [];
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
+// ЖАҢА ФУНКЦИЯ: Белсенді тапсырысты тексеру
+function checkActiveOrder() {
+    const activeOrderId = sessionStorage.getItem("urzhar_taxi_order_id");
+    const activeToken = sessionStorage.getItem("urzhar_taxi_tracking_token");
+    
+    if (activeOrderId && activeToken) {
+        document.getElementById('activeOrderBanner').style.display = 'block';
+    } else {
+        document.getElementById('activeOrderBanner').style.display = 'none';
+    }
+}
+
+// ЖАҢА ФУНКЦИЯ: Бақылау бетіне өту
+function goToTracking() {
+    window.location.href = '/passenger-tracking.html';
+}
+
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
 function menuGo(id){closeMenu();showPage(id)}
@@ -420,7 +453,6 @@ async function confirmCenterPoint() {
 
         if(endMarker) endMarker.destroy();
         
-        // Бастапқыда бағасыз маркер құрылады
         endMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
             html: `
@@ -625,7 +657,6 @@ async function getRoute(){
       routeReady=true; 
       updateButtonState(); 
 
-      // 🚨 ТҮЗЕТІЛГЕН ЖЕРІ: Есептелген бағаны баратын жер маркерінің үстіне шығару
       if(endMarker) {
           endMarker.destroy();
           endMarker = new mapgl.HtmlMarker(map, {
@@ -701,9 +732,17 @@ async function makeOrder(){
     const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,phone,from:document.getElementById('from').value,to:document.getElementById('to').value,car:selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Комфорт+',distance:distanceKm.toFixed(1),price:currentPrices[selectedCar],pickup_latitude:startPoint.lat,pickup_longitude:startPoint.lon,destination_latitude:endPoint.lat,destination_longitude:endPoint.lon})});
     let result={};try{result=await response.json()}catch(e){}
     if(!response.ok)throw new Error(result.error||'Тапсырыс жіберілмеді.');
-    if(result.orderId&&result.trackingToken){sessionStorage.setItem("urzhar_taxi_order_id",result.orderId);sessionStorage.setItem("urzhar_taxi_tracking_token",result.trackingToken)}
+    
+    // Тапсырыс сәтті болғанда sessionStorage-ке сақтау
+    if(result.orderId&&result.trackingToken){
+        sessionStorage.setItem("urzhar_taxi_order_id",result.orderId);
+        sessionStorage.setItem("urzhar_taxi_tracking_token",result.trackingToken);
+        checkActiveOrder(); // Баннерді бірден көрсету
+    }
+    
     document.getElementById('finalSummary').innerHTML=`👤 ${safe(name)}<br>📞 ${safe(phone)}<br>🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
     showPage('page4');
+    
     if(result.orderId&&result.trackingToken){setTimeout(()=>{window.location.href='/passenger-tracking.html'},1500)}
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
 }
@@ -793,6 +832,7 @@ async function registerDriver(){
 document.addEventListener('DOMContentLoaded',()=>{
     initMap();
     updateButtonState();
+    checkActiveOrder(); // Бет жүктелгенде белсенді тапсырысты тексеру
 });
 </script>
 </body>
