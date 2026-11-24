@@ -142,10 +142,10 @@ button{width:100%;border:0;border-radius:10px;padding:15px;margin-top:10px;font-
 <!-- 2GIS MapGL скриптін қосу -->
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
-// ==========================================
-// БҰЛ ЖЕРГЕ 2GIS API КІЛТІҢІЗДІ ҚОЙЫҢЫЗ!
-// ==========================================
-const DG_API_KEY = 'СІЗДІҢ_2GIS_API_КІЛТІҢІЗ';
+// =========================================================
+// 🚨 ОСЫ ЖЕРГЕ ӨЗ 2GIS API КІЛТІҢІЗДІ ҚОЯСЫЗ 🚨
+// =========================================================
+const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7';
 
 const orderId = sessionStorage.getItem("urzhar_taxi_order_id");
 const token = sessionStorage.getItem("urzhar_taxi_tracking_token");
@@ -244,6 +244,10 @@ async function checkStatus() {
           html: '<div style="font-size:28px;filter:drop-shadow(0 0 3px #000)">📍</div>',
           anchor: [0.5, 1]
       });
+
+      // Картаны бірден жолаушының орнына центрлеу
+      map.setCenter(orderCoords.pickup);
+      map.setZoom(15);
     }
     if (d.order.destination_latitude && !orderCoords.destination) {
       orderCoords.destination = [Number(d.order.destination_longitude), Number(d.order.destination_latitude)];
