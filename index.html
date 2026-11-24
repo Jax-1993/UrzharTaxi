@@ -37,8 +37,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .address-info h2{margin:2px 0 0;font-size:18px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Төменгі қалқымалы батырмалар */
-.floating-actions{position:absolute;bottom:170px;left:15px;right:15px;z-index:100;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
-.yellow-qajet{pointer-events:auto;background:var(--yellow);color:#111;border:none;padding:12px 20px;border-radius:25px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(255,204,0,0.4);cursor:pointer}
+.floating-actions{position:absolute;bottom:180px;left:15px;right:15px;z-index:100;display:flex;justify-content:flex-end;align-items:flex-end;pointer-events:none} /* QAJET алынғандықтан оң жаққа ығыстырдық */
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
 
@@ -62,11 +61,10 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
 .clear-btn.show{display:flex}
 
-/* Негізгі батырма (Көк және Қараңғы күйі) */
-.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s; min-height: 60px;}
-.main-dark-btn.active-blue {background: var(--blue); color: white; box-shadow: 0 4px 15px rgba(59,130,246,0.4);}
-.main-dark-btn:disabled{opacity:0.5; cursor: not-allowed;}
-.btn-arrow{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.3s;}
+/* Негізгі батырма (Көк түсті) */
+.main-dark-btn{width:100%;background:var(--blue);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s; min-height: 60px; box-shadow: 0 4px 15px rgba(59,130,246,0.4);}
+.main-dark-btn:active {transform: scale(0.98);}
+.btn-arrow{background:#fff; color:var(--blue); width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;}
 
 /* Басқа беттер үшін жалпы стильдер */
 .page{display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#f2f3f5; z-index:200; overflow-y:auto;}
@@ -173,9 +171,8 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
   <!-- GPS/Компас батырмасы -->
   <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
 
-  <!-- Төменгі қалқымалы батырмалар -->
+  <!-- Төменгі қалқымалы батырмалар (Тек Қолдау) -->
   <div class="floating-actions">
-    <button class="yellow-qajet">★ Сізге QAJET</button>
     <div class="right-btns">
       <button class="dark-pill">☎ Қолдау</button>
     </div>
@@ -183,7 +180,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 
   <!-- Ең төменгі қараңғы панель -->
   <div class="bottom-panel" id="bottomPanel">
-    <!-- Бұл контейнер мекенжай таңдалғанда жасырылады -->
+    <!-- Бұл контейнер тек мекенжай таңдалғанша тұрады -->
     <div id="inputsContainer">
       <div class="input-wrapper">
         <input id="from" placeholder="📍 Қай жерден мінесіз?" readonly onclick="focusPickup()">
@@ -195,9 +192,9 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
       </div>
     </div>
     
-    <!-- Жалғастыру батырмасы -->
-    <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()" disabled>
-      <span></span> <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
+    <!-- 🚨 Жалғастыру батырмасы (Әзірге жасырынып тұрады, тек бағыт дайын болғанда шығады) -->
+    <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()" style="display: none;">
+      Жалғастыру <div class="btn-arrow">→</div>
     </button>
   </div>
 </section>
@@ -355,7 +352,7 @@ function initMap(){
       key: DG_API_KEY
   });
 
-  map.setPadding({ top: 100, bottom: 250, left: 0, right: 0 });
+  map.setPadding({ top: 100, bottom: 200, left: 0, right: 0 });
 
   map.on('moveend', () => {
       if(mapMode === 'route_ready') return;
@@ -548,21 +545,18 @@ function clearRoute(){
     updateButtonState();
 }
 
-// 🚨 ЖАҢА ЛОГИКА: Егер бағыт дайын болса, кірістерді жасырып, КӨК батырма шығару
+// 🚨 ЖАҢА ЛОГИКА: Егер бағыт дайын болса, кірістер жасырылып, КӨК батырма шығады
 function updateButtonState() {
     const btn = document.getElementById('continueBtn');
     const inputs = document.getElementById('inputsContainer');
 
     if(startPoint && endPoint && routeReady){
         inputs.style.display = 'none'; // Енгізу өрістерін жасыру
+        btn.style.display = 'flex';   // Көк батырманы көрсету
         btn.disabled = false;
-        btn.classList.add('active-blue'); // Көк түс қосу
-        btn.innerHTML = `Жалғастыру <div class="btn-arrow" style="background:#fff; color:#3b82f6;">→</div>`;
     } else {
         inputs.style.display = 'block'; // Енгізу өрістерін көрсету
-        btn.disabled = true;
-        btn.classList.remove('active-blue'); // Көк түсті алу
-        btn.innerHTML = `<span></span> <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
+        btn.style.display = 'none';    // Батырманы мүлдем жасыру (бос орын қалмайды)
     }
 }
 
@@ -611,7 +605,7 @@ async function getRoute(){
       map.fitBounds({
           southWest: [Math.min(...lngs), Math.min(...lats)],
           northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: {top: 100, bottom: 200, left: 50, right: 50}
+          padding: {top: 100, bottom: 150, left: 50, right: 50} // Астыңғы панель кішірейгендіктен padding азайтылды
       });
 
       calculatePrices();
@@ -643,7 +637,6 @@ function selectCar(k){
     selectedCar=k;
     document.querySelectorAll('.car').forEach(c=>c.classList.remove('selected'));
     document.getElementById(k).classList.add('selected');
-    updateButtonState();
 }
 
 function continueToDetails(){
