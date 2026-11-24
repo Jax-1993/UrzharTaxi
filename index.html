@@ -32,7 +32,7 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 /* Жоғарғы қалқымалы панель */
 .top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)}
 .menu-btn-floating{pointer-events:auto;background:rgba(30,32,38,0.9);border:none;color:white;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px)}
-.address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:45px;} /* Брендтің астында тұру үшін төмен түсірдік */
+.address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:45px;} 
 .address-info p{margin:0;font-size:12px;font-weight:600;color:#e5e7eb}
 .address-info h2{margin:2px 0 0;font-size:18px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
@@ -41,8 +41,30 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .yellow-qajet{pointer-events:auto;background:var(--yellow);color:#111;border:none;padding:12px 20px;border-radius:25px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(255,204,0,0.4);cursor:pointer}
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
-.gps-btn-round{background:rgba(30,32,38,0.9);color:white;border:none;width:45px;height:45px;border-radius:50%;font-size:22px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer;transition:transform 0.2s;}
-.gps-btn-round:active{transform:scale(0.9);}
+
+/* 🚨 ЖАҢА: GPS/Компас батырмасы (Экранның оң жағында қалқып тұрады) */
+.gps-floating-btn {
+    position: absolute;
+    right: 15px;
+    bottom: 250px; /* Төменгі панельден жоғарырақ тұрады */
+    z-index: 150;
+    background: white;
+    color: #3b82f6;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+.gps-floating-btn:active { transform: scale(0.9); background: #f0f0f0; }
+.gps-floating-btn.loading { animation: spin 1s linear infinite; pointer-events: none; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* Төменгі қараңғы панель */
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease;pointer-events:auto}
@@ -160,13 +182,14 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
     </div>
   </div>
 
+  <!-- 🚨 GPS/Компас батырмасы (Жеке қалқымалы) -->
+  <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
+
   <!-- Төменгі қалқымалы батырмалар -->
   <div class="floating-actions">
     <button class="yellow-qajet">★ Сізге QAJET</button>
     <div class="right-btns">
       <button class="dark-pill">☎ Қолдау</button>
-      <!-- КОМПАС (GPS) БАТЫРМАСЫ -->
-      <button class="gps-btn-round" onclick="flyToGPS()" title="Менің орнымды табу">🧭</button>
     </div>
   </div>
 
@@ -376,7 +399,6 @@ async function confirmCenterPoint() {
         
         if(startMarker) startMarker.destroy();
         
-        // 🚨 МАРКЕРГЕ "✕" БЕЛГІСІН ҚОСУ (Жоғарысына)
         startMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
             html: `
@@ -399,7 +421,6 @@ async function confirmCenterPoint() {
 
         if(endMarker) endMarker.destroy();
         
-        // 🚨 БАРАТЫН ЖЕР МАРКЕРІНЕ ДЕ "✕" ҚОСУ
         endMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
             html: `
@@ -417,20 +438,51 @@ async function confirmCenterPoint() {
     }
 }
 
-// === ЖЫЛДАМАЛЫ КОМПАС (GPS-ке бару) ===
+// === 🚨 ЖАҢА: КОМПАС (GPS) БАТЫРМАСЫНЫҢ ЛОГИКАСЫ ===
 function flyToGPS() {
-    if (userGpsMarker) {
-        // Егер GPS бұрын табылған болса, сол жерге жылдам ұшу
-        const coords = userGpsMarker.getCoordinates();
-        map.setCenter(coords);
-        map.setZoom(16);
-    } else {
-        // Егер GPS табылмаған болса, іздеуді бастау
-        enableGPS();
+    const btn = document.getElementById('gpsBtn');
+    btn.classList.add('loading'); // Айналмалы эффект қосады
+    
+    if (!navigator.geolocation) {
+        alert("Браузеріңіз GPS-ті қолдамайды.");
+        btn.classList.remove('loading');
+        return;
     }
+    
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            // Егер бұрын GPS белгісі болса, оны жою
+            if(userGpsMarker) userGpsMarker.destroy();
+            
+            // Адамның тұрған жеріне (көк нүкте) маркер қою
+            userGpsMarker = new mapgl.HtmlMarker(map, {
+                coordinates: [lng, lat],
+                html: `
+                <div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                    <div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div>
+                    <div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); z-index:2;"></div>
+                </div>`,
+                anchor: [0.5, 0.5]
+            });
+
+            // Картаны сол жерге жылжыту
+            map.setCenter([lng, lat]);
+            map.setZoom(16);
+            
+            btn.classList.remove('loading');
+        },
+        (err) => {
+            alert("GPS рұқсаты берілмеді немесе қате шықты. Браузер параметрлерінен рұқсат беріңіз.");
+            btn.classList.remove('loading');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
 }
 
-// === GPS БЕЛГІСІН ОРНАТУ ===
+// === GPS БЕЛГІСІН ОРНАТУ (Модальді терезеден шақырылады) ===
 function enableGPS() {
   const btn = document.getElementById('enableGpsBtn');
   btn.textContent = "Анықталуда..."; btn.disabled = true;
@@ -442,11 +494,10 @@ function enableGPS() {
       localStorage.setItem('passenger_last_lat', p.lat);
       localStorage.setItem('passenger_last_lng', p.lng);
       
-      // Нақты тұрған жерге көк нүкте қою
       if(userGpsMarker) userGpsMarker.destroy();
       userGpsMarker = new mapgl.HtmlMarker(map, {
           coordinates: [p.lng, p.lat],
-          html: `<div style="background-color:#2563eb; width:18px; height:18px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(37,99,235,0.8);"></div>`,
+          html: `<div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(37,99,235,0.8);"></div>`,
           anchor: [0.5, 0.5]
       });
 
@@ -472,21 +523,35 @@ async function reverseAddress(p){
     }
 }
 
-// === ТАЗАЛАУ (CLEAR) БАТЫРМАЛАРЫ ===
+// === 🚨 ТҮЗЕТІЛГЕН: ТАЗАЛАУ (CLEAR) ЛОГИКАСЫ ===
 function clearPoint(type){
   if(type==='A'){
-    startPoint = null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
+    // "Мінетін жердің" ✕ басылса, БАРЛЫҒЫ өшуі керек (себебі бастау нүктесі жоқ)
+    startPoint = null; endPoint = null;
+    document.getElementById('from').value=''; document.getElementById('to').value='';
+    document.getElementById('clearFrom').classList.remove('show'); document.getElementById('clearTo').classList.remove('show');
+    
     if(startMarker){ startMarker.destroy(); startMarker=null; }
+    if(endMarker){ endMarker.destroy(); endMarker=null; }
+    
     clearRoute();
+    
     mapMode = 'pickup';
     document.getElementById('centerPin').classList.add('show');
     document.getElementById('centerPinLabel').textContent = 'Мінетін жер';
     document.getElementById('centerPinIcon').textContent = '🚶‍♂️';
     document.getElementById('centerPinIcon').style.background = 'var(--blue)';
-  } else {
-    endPoint = null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
+    
+  } else if (type==='B') {
+    // "Баратын жердің" ✕ басылса, тек БАРАТЫН ЖЕР өшуі керек
+    endPoint = null;
+    document.getElementById('to').value='';
+    document.getElementById('clearTo').classList.remove('show');
+    
     if(endMarker){ endMarker.destroy(); endMarker=null; }
+    
     clearRoute();
+    
     mapMode = 'destination';
     document.getElementById('centerPin').classList.add('show');
     document.getElementById('centerPinLabel').textContent = 'Баратын жер';
