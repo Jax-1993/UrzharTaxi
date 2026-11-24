@@ -42,32 +42,19 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
 
-/* GPS/Компас батырмасы (Экранның оң жағында қалқып тұрады) */
+/* GPS/Компас батырмасы */
 .gps-floating-btn {
-    position: absolute;
-    right: 15px;
-    bottom: 250px;
-    z-index: 150;
-    background: white;
-    color: #3b82f6;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.25);
-    cursor: pointer;
-    transition: transform 0.2s, background 0.2s;
+    position: absolute; right: 15px; bottom: 250px; z-index: 150; background: white; color: #3b82f6;
+    border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+    cursor: pointer; transition: transform 0.2s, background 0.2s;
 }
 .gps-floating-btn:active { transform: scale(0.9); background: #f0f0f0; }
 .gps-floating-btn.loading { animation: spin 1s linear infinite; pointer-events: none; }
 @keyframes spin { 100% { transform: rotate(360deg); } }
 
 /* Төменгі қараңғы панель */
-.bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease;pointer-events:auto}
+.bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:all 0.3s ease;pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
 .input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:pointer;}
 .input-wrapper input::placeholder{color:#9ca3af}
@@ -75,10 +62,11 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
 .clear-btn.show{display:flex}
 
-.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.2s; min-height: 60px;}
-.main-dark-btn:active{background:#3a3d46}
+/* Негізгі батырма (Көк және Қараңғы күйі) */
+.main-dark-btn{width:100%;background:var(--dark-input);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:all 0.3s; min-height: 60px;}
+.main-dark-btn.active-blue {background: var(--blue); color: white; box-shadow: 0 4px 15px rgba(59,130,246,0.4);}
 .main-dark-btn:disabled{opacity:0.5; cursor: not-allowed;}
-.btn-arrow{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
+.btn-arrow{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.3s;}
 
 /* Басқа беттер үшін жалпы стильдер */
 .page{display:none; position:absolute; top:0; left:0; width:100%; height:100%; background:#f2f3f5; z-index:200; overflow-y:auto;}
@@ -195,17 +183,21 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 
   <!-- Ең төменгі қараңғы панель -->
   <div class="bottom-panel" id="bottomPanel">
-    <div class="input-wrapper">
-      <input id="from" placeholder="📍 Қай жерден мінесіз?" readonly onclick="focusPickup()">
-      <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
+    <!-- Бұл контейнер мекенжай таңдалғанда жасырылады -->
+    <div id="inputsContainer">
+      <div class="input-wrapper">
+        <input id="from" placeholder="📍 Қай жерден мінесіз?" readonly onclick="focusPickup()">
+        <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
+      </div>
+      <div class="input-wrapper">
+        <input id="to" placeholder="🏁 Қайда барасыз?" readonly onclick="focusDestination()">
+        <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
+      </div>
     </div>
-    <div class="input-wrapper">
-      <input id="to" placeholder="🏁 Қайда барасыз?" readonly onclick="focusDestination()">
-      <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
-    </div>
-    <!-- 🚨 ТҮЗЕТІЛГЕН: Батырманың іші бос тұрады, тек баға шыққанда толады -->
+    
+    <!-- Жалғастыру батырмасы -->
     <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()" disabled>
-      <span></span><div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
+      <span></span> <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
     </button>
   </div>
 </section>
@@ -556,16 +548,20 @@ function clearRoute(){
     updateButtonState();
 }
 
-// 🚨 ТҮЗЕТІЛГЕН: Батырмадағы артық жазуларды өшіріп, тек бағаны қалдыру
+// 🚨 ЖАҢА ЛОГИКА: Егер бағыт дайын болса, кірістерді жасырып, КӨК батырма шығару
 function updateButtonState() {
     const btn = document.getElementById('continueBtn');
+    const inputs = document.getElementById('inputsContainer');
+
     if(startPoint && endPoint && routeReady){
+        inputs.style.display = 'none'; // Енгізу өрістерін жасыру
         btn.disabled = false;
-        // Батырмада тек баға мен көрсеткі қалады
-        btn.innerHTML = `${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸ <div class="btn-arrow" style="background:#fff; color:#000;">→</div>`;
+        btn.classList.add('active-blue'); // Көк түс қосу
+        btn.innerHTML = `Жалғастыру <div class="btn-arrow" style="background:#fff; color:#3b82f6;">→</div>`;
     } else {
+        inputs.style.display = 'block'; // Енгізу өрістерін көрсету
         btn.disabled = true;
-        // Батырма бос тұрады, тек сұр көрсеткі қалады (ешқандай жазу жоқ)
+        btn.classList.remove('active-blue'); // Көк түсті алу
         btn.innerHTML = `<span></span> <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>`;
     }
 }
@@ -615,7 +611,7 @@ async function getRoute(){
       map.fitBounds({
           southWest: [Math.min(...lngs), Math.min(...lats)],
           northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: {top: 100, bottom: 300, left: 50, right: 50}
+          padding: {top: 100, bottom: 200, left: 50, right: 50}
       });
 
       calculatePrices();
