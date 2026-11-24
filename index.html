@@ -7,7 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--yellow:#ffcc00;--black:#101114;--green:#16bd79}
@@ -48,7 +47,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .suggestion:hover{background:#e0f9ec}
 .small{font-size:12px;color:#6b7280;line-height:1.5}
 .bottom-action{position:sticky;bottom:0;background:white;padding:12px 15px calc(14px + env(safe-area-inset-bottom));z-index:100;border-top:1px solid #eee}
-.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:14px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35)}
+.main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:14px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35);border:0;cursor:pointer}
 .main-btn:disabled{opacity:0.5;box-shadow:none}
 .continue-btn{display:none}.continue-btn.show{display:block}
 #page2,#page3,#page4{min-height:calc(100dvh - 65px)}
@@ -65,7 +64,7 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 .summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);padding:15px;border-radius:14px;margin:12px 0;line-height:1.9;border:1px solid #f0d875}
 .status{text-align:center;padding:40px 15px}
 .status h2{color:#169e68;font-size:24px;font-weight:900;margin-bottom:10px}
-.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px}
+.back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px;border:0;cursor:pointer}
 #carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
 .passenger-info{background:#eef2f7;padding:12px;border-radius:12px;margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;font-size:14px}
 .passenger-info b{color:#111}
@@ -99,7 +98,6 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
 <header>
   <button class="menu-btn" onclick="toggleMenu()">☰</button>
   <div class="brand">
-    <!-- Басты беттегі шынайы такси суреті -->
     <img src="https://cdn-icons-png.flaticon.com/512/4337/4337328.png" style="width:32px;height:32px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.3))" alt="Taxi">
     <div>
       <h2>TULPAR TAXI</h2>
@@ -190,13 +188,13 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   <div class="panel">
     <div class="title">🚘 Жүргізуші болып тіркелу</div>
     <p class="small" style="margin-bottom:15px;color:#d00;">Назар аударыңыз: Барлық құжаттар анық көрінуі керек!</p>
-    <input id="regName" placeholder="Аты-жөніңіз">
-    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз">
+    <input id="regName" placeholder="Аты-жөніңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
     <h3 style="margin-top:20px; font-size:16px;">🚗 Көлік туралы ақпарат</h3>
-    <input id="carBrand" placeholder="Көлік маркасы">
-    <input id="carModel" placeholder="Көлік моделі">
-    <input id="carYear" type="number" placeholder="Шыққан жылы">
-    <input id="carNumber" placeholder="Мемлекеттік нөмірі">
+    <input id="carBrand" placeholder="Көлік маркасы" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    <input id="carModel" placeholder="Көлік моделі" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    <input id="carYear" type="number" placeholder="Шыққан жылы" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
+    <input id="carNumber" placeholder="Мемлекеттік нөмірі" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
     <select id="carClass" style="width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px">
       <option value="economy">Эконом</option>
       <option value="comfort">Бизнес</option>
@@ -223,83 +221,69 @@ header{height:65px;background:linear-gradient(135deg,#101114 0%,#1a1d24 100%);co
   </div>
 </section>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- 2GIS MapGL скриптін қосу -->
+<script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
-let map,startPoint=null,endPoint=null,startMarker=null,endMarker=null,routeLine=null;
-let distanceKm=0,durationMin=0,routeReady=false,selectedCar='economy',currentPrices={};
+// ==========================================
+// БҰЛ ЖЕРГЕ 2GIS API КІЛТІҢІЗДІ ҚОЙЫҢЫЗ!
+// ==========================================
+const DG_API_KEY = 'СІЗДІҢ_2GIS_API_КІЛТІҢІЗ'; 
+
+let map;
+let startPoint=null, endPoint=null;
+let startMarker=null, endMarker=null, routeLine=null;
+let distanceKm=0, durationMin=0, routeReady=false, selectedCar='economy', currentPrices={};
 const prices={economy:{base:500,km:100},comfort:{base:700,km:140},plus:{base:1000,km:180}};
 const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let onlineDriverMarkers = [];
-
-// === ЖАҢА ИКОНКАЛАР (Такси тоқтатып тұрған адам және Ту) ===
-const pickupIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="background-color:#ffcc00; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🙋</div>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19]
-});
-
-const destIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
-    iconSize: [38, 38],
-    iconAnchor: [19, 19]
-});
-
-// === ЖОЛАУШЫ КАРТАСЫНДАҒЫ ЖҮРГІЗУШІ (Жоғарыдан қарағандағы шынайы көлік суреті) ===
-const driverOnlineIcon = L.divIcon({
-    className: 'custom-div-icon',
-    html: `<img src="https://cdn-icons-png.flaticon.com/512/3204/3204997.png" style="width:42px; height:42px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: rotate(0deg);">`,
-    iconSize: [42, 42],
-    iconAnchor: [21, 21]
-});
 
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
 function menuGo(id){closeMenu();showPage(id)}
 function goToDriver(){closeMenu();window.location.href='/driver-login.html'}
 function goToAdmin(){closeMenu();window.location.href='/admin.html'}
-function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');window.scrollTo(0,0);if(id==='page1'&&map)setTimeout(()=>map.invalidateSize(true),250)}
-function updateContinue(){document.getElementById('continueBtn').classList.toggle('show',!!(startPoint&&endPoint&&routeReady))}
 
-function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
-
-function clearPoint(type){
-  if(type==='A'){
-    startPoint=null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
-    if(startMarker){map.removeLayer(startMarker);startMarker=null}
-    clearRoute();
-    document.getElementById('mapTitle').textContent='Қай жерден мінесіз?';
-    document.getElementById('hint').textContent='Картадан мінетін жерді таңдаңыз.';
-  } else {
-    endPoint=null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
-    if(endMarker){map.removeLayer(endMarker);endMarker=null}
-    if(routeLine){map.removeLayer(routeLine);routeLine=null}
-    distanceKm=0; routeReady=false;
-    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
-    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз.';
-  }
-  updateContinue();
+function showPage(id){
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+    // 2GIS картасын өлшемін жаңарту үшін
+    if(id==='page1'&&map){ setTimeout(()=>map.setZoom(map.getZoom()), 250); } 
 }
 
+function updateContinue(){document.getElementById('continueBtn').classList.toggle('show',!!(startPoint&&endPoint&&routeReady))}
+function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
+
+// === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
 function initMap(){
   const savedLat = localStorage.getItem('passenger_last_lat');
   const savedLng = localStorage.getItem('passenger_last_lng');
-  const initialCoords = (savedLat && savedLng) ? [Number(savedLat), Number(savedLng)] : [48.0196, 66.9237];
-  const initialZoom = (savedLat && savedLng) ? 14 : 5;
+  
+  // 2GIS координаталарды [Lng, Lat] (Ұзындық, Ендік) түрінде алады!
+  const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
+  const initialZoom = (savedLat && savedLng) ? 14 : 11;
 
-  map=L.map('map').setView(initialCoords, initialZoom);
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
-  
-  map.on('click',async e=>{if(!startPoint)await setPoint('A',e.latlng);else if(!endPoint)await setPoint('B',e.latlng);else{clearPoint('B');await setPoint('A',e.latlng)}});
-  setTimeout(()=>map.invalidateSize(true),400);
+  map = new mapgl.Map('map', {
+      center: initialCoords,
+      zoom: initialZoom,
+      key: DG_API_KEY
+  });
+
+  // Картаға басқан кездегі оқиға
+  map.on('click', async (e) => {
+      const ll = { lat: e.lngLat[1], lng: e.lngLat[0] };
+      if(!startPoint) await setPoint('A', ll);
+      else if(!endPoint) await setPoint('B', ll);
+      else { clearPoint('B'); await setPoint('A', ll); }
+  });
+
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
-  
   setTimeout(loadOnlineDrivers, 2000);
   setInterval(loadOnlineDrivers, 10000);
 }
 
+// === ОНЛАЙН ТҰРҒАН ТАКСИЛЕРДІ КӨРСЕТУ ===
 async function loadOnlineDrivers() {
   if (!map) return;
   try {
@@ -307,15 +291,17 @@ async function loadOnlineDrivers() {
     const d = await r.json();
     if (!d.success || !d.drivers) return;
 
-    onlineDriverMarkers.forEach(m => map.removeLayer(m));
+    // Ескі маркерлерді өшіру
+    onlineDriverMarkers.forEach(m => m.destroy());
     onlineDriverMarkers = [];
 
     d.drivers.forEach(driver => {
       if (driver.current_latitude && driver.current_longitude) {
-        // Осы жерде шынайы көлік иконкасын қолданамыз
-        const marker = L.marker([Number(driver.current_latitude), Number(driver.current_longitude)], {
-          icon: driverOnlineIcon
-        }).addTo(map).bindPopup('Такси қозғалыста');
+        const marker = new mapgl.HtmlMarker(map, {
+            coordinates: [Number(driver.current_longitude), Number(driver.current_latitude)],
+            html: `<img src="https://cdn-icons-png.flaticon.com/512/3204/3204997.png" style="width:42px; height:42px; filter:drop-shadow(0 4px 6px rgba(0,0,0,0.5)); transform: rotate(0deg);">`,
+            anchor: [0.5, 0.5] // Ортасынан тұрады
+        });
         onlineDriverMarkers.push(marker);
       }
     });
@@ -333,7 +319,9 @@ function enableGPS() {
       localStorage.setItem('passenger_last_lat', p.lat);
       localStorage.setItem('passenger_last_lng', p.lng);
       
-      map.setView(p, 16);
+      map.setCenter([p.lng, p.lat]);
+      map.setZoom(16);
+      
       await setPoint('A', p);
       document.getElementById('hint').textContent = 'Енді баратын жерді таңдаңыз.';
       closeGeoModal();
@@ -345,30 +333,61 @@ function enableGPS() {
 }
 function closeGeoModal() { document.getElementById('geoModal').classList.remove('show'); }
 
-function clearRoute(){routeReady=false;distanceKm=0;durationMin=0;if(routeLine){map.removeLayer(routeLine);routeLine=null}if(endMarker){map.removeLayer(endMarker);endMarker=null}endPoint=null;document.getElementById('to').value='';document.getElementById('clearTo').classList.remove('show');updateContinue()}
-async function reverseAddress(p){try{const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18`);const d=await r.json();return d.display_name||`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}catch(e){return `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`}}
+function clearRoute(){
+    routeReady=false; distanceKm=0; durationMin=0;
+    if(routeLine){ routeLine.destroy(); routeLine=null; }
+    if(endMarker){ endMarker.destroy(); endMarker=null; }
+    endPoint=null;
+    document.getElementById('to').value='';
+    document.getElementById('clearTo').classList.remove('show');
+    updateContinue();
+}
 
+// Атауын анықтау (Nominatim-ді қалдырдық, ол жақсы істейді)
+async function reverseAddress(p){
+    try{
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lng}&zoom=18`);
+        const d=await r.json();
+        return d.display_name||`${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+    }catch(e){
+        return `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+    }
+}
+
+function clearPoint(type){
+  if(type==='A'){
+    startPoint=null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
+    if(startMarker){ startMarker.destroy(); startMarker=null; }
+    clearRoute();
+    document.getElementById('mapTitle').textContent='Қай жерден мінесіз?';
+    document.getElementById('hint').textContent='Картадан мінетін жерді таңдаңыз.';
+  } else {
+    endPoint=null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
+    if(endMarker){ endMarker.destroy(); endMarker=null; }
+    if(routeLine){ routeLine.destroy(); routeLine=null; }
+    distanceKm=0; routeReady=false;
+    document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
+    document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз.';
+  }
+  updateContinue();
+}
+
+// === НҮКТЕЛЕРДІ (МАРКЕРЛЕРДІ) ОРНАТУ ===
 async function setPoint(type,ll,address){
   const p={lat:ll.lat,lon:ll.lng};
   
   if(type==='A'){
     clearRoute();
     startPoint=p;
-    if(startMarker)map.removeLayer(startMarker);
+    if(startMarker) startMarker.destroy();
     
-    const popupHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; min-width:140px; gap:15px; font-family:'Inter',sans-serif;">
-        <span style="font-weight:700; font-size:14px; color:#101114;">Мінетін жер</span>
-        <button onclick="clearPoint('A')" style="background:#f0f0f0; border:none; border-radius:50%; width:24px; height:24px; color:#666; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
-      </div>
-    `;
-
-    startMarker=L.marker(ll, {icon: pickupIcon})
-        .addTo(map)
-        .bindPopup(popupHTML, {closeButton: false})
-        .openPopup();
+    startMarker = new mapgl.HtmlMarker(map, {
+        coordinates: [p.lon, p.lat],
+        html: `<div style="background-color:#ffcc00; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:22px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🙋</div>`,
+        anchor: [0.5, 0.5]
+    });
         
-    document.getElementById('from').value=address||await reverseAddress(p);
+    document.getElementById('from').value=address || await reverseAddress(p);
     document.getElementById('clearFrom').classList.add('show');
     document.getElementById('mapTitle').textContent='Енді баратын жерді таңдаңыз';
     document.getElementById('hint').textContent='Картадан баратын жерді белгілеңіз немесе іздеу жолағын қолданыңыз.';
@@ -376,21 +395,15 @@ async function setPoint(type,ll,address){
   else{
     endPoint=p;
     routeReady=false;
-    if(endMarker)map.removeLayer(endMarker);
+    if(endMarker) endMarker.destroy();
     
-    const popupHTML = `
-      <div style="display:flex; justify-content:space-between; align-items:center; min-width:140px; gap:15px; font-family:'Inter',sans-serif;">
-        <span style="font-weight:700; font-size:14px; color:#101114;">Баратын жер</span>
-        <button onclick="clearPoint('B')" style="background:#f0f0f0; border:none; border-radius:50%; width:24px; height:24px; color:#666; font-size:14px; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
-      </div>
-    `;
-
-    endMarker=L.marker(ll, {icon: destIcon})
-        .addTo(map)
-        .bindPopup(popupHTML, {closeButton: false})
-        .openPopup();
+    endMarker = new mapgl.HtmlMarker(map, {
+        coordinates: [p.lon, p.lat],
+        html: `<div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
+        anchor: [0.5, 0.5]
+    });
         
-    document.getElementById('to').value=address||await reverseAddress(p);
+    document.getElementById('to').value=address || await reverseAddress(p);
     document.getElementById('clearTo').classList.add('show');
     document.getElementById('mapTitle').textContent='Бағыт есептелуде...';
     const ok=await getRoute();
@@ -403,13 +416,69 @@ function setupSearch(inputId,boxId,type){
   const input=document.getElementById(inputId),box=document.getElementById(boxId);let timer;
   input.addEventListener('input',()=>{
     clearTimeout(timer); const q=input.value.trim(); if(q.length < 3) return;
-    timer=setTimeout(async()=>{try{const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q)}`);const data=await r.json();box.innerHTML='';data.forEach(item=>{const div=document.createElement('div');div.className='suggestion';div.textContent=item.display_name;div.onclick=async()=>{input.value=item.display_name;box.innerHTML='';const point={lat:Number(item.lat),lng:Number(item.lon)};if(type==='A')await setPoint('A',point,item.display_name);else await setPoint('B',point,item.display_name);map.setView(point,16)};box.appendChild(div)})}catch(e){box.innerHTML=''}},800);
+    timer=setTimeout(async()=>{
+        try{
+            const r=await fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=kz&q=${encodeURIComponent(q)}`);
+            const data=await r.json();
+            box.innerHTML='';
+            data.forEach(item=>{
+                const div=document.createElement('div');
+                div.className='suggestion';
+                div.textContent=item.display_name;
+                div.onclick=async()=>{
+                    input.value=item.display_name;box.innerHTML='';
+                    const point={lat:Number(item.lat),lng:Number(item.lon)};
+                    if(type==='A')await setPoint('A',point,item.display_name);
+                    else await setPoint('B',point,item.display_name);
+                    
+                    map.setCenter([point.lng, point.lat]);
+                    map.setZoom(16);
+                };
+                box.appendChild(div);
+            });
+        }catch(e){box.innerHTML=''}
+    },800);
   });
 }
 
+// === БАҒЫТТЫ СЫЗУ (ROUTING) ===
 async function getRoute(){
   if(!startPoint||!endPoint)return false;
-  try{const url=`https://router.project-osrm.org/route/v1/driving/${startPoint.lon},${startPoint.lat};${endPoint.lon},${endPoint.lat}?overview=full&geometries=geojson`;const r=await fetch(url);const d=await r.json();if(d.code!=='Ok'||!d.routes.length)return false;const route=d.routes[0];distanceKm=route.distance/1000;durationMin=Math.round(route.duration/60);if(routeLine)map.removeLayer(routeLine);routeLine=L.geoJSON(route.geometry,{style:{color:'#f2b900',weight:7}}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[30,30]});routeReady=true;updateContinue();return true}catch(e){return false}
+  try{
+      // OSRM арқылы бағытты аламыз
+      const url=`https://router.project-osrm.org/route/v1/driving/${startPoint.lon},${startPoint.lat};${endPoint.lon},${endPoint.lat}?overview=full&geometries=geojson`;
+      const r=await fetch(url);
+      const d=await r.json();
+      
+      if(d.code!=='Ok'||!d.routes.length)return false;
+      const route=d.routes[0];
+      distanceKm=route.distance/1000;
+      durationMin=Math.round(route.duration/60);
+      
+      if(routeLine) routeLine.destroy();
+      
+      // 2GIS Polyline құру
+      routeLine = new mapgl.Polyline(map, {
+          coordinates: route.geometry.coordinates, // OSRM [lng, lat] формат қайтарады, 2GIS те соны күтеді!
+          width: 7,
+          color: '#f2b900'
+      });
+
+      // Картаны бағытқа сай ыңғайлау (fitBounds)
+      const coords = route.geometry.coordinates;
+      const lats = coords.map(c => c[1]);
+      const lngs = coords.map(c => c[0]);
+      map.fitBounds({
+          southWest: [Math.min(...lngs), Math.min(...lats)],
+          northEast: [Math.max(...lngs), Math.max(...lats)],
+          padding: 50
+      });
+
+      routeReady=true; updateContinue(); return true;
+  }catch(e){
+      console.error(e);
+      return false;
+  }
 }
 
 function calculatePrices(){for(const k in prices){currentPrices[k]=Math.round(prices[k].base+distanceKm*prices[k].km)}document.getElementById('priceEconomy').textContent=currentPrices.economy.toLocaleString('kk-KZ')+' ₸';document.getElementById('priceComfort').textContent=currentPrices.comfort.toLocaleString('kk-KZ')+' ₸';document.getElementById('pricePlus').textContent=currentPrices.plus.toLocaleString('kk-KZ')+' ₸'}
