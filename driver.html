@@ -27,7 +27,7 @@ body {
 /* --- КАРТА --- */
 #map { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; background: #dce9e9; }
 
-/* --- ҚАЛҚЫМАЛЫ БАТЫРМАЛАР (FLOATING UI) --- */
+/* --- ЖОҒАРҒЫ ПАНЕЛЬ --- */
 .top-header {
     position: absolute; top: 15px; left: 15px; right: 15px; z-index: 10;
     display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none;
@@ -39,28 +39,63 @@ body {
 }
 .brand-pill span { color: var(--yellow); }
 
+/* --- БЕЛСЕНДІ ТАПСЫРЫС БАННЕРІ (Басқа беттерде көрінеді) --- */
+#floatingActiveOrderBanner {
+    position: absolute; top: 70px; left: 15px; right: 15px; z-index: 50;
+    background: linear-gradient(135deg, #16bd79 0%, #0f9f63 100%);
+    color: white; padding: 14px; border-radius: 12px; text-align: center;
+    font-weight: 800; font-size: 15px; box-shadow: 0 6px 20px rgba(22, 189, 121, 0.4);
+    cursor: pointer; display: none; animation: pulseBanner 2s infinite;
+}
+@keyframes pulseBanner { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
+
 /* --- ТӨМЕНГІ ПАНЕЛЬ (Активті тапсырыс) --- */
 #activeOrderPanel {
     position: absolute; bottom: 70px; left: 10px; right: 10px; z-index: 10;
     background: var(--panel-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 -5px 25px rgba(0,0,0,0.4);
-    padding: 16px; display: none; flex-direction: column; gap: 12px;
+    padding: 16px; display: none; flex-direction: column; gap: 10px;
     transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 #activeOrderPanel.show { transform: translateY(0); display: flex; }
 
-.order-details { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-.order-addresses { flex: 1; padding-right: 15px; }
-.addr-line { display: flex; gap: 8px; font-size: 14px; line-height: 1.4; margin-bottom: 8px; color: #e2e8f0; }
+/* Жолаушы және баға */
+.passenger-header { display: flex; justify-content: space-between; align-items: center; }
+.passenger-name-box { display: flex; align-items: center; gap: 10px; }
+.passenger-name { font-weight: 800; font-size: 18px; }
+.order-price { font-size: 22px; font-weight: 900; color: var(--yellow); }
+
+/* Мекенжайды ашу/жабу батырмасы */
+.toggle-addr-btn {
+    background: rgba(255,255,255,0.05); border: 1px solid var(--border); color: var(--text-muted);
+    padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center; transition: background 0.2s;
+}
+.toggle-addr-btn:active { background: rgba(255,255,255,0.1); }
+
+/* Мекенжайлар контейнері (жиналатын) */
+.addresses-container {
+    display: none; flex-direction: column; gap: 8px;
+    padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);
+}
+.addresses-container.expanded { display: flex; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+.addr-line { display: flex; gap: 8px; font-size: 13px; line-height: 1.4; color: #e2e8f0; }
 .addr-line b { color: white; }
-.order-price { text-align: right; font-size: 22px; font-weight: 900; color: var(--yellow); line-height: 1; }
-.order-price small { display: block; font-size: 11px; color: var(--text-muted); font-weight: 600; margin-top: 4px; }
 
-.passenger-info { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 10px 14px; border-radius: 12px; }
-.passenger-name { font-weight: 700; font-size: 15px; }
-.call-btn { background: var(--green); color: white; text-decoration: none; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 5px; }
+/* Қоңырау батырмасы */
+.call-btn { 
+    background: rgba(22, 189, 121, 0.15); color: var(--green); text-decoration: none; 
+    padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 14px; 
+    display: flex; align-items: center; gap: 5px; border: 1px solid rgba(22, 189, 121, 0.3);
+}
 
-.action-buttons { display: flex; flex-direction: column; gap: 8px; }
+/* Күту таймері */
+.wait-timer { background: rgba(255, 204, 0, 0.15); border: 1px solid rgba(255, 204, 0, 0.3); color: var(--yellow); padding: 10px; border-radius: 10px; text-align: center; font-weight: 700; font-size: 14px; display: none; }
+.wait-timer.free { background: rgba(22, 189, 121, 0.15); border-color: rgba(22, 189, 121, 0.3); color: var(--green); }
+
+.action-buttons { display: flex; flex-direction: column; gap: 8px; margin-top: 5px; }
 button { border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 800; font-family: inherit; cursor: pointer; transition: transform 0.1s; display: flex; justify-content: center; align-items: center; gap: 8px; }
 button:active { transform: scale(0.98); }
 button:disabled { opacity: 0.6; }
@@ -70,10 +105,6 @@ button:disabled { opacity: 0.6; }
 .btn-red { background: var(--red); color: white; }
 .btn-gray { background: #334155; color: white; }
 
-/* Күту таймері */
-.wait-timer { background: rgba(255, 204, 0, 0.15); border: 1px solid rgba(255, 204, 0, 0.3); color: var(--yellow); padding: 10px; border-radius: 10px; text-align: center; font-weight: 700; font-size: 14px; display: none; }
-.wait-timer.free { background: rgba(22, 189, 121, 0.15); border-color: rgba(22, 189, 121, 0.3); color: var(--green); }
-
 /* --- НАВИГАЦИЯ (Bottom Menu) --- */
 .bottom-nav {
     position: absolute; bottom: 0; left: 0; right: 0; height: 60px; z-index: 20;
@@ -82,11 +113,12 @@ button:disabled { opacity: 0.6; }
 }
 .nav-item {
     color: var(--text-muted); text-decoration: none; display: flex; flex-direction: column; align-items: center; gap: 4px;
-    font-size: 10px; font-weight: 600; cursor: pointer; transition: color 0.2s; width: 25%;
+    font-size: 10px; font-weight: 600; cursor: pointer; transition: color 0.2s; width: 25%; position: relative;
 }
 .nav-item.active { color: var(--yellow); }
 .nav-item .icon { font-size: 22px; line-height: 1; }
-.badge { position: absolute; top: 8px; right: 25%; background: var(--red); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; display: none; }
+.badge { position: absolute; top: -5px; right: 25%; background: var(--red); color: white; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 10px; display: none; }
+.nav-item.has-active-order .icon::after { content: ''; position: absolute; top: 0; right: 10px; width: 8px; height: 8px; background: var(--green); border-radius: 50%; border: 2px solid #17191e; }
 
 /* --- БАСҚА БЕТТЕР (Pages) --- */
 .page-container {
@@ -142,21 +174,34 @@ button:disabled { opacity: 0.6; }
     </div>
 </div>
 
+<!-- БЕЛСЕНДІ САПАР БАННЕРІ (Басқа беттерде көрінеді) -->
+<div id="floatingActiveOrderBanner" onclick="switchTab('map')">
+    🚕 Ағымдағы сапарға оралу →
+</div>
+
 <div class="loading-indicator" id="loadingIndicator">⏳ Жүктелуде...</div>
 
 <!-- БЕЛСЕНДІ ТАПСЫРЫС ПАНЕЛІ (Карта бетінде) -->
 <div id="activeOrderPanel">
-    <div class="order-details">
-        <div class="order-addresses">
-            <div class="addr-line"><span>📍</span> <b id="ui-pickup">Жүктелуде...</b></div>
-            <div class="addr-line"><span>🏁</span> <b id="ui-dest">Жүктелуде...</b></div>
+    <!-- Жолаушы аты және Бағасы -->
+    <div class="passenger-header">
+        <div class="passenger-name-box">
+            <div class="passenger-name" id="ui-passenger">Жолаушы</div>
+            <a href="#" class="call-btn" id="ui-call" style="display:none;">📞 Қоңырау</a>
         </div>
         <div class="order-price" id="ui-price">0 ₸</div>
     </div>
-    
-    <div class="passenger-info">
-        <div class="passenger-name" id="ui-passenger">Жолаушы</div>
-        <a href="#" class="call-btn" id="ui-call" style="display:none;">📞 Қоңырау</a>
+
+    <!-- Мекенжайды ашу/жабу батырмасы -->
+    <button class="toggle-addr-btn" id="toggleAddrBtn" onclick="toggleAddress()">
+        <span>📍 Мекенжайды көрсету</span>
+        <span id="toggleIcon">▼</span>
+    </button>
+
+    <!-- Мекенжайлар (жасырын тұрады) -->
+    <div class="addresses-container" id="addressesContainer">
+        <div class="addr-line"><span>📍</span> <b id="ui-pickup">Жүктелуде...</b></div>
+        <div class="addr-line"><span>🏁</span> <b id="ui-dest">Жүктелуде...</b></div>
     </div>
 
     <div class="wait-timer" id="ui-wait-timer">⏱ 5:00 тегін күту</div>
@@ -241,7 +286,6 @@ button:disabled { opacity: 0.6; }
 <script>
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7';
 
-// Күй айнымалылары
 let map, driverMarker, pickupMarker, destMarker, routeLine;
 let currentActiveOrder = null;
 let currentTab = 'map';
@@ -252,8 +296,8 @@ let lastOnlineSent = 0;
 let waitTimerInterval = null;
 let lastOrderIds = [];
 let isFirstLoad = true;
+let isAddrExpanded = false; // Мекенжай ашық/жабық күйі
 
-// Аудио (Жаңа тапсырыс дыбысы)
 let audioCtx = null;
 function initAudio() {
     try {
@@ -266,8 +310,7 @@ document.body.addEventListener('click', initAudio, { once: true });
 function playSound() {
     if (!audioCtx) return;
     try {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
+        const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
         osc.type = 'square'; osc.frequency.value = 880;
         osc.connect(gain); gain.connect(audioCtx.destination);
         gain.gain.setValueAtTime(0, audioCtx.currentTime);
@@ -278,7 +321,6 @@ function playSound() {
     } catch (e) {}
 }
 
-// --- УТИЛИТАЛАР ---
 function money(n) { return Number(n || 0).toLocaleString("kk-KZ") + " ₸"; }
 function escapeHtml(v) { return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
 
@@ -292,6 +334,24 @@ async function api(url, options = {}) {
 
 function showLoading(show) { document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none'; }
 
+// --- МЕКЕНЖАЙДЫ АШУ/ЖАБУ ---
+function toggleAddress() {
+    isAddrExpanded = !isAddrExpanded;
+    const container = document.getElementById('addressesContainer');
+    const icon = document.getElementById('toggleIcon');
+    const btnText = document.querySelector('#toggleAddrBtn span:first-child');
+    
+    if (isAddrExpanded) {
+        container.classList.add('expanded');
+        icon.textContent = '▲';
+        btnText.textContent = '📍 Мекенжайды жасыру';
+    } else {
+        container.classList.remove('expanded');
+        icon.textContent = '▼';
+        btnText.textContent = '📍 Мекенжайды көрсету';
+    }
+}
+
 // --- НАВИГАЦИЯ (Tabs) ---
 function switchTab(tab) {
     currentTab = tab;
@@ -303,6 +363,7 @@ function switchTab(tab) {
         if (map) setTimeout(() => map.setZoom(map.getZoom()), 100);
         document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
         document.getElementById('mapHeader').style.display = 'flex';
+        document.getElementById('floatingActiveOrderBanner').style.display = 'none'; // Баннерді жасыру
         if (currentActiveOrder) updateActivePanelUI(currentActiveOrder);
     } else {
         document.getElementById('map').style.display = 'none';
@@ -311,6 +372,13 @@ function switchTab(tab) {
         
         document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
         document.getElementById('page-' + tab).classList.add('active');
+
+        // Егер белсенді тапсырыс болса, басқа беттерде баннер көрсету
+        if (currentActiveOrder) {
+            document.getElementById('floatingActiveOrderBanner').style.display = 'block';
+        } else {
+            document.getElementById('floatingActiveOrderBanner').style.display = 'none';
+        }
 
         if (tab === 'orders') loadOrdersData();
         if (tab === 'stats') loadStatsData();
@@ -325,8 +393,6 @@ function initMap() {
     const center = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
 
     map = new mapgl.Map('map', { center: center, zoom: 15, key: DG_API_KEY });
-    
-    // Жүргізушінің өз көлігін көрсету
     updateDriverMarker(center[1], center[0]);
 }
 
@@ -352,10 +418,13 @@ function updateActivePanelUI(order) {
         if (routeLine) routeLine.destroy();
         if (pickupMarker) pickupMarker.destroy();
         if (destMarker) destMarker.destroy();
+        document.getElementById('nav-map').classList.remove('has-active-order');
         return;
     }
 
     panel.classList.add('show');
+    document.getElementById('nav-map').classList.add('has-active-order'); // Карта иконкасына жасыл нүкте қосу
+    
     document.getElementById('ui-pickup').textContent = order.pickup_address || 'Мекенжай жоқ';
     document.getElementById('ui-dest').textContent = order.destination_address || 'Мекенжай жоқ';
     document.getElementById('ui-price').textContent = money(order.price);
@@ -369,28 +438,32 @@ function updateActivePanelUI(order) {
         callBtn.style.display = 'none';
     }
 
+    // Мекенжай күйін қалпына келтіру
+    if (isAddrExpanded) {
+        document.getElementById('addressesContainer').classList.add('expanded');
+        document.getElementById('toggleIcon').textContent = '▲';
+    } else {
+        document.getElementById('addressesContainer').classList.remove('expanded');
+        document.getElementById('toggleIcon').textContent = '▼';
+    }
+
     const actionsBox = document.getElementById('ui-actions');
     actionsBox.innerHTML = '';
 
-    // 1. Қабылданды (Бірақ келген жоқ)
     if (order.status === 'accepted' && !order.driver_arrived_at) {
         actionsBox.innerHTML = `
             <button class="btn-purple" onclick="arriveOrder('${order.id}')">📍 ЖОЛАУШЫҒА КЕЛДІМ</button>
             <button class="btn-red" onclick="cancelOrder('${order.id}')">❌ БАС ТАРТУ</button>
         `;
         drawMapRoute(order, true);
-    } 
-    // 2. Келді (Күтуде)
-    else if (order.status === 'accepted' && order.driver_arrived_at) {
+    } else if (order.status === 'accepted' && order.driver_arrived_at) {
         actionsBox.innerHTML = `
             <button class="btn-blue" onclick="startRide('${order.id}')">🚕 САПАРДЫ БАСТАУ</button>
             <button class="btn-red" onclick="cancelOrder('${order.id}')">❌ БАС ТАРТУ</button>
         `;
         drawMapRoute(order, true);
         startWaitTimer(order);
-    } 
-    // 3. Сапар басталды (Жолда)
-    else if (order.status === 'in_progress') {
+    } else if (order.status === 'in_progress') {
         const gpsActive = (gpsWatchId !== null);
         const gpsBtn = gpsActive 
             ? `<button class="btn-gray" onclick="stopGps()">📡 GPS ТОҚТАТУ</button>`
@@ -427,8 +500,6 @@ function drawMapRoute(order, toPassenger) {
         anchor: [0.5, 1]
     });
 
-    // Егер жүргізуші жолаушыға бара жатса: Driver -> Pickup
-    // Егер сапар басталса: Pickup -> Destination
     let startCoord = toPassenger ? (driverMarker ? driverMarker.getCoordinates() : pickupPos) : pickupPos;
     let endCoord = toPassenger ? pickupPos : destPos;
 
@@ -444,7 +515,7 @@ function drawMapRoute(order, toPassenger) {
                 map.fitBounds({
                     southWest: [Math.min(...lngs), Math.min(...lats)],
                     northEast: [Math.max(...lngs), Math.max(...lats)],
-                    padding: { top: 100, bottom: 300, left: 50, right: 50 }
+                    padding: { top: 100, bottom: 250, left: 50, right: 50 }
                 });
             }
         }).catch(e => console.log(e));
@@ -483,7 +554,7 @@ async function acceptOrder(orderId) {
     showLoading(true);
     try {
         await api("/api/driver?action=accept", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId }) });
-        await loadOrdersData(); // Картаға шығу үшін деректерді жаңарту
+        await loadOrdersData();
         switchTab('map');
     } catch (e) { alert("❌ " + e.message); } finally { showLoading(false); }
 }
@@ -538,7 +609,6 @@ function startGps() {
         localStorage.setItem('driver_last_lat', lat); localStorage.setItem('driver_last_lng', lng);
         updateDriverMarker(lat, lng);
         
-        // Жүргізушінің қозғалысын серверге жіберу (әр 5 секунд сайын)
         const now = Date.now();
         if (now - lastOnlineSent > 5000) {
             lastOnlineSent = now;
@@ -549,7 +619,6 @@ function startGps() {
         }
     }, null, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
     
-    document.getElementById('ui-actions').querySelector('.btn-blue')?.outerHTML.replace('btn-blue', 'btn-gray');
     if (currentActiveOrder) updateActivePanelUI(currentActiveOrder);
 }
 
@@ -565,17 +634,20 @@ async function loadOrdersData() {
         const newOrders = Array.isArray(data.new_orders) ? data.new_orders : [];
         const myOrders = Array.isArray(data.my_orders) ? data.my_orders : [];
 
-        // Жаңа тапсырыс дыбысы
         const currentIds = newOrders.map(o => o.id);
         if (!isFirstLoad && currentIds.some(id => !lastOrderIds.includes(id))) playSound();
         lastOrderIds = currentIds;
         isFirstLoad = false;
 
-        // 1. Белсенді тапсырысты табу
         currentActiveOrder = myOrders.find(o => o.status === 'accepted' || o.status === 'in_progress') || null;
-        if (currentTab === 'map') updateActivePanelUI(currentActiveOrder);
+        
+        if (currentTab === 'map') {
+            updateActivePanelUI(currentActiveOrder);
+        } else {
+            // Басқа бетте болса, баннер көрсету
+            document.getElementById('floatingActiveOrderBanner').style.display = currentActiveOrder ? 'block' : 'none';
+        }
 
-        // 2. Жаңа тапсырыстар тізімін жаңарту (Екінші бет)
         const badge = document.getElementById('orderBadge');
         if (newOrders.length > 0) { badge.textContent = newOrders.length; badge.style.display = 'block'; } 
         else { badge.style.display = 'none'; }
@@ -599,7 +671,6 @@ async function loadOrdersData() {
             `).join('');
         }
 
-        // Егер картада белсенді тапсырыс болса, жүргізушінің орнын жаңарту
         if (currentActiveOrder && navigator.geolocation) {
              navigator.geolocation.getCurrentPosition(pos => {
                  updateDriverMarker(pos.coords.latitude, pos.coords.longitude);
@@ -697,14 +768,11 @@ async function logout() {
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
     setDriverOnline().then(() => {
-        // Бастапқы жүктеу
         loadOrdersData();
-        
-        // Интервалдар (Автоматты жаңарту)
         setInterval(() => {
             loadOrdersData();
             if (currentTab === 'chat') loadChatData();
-        }, 5000); // Тапсырыстарды тексеру
+        }, 5000);
     });
 });
 
