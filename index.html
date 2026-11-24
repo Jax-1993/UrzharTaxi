@@ -15,7 +15,14 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 /* Картаны толық экранға жаю */
 #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
 
-/* Жоғарғы қалқымалы панель (Мәзір және Мекенжай) */
+/* Орталық маркер (Яндекс стилінде) */
+.center-pin {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 50; pointer-events: none; display: none; flex-direction: column; align-items: center; transition: opacity 0.2s;}
+.center-pin.show {display: flex;}
+.center-pin-label {background: white; padding: 8px 14px; border-radius: 12px; font-weight: 800; font-size: 14px; color: black; margin-bottom: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); position: relative;}
+.center-pin-label::after {content: ''; position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%); border-width: 6px 6px 0; border-style: solid; border-color: white transparent transparent transparent;}
+.center-pin-icon {width: 46px; height: 46px; background: var(--blue); border: 3px solid white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.4);}
+
+/* Жоғарғы қалқымалы панель */
 .top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 100%)}
 .menu-btn-floating{pointer-events:auto;background:rgba(30,32,38,0.9);border:none;color:white;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px)}
 .address-info{pointer-events:auto;color:white;text-shadow:0 2px 4px rgba(0,0,0,0.5);margin-top:2px}
@@ -23,18 +30,18 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .address-info h2{margin:2px 0 0;font-size:20px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* Төменгі қалқымалы батырмалар */
-.floating-actions{position:absolute;bottom:150px;left:15px;right:15px;z-index:100;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
+.floating-actions{position:absolute;bottom:170px;left:15px;right:15px;z-index:100;display:flex;justify-content:space-between;align-items:flex-end;pointer-events:none}
 .yellow-qajet{pointer-events:auto;background:var(--yellow);color:#111;border:none;padding:12px 20px;border-radius:25px;font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;box-shadow:0 4px 15px rgba(255,204,0,0.4);cursor:pointer}
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(30,32,38,0.9);color:white;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
 .gps-btn-round{background:rgba(30,32,38,0.9);color:white;border:none;width:45px;height:45px;border-radius:50%;font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(0,0,0,0.3);backdrop-filter:blur(5px);cursor:pointer}
 
-/* Төменгі қараңғы панель (Кірістер және Такси шақыру батырмасы) */
+/* Төменгі қараңғы панель */
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--dark-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -10px 30px rgba(0,0,0,0.5);transition:transform 0.3s ease;pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
 .input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--dark-input);color:white;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s}
 .input-wrapper input::placeholder{color:#9ca3af}
-.input-wrapper input:focus{background:#3a3d46}
+.input-wrapper input:focus{background:#3a3d46; box-shadow: 0 0 0 2px var(--blue);}
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#4b4f5a;border:0;width:24px;height:24px;border-radius:50%;color:white;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
 .clear-btn.show{display:flex}
 
@@ -43,8 +50,8 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 .main-dark-btn:disabled{opacity:0.5}
 .btn-arrow{background:var(--blue);color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px}
 
-/* Ұсыныстар (іздеу нәтижелері) */
-.suggestions{background:var(--dark-input);border-radius:16px;overflow:hidden;margin-bottom:12px;max-height:200px;overflow-y:auto;}
+/* Ұсыныстар */
+.suggestions{background:var(--dark-input);border-radius:16px;overflow:hidden;margin-bottom:12px;max-height:200px;overflow-y:auto; position: absolute; width: calc(100% - 30px); z-index: 200;}
 .suggestion{padding:15px;border-bottom:1px solid #3a3d46;font-size:14px;color:#e5e7eb;cursor:pointer}
 .suggestion:hover{background:#3a3d46}
 
@@ -54,8 +61,6 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
 @keyframes slideIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 .panel{background:white;padding:20px;border-radius:24px 24px 0 0;min-height:100%; padding-bottom:100px;}
 .title{font-size:22px;font-weight:800;margin-bottom:15px}
-.hint{font-size:13px;color:#6b7280;margin-bottom:12px}
-.small{font-size:12px;color:#6b7280;line-height:1.5}
 
 .route-summary{background:linear-gradient(135deg,#fff6ce 0%,#fff9e0 100%);border:1px solid #f0d875;padding:15px;border-radius:16px;font-size:14px;line-height:1.8;margin-bottom:20px}
 .car{display:flex;gap:12px;background:white;padding:12px;border:2px solid #e8ebef;border-radius:18px;margin:12px 0;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.06);transition:all 0.2s}
@@ -129,9 +134,15 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
 </nav>
 
-<!-- БАСТЫ БЕТ (КАРТА ЖӘНЕ ҚАЛҚЫМАЛЫ ЭЛЕМЕНТТЕР) -->
+<!-- БАСТЫ БЕТ -->
 <section id="page1" class="page active" style="background: transparent;">
   <div id="map"></div>
+
+  <!-- ЯНДЕКС СТИЛІНДЕГІ ОРТАЛЫҚ МАРКЕР -->
+  <div id="centerPin" class="center-pin show">
+    <div class="center-pin-label">Көлік ~7 мин</div>
+    <div class="center-pin-icon">🚶‍♂️</div>
+  </div>
 
   <!-- Жоғарғы қалқымалы бөлік -->
   <div class="top-overlay">
@@ -154,20 +165,20 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
   <!-- Ең төменгі қараңғы панель -->
   <div class="bottom-panel" id="bottomPanel">
     <div class="input-wrapper">
-      <input id="from" placeholder="📍 Қай жерден мінесіз?" oninput="toggleClearBtn('from')">
+      <input id="from" placeholder="📍 Қай жерден мінесіз?" oninput="toggleClearBtn('from')" onfocus="setPickupMode(true)">
       <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
     </div>
     <div id="suggestFrom" class="suggestions"></div>
 
     <div class="input-wrapper">
-      <input id="to" placeholder="🏁 Қайда барасыз?" oninput="toggleClearBtn('to')">
+      <input id="to" placeholder="🏁 Қайда барасыз?" oninput="toggleClearBtn('to')" onfocus="setPickupMode(false)">
       <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
     </div>
     <div id="suggestTo" class="suggestions"></div>
 
     <!-- Такси шақыру батырмасы -->
     <button id="continueBtn" class="main-dark-btn" onclick="continueToCars()">
-      Такси қажет! <div class="btn-arrow">→</div>
+      Мекенжайды таңдаңыз <div class="btn-arrow" style="background:#4b4f5a; color:#9ca3af;">→</div>
     </button>
   </div>
 </section>
@@ -268,7 +279,6 @@ body{margin:0;font-family:'Inter',sans-serif;background:var(--black);color:#1717
   </div>
 </section>
 
-<!-- 2GIS MapGL скриптін қосу -->
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
 // =========================================================
@@ -278,12 +288,14 @@ const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7';
 
 let map;
 let startPoint=null, endPoint=null;
-let startMarker=null, endMarker=null, routeLine=null;
+let routeLine=null;
 let distanceKm=0, durationMin=0, routeReady=false, selectedCar='economy', currentPrices={};
 const prices={economy:{base:500,km:100},comfort:{base:700,km:140},plus:{base:1000,km:180}};
 const savedName = localStorage.getItem('tulpar_passenger_name');
 const savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let onlineDriverMarkers = [];
+let isPickupMode = true; // Басында жүктелу режимі қосулы тұрады
+let moveDebounceTimer;
 
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
@@ -295,17 +307,29 @@ function showPage(id){
     document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     
-    // Карта тек 1-бетте көрінуі үшін (қалған беттер ақ фонмен жабылады)
     if(id==='page1'&&map){ 
         setTimeout(()=>map.setZoom(map.getZoom()), 100); 
         document.getElementById('map').style.display = 'block';
     } else {
-        // Қалған беттерде картаны жасыру (егер page1-де болмасақ)
         if(id !== 'page1') document.getElementById('map').style.display = 'none';
     }
 }
 
 function toggleClearBtn(id){document.getElementById('clear'+id.charAt(0).toUpperCase()+id.slice(1)).classList.toggle('show', document.getElementById(id).value.length > 0)}
+
+// === ОРТАЛЫҚ МАРКЕР РЕЖИМІ (ЯНДЕКС СТИЛІ) ===
+function setPickupMode(isPickup) {
+    isPickupMode = isPickup;
+    const pin = document.getElementById('centerPin');
+    if (isPickup) {
+        pin.classList.add('show');
+        if(startPoint && !endPoint) {
+            map.setCenter([startPoint.lon, startPoint.lat]);
+        }
+    } else {
+        pin.classList.remove('show');
+    }
+}
 
 // === 2GIS КАРТАСЫН ІСКЕ ҚОСУ ===
 function initMap(){
@@ -313,7 +337,7 @@ function initMap(){
   const savedLng = localStorage.getItem('passenger_last_lng');
   
   const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
-  const initialZoom = (savedLat && savedLng) ? 14 : 11;
+  const initialZoom = (savedLat && savedLng) ? 16 : 12;
 
   map = new mapgl.Map('map', {
       center: initialCoords,
@@ -321,16 +345,49 @@ function initMap(){
       key: DG_API_KEY
   });
 
+  // Экранның төменгі жағында панель бар, сондықтан картаның орталығын жоғарырақ ығыстырамыз
+  map.setPadding({ top: 100, bottom: 250, left: 0, right: 0 });
+
+  // Карта тоқтаған кезде (жылжыту аяқталғанда) координатаны алу
+  map.on('moveend', () => {
+      if(!isPickupMode) return;
+      
+      clearTimeout(moveDebounceTimer);
+      moveDebounceTimer = setTimeout(async () => {
+          const center = map.getCenter();
+          const newPoint = { lat: center[1], lon: center[0] };
+          
+          // Егер координата бұрынғысынан өзгерсе ғана жаңартамыз
+          if(!startPoint || Math.abs(startPoint.lat - newPoint.lat) > 0.0001 || Math.abs(startPoint.lon - newPoint.lon) > 0.0001) {
+              startPoint = newPoint;
+              localStorage.setItem('passenger_last_lat', startPoint.lat);
+              localStorage.setItem('passenger_last_lng', startPoint.lon);
+              
+              const addr = await reverseAddress(startPoint);
+              document.getElementById('from').value = addr;
+              document.getElementById('currentAddressText').textContent = addr.split(',')[0];
+              document.getElementById('clearFrom').classList.add('show');
+              
+              if(endPoint) await getRoute(); // Егер баратын жер бұрын таңдалса, бағытты жаңарту
+              updateButtonState();
+          }
+      }, 600); // 600ms күту (API-ге тым көп сұраныс кетпес үшін)
+  });
+
+  // Картаға басқан кезде (тек баратын жерді таңдау үшін)
   map.on('click', async (e) => {
+      if(isPickupMode) return; // Егер мінетін жер режимінде болсақ, басуға рұқсат бермейміз
+      
       const ll = { lat: e.lngLat[1], lng: e.lngLat[0] };
-      if(!startPoint) await setPoint('A', ll);
-      else if(!endPoint) await setPoint('B', ll);
-      else { clearPoint('B'); await setPoint('A', ll); }
+      await setEndPoint(ll);
   });
 
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
   setTimeout(loadOnlineDrivers, 2000);
   setInterval(loadOnlineDrivers, 10000);
+  
+  // Бастапқы координата бойынша мекенжайды анықтау
+  setTimeout(() => map.emit('moveend'), 1000);
 }
 
 // === ОНЛАЙН ТҰРҒАН ТАКСИЛЕРДІ КӨРСЕТУ ===
@@ -371,7 +428,7 @@ function enableGPS() {
       map.setCenter([p.lng, p.lat]);
       map.setZoom(16);
       
-      await setPoint('A', p);
+      setPickupMode(true); // Маркерді көрсету
       closeGeoModal();
       btn.textContent = "Қосу"; btn.disabled = false;
     },
@@ -384,7 +441,6 @@ function closeGeoModal() { document.getElementById('geoModal').classList.remove(
 function clearRoute(){
     routeReady=false; distanceKm=0; durationMin=0;
     if(routeLine){ routeLine.destroy(); routeLine=null; }
-    if(endMarker){ endMarker.destroy(); endMarker=null; }
     endPoint=null;
     document.getElementById('to').value='';
     document.getElementById('clearTo').classList.remove('show');
@@ -393,30 +449,29 @@ function clearRoute(){
 
 async function reverseAddress(p){
     try{
-        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lng}&zoom=18`);
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18`);
         const d=await r.json();
-        return d.display_name||`${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+        return d.display_name||`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
     }catch(e){
-        return `${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+        return `${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
     }
 }
 
 function clearPoint(type){
   if(type==='A'){
-    startPoint=null; document.getElementById('from').value=''; document.getElementById('clearFrom').classList.remove('show');
-    document.getElementById('currentAddressText').textContent = 'Анықталуда...';
-    if(startMarker){ startMarker.destroy(); startMarker=null; }
+    // Мінетін жерді өшіру (қайтадан GPS-ке қарай жылжытамыз)
+    setPickupMode(true);
     clearRoute();
   } else {
+    // Баратын жерді өшіру
     endPoint=null; document.getElementById('to').value=''; document.getElementById('clearTo').classList.remove('show');
-    if(endMarker){ endMarker.destroy(); endMarker=null; }
     if(routeLine){ routeLine.destroy(); routeLine=null; }
     distanceKm=0; routeReady=false;
+    setPickupMode(false);
   }
   updateButtonState();
 }
 
-// Батырманың күйін жаңарту (Жасыл немесе Сұр)
 function updateButtonState() {
     const btn = document.getElementById('continueBtn');
     if(startPoint && endPoint && routeReady){
@@ -428,47 +483,25 @@ function updateButtonState() {
     }
 }
 
-// === НҮКТЕЛЕРДІ (МАРКЕРЛЕРДІ) ОРНАТУ ===
-async function setPoint(type,ll,address){
+// === БАРАТЫН ЖЕРДІ ОРНАТУ ===
+async function setEndPoint(ll, address){
   const p={lat:ll.lat,lon:ll.lng};
+  endPoint=p;
+  routeReady=false;
   
-  if(type==='A'){
-    clearRoute();
-    startPoint=p;
-    if(startMarker) startMarker.destroy();
-    
-    // Суреттегідей көк маркер жасау
-    startMarker = new mapgl.HtmlMarker(map, {
-        coordinates: [p.lon, p.lat],
-        html: `
-        <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
-            <div style="background:white; padding:6px 12px; border-radius:12px; font-weight:800; font-size:14px; color:black; white-space:nowrap; margin-bottom:8px; box-shadow:0 4px 10px rgba(0,0,0,0.3);">Көлік ~7 мин</div>
-            <div style="background:#3b82f6; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid white; box-shadow:0 4px 10px rgba(0,0,0,0.4);">🚶‍♂️</div>
-        </div>`,
-        anchor: [0.5, 0.9]
-    });
-        
-    const addr = address || await reverseAddress(p);
-    document.getElementById('from').value=addr;
-    // Жоғарғы жақтағы үлкен мәтінді өзгерту
-    document.getElementById('currentAddressText').textContent = addr.split(',')[0]; 
-    document.getElementById('clearFrom').classList.add('show');
-  }
-  else{
-    endPoint=p;
-    routeReady=false;
-    if(endMarker) endMarker.destroy();
-    
-    endMarker = new mapgl.HtmlMarker(map, {
-        coordinates: [p.lon, p.lat],
-        html: `<div style="background-color:#101114; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
-        anchor: [0.5, 0.5]
-    });
-        
-    document.getElementById('to').value=address || await reverseAddress(p);
-    document.getElementById('clearTo').classList.add('show');
-    await getRoute();
-  }
+  const endMarker = new mapgl.HtmlMarker(map, {
+      coordinates: [p.lon, p.lat],
+      html: `<div style="background-color:#101114; width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>`,
+      anchor: [0.5, 0.5]
+  });
+      
+  document.getElementById('to').value=address || await reverseAddress(p);
+  document.getElementById('clearTo').classList.add('show');
+  
+  // Баратын жер таңдалған соң, мінетін жер маркерін жасырамыз
+  setPickupMode(false);
+  
+  await getRoute();
   updateButtonState();
 }
 
@@ -488,11 +521,17 @@ function setupSearch(inputId,boxId,type){
                 div.onclick=async()=>{
                     input.value=item.display_name;box.innerHTML='';
                     const point={lat:Number(item.lat),lng:Number(item.lon)};
-                    if(type==='A')await setPoint('A',point,item.display_name);
-                    else await setPoint('B',point,item.display_name);
-                    
-                    map.setCenter([point.lng, point.lat]);
-                    map.setZoom(16);
+                    if(type==='A'){
+                        startPoint = {lat: point.lat, lon: point.lng};
+                        map.setCenter([point.lng, point.lat]);
+                        document.getElementById('currentAddressText').textContent = item.display_name.split(',')[0];
+                        document.getElementById('from').value = item.display_name;
+                        setPickupMode(true);
+                    } else {
+                        await setEndPoint(point, item.display_name);
+                        map.setCenter([point.lng, point.lat]);
+                        map.setZoom(15);
+                    }
                 };
                 box.appendChild(div);
             });
@@ -501,7 +540,7 @@ function setupSearch(inputId,boxId,type){
   });
 }
 
-// === БАҒЫТТЫ СЫЗУ (ROUTING) ===
+// === БАҒЫТТЫ СЫЗУ (ROUTING) - ТҮЗЕТІЛГЕН НҰСҚА ===
 async function getRoute(){
   if(!startPoint||!endPoint)return false;
   try{
@@ -509,17 +548,24 @@ async function getRoute(){
       const r=await fetch(url);
       const d=await r.json();
       
-      if(d.code!=='Ok'||!d.routes.length)return false;
+      console.log("OSRM Жауабы:", d); // Қатені анықтау үшін консольге шығарамыз
+      
+      if(d.code!=='Ok'||!d.routes.length) {
+          console.error("Бағыт табылмады, код:", d.code);
+          return false;
+      }
       const route=d.routes[0];
       distanceKm=route.distance/1000;
       durationMin=Math.round(route.duration/60);
       
       if(routeLine) routeLine.destroy();
       
+      // 2GIS-те сызықтың көрінуі үшін zIndex береміз және түсін анықтаймыз
       routeLine = new mapgl.Polyline(map, {
           coordinates: route.geometry.coordinates,
           width: 7,
-          color: '#3b82f6' // Көк сызық
+          color: '#3b82f6',
+          zIndex: 10 // Картада басқа белгілерден жоғары тұруы үшін
       });
 
       const coords = route.geometry.coordinates;
@@ -528,12 +574,12 @@ async function getRoute(){
       map.fitBounds({
           southWest: [Math.min(...lngs), Math.min(...lats)],
           northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: {top: 100, bottom: 250, left: 50, right: 50} // Панельдерге кедергі жасамас үшін
+          padding: {top: 100, bottom: 300, left: 50, right: 50} // Картаны маркерлер мен панельдерге сай ыңғайлау
       });
 
       routeReady=true; updateButtonState(); return true;
   }catch(e){
-      console.error(e);
+      console.error("Маршрут алу қатесі:", e);
       return false;
   }
 }
