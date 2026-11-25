@@ -19,18 +19,8 @@ html, body {
 
 #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
 
-/* Жоғарғы бренд ақ түске ауыстырылды */
 .top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); color: #101114; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.15); backdrop-filter: blur(10px); pointer-events: none; letter-spacing: 0.5px;}
 .top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));}
-
-/* Профиль батырмасы ақ түске ауыстырылды */
-.profile-btn-floating {
-    position: absolute; top: 20px; right: 15px; z-index: 150;
-    background: rgba(255,255,255,0.95); border: none; color: #101114;
-    width: 45px; height: 45px; border-radius: 50%; font-size: 20px;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); backdrop-filter: blur(10px);
-}
 
 .center-pin {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 50; pointer-events: auto; cursor: pointer; display: none; flex-direction: column; align-items: center; transition: transform 0.1s;}
 .center-pin:active {transform: translate(-50%, -100%) scale(0.9);}
@@ -41,7 +31,6 @@ html, body {
 .center-pin.show .center-pin-icon {animation: pulse 2s infinite;}
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
-/* Жоғарғы градиент ақшыл түске ауыстырылды */
 .top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)}
 .menu-btn-floating{pointer-events:auto;background:rgba(255,255,255,0.95);border:none;color:#101114;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px)}
 .address-info{pointer-events:auto;color:#101114;margin-top:45px;} 
@@ -50,7 +39,6 @@ html, body {
 
 .floating-actions{position:absolute;bottom:180px;left:15px;right:15px;z-index:100;display:flex;justify-content:flex-end;align-items:flex-end;pointer-events:none}
 .right-btns{display:flex;gap:10px;pointer-events:auto}
-/* Қолдау батырмасы ақ түске ауыстырылды */
 .dark-pill{background:rgba(255,255,255,0.95);color:#101114;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);cursor:pointer}
 
 .gps-floating-btn {
@@ -72,10 +60,8 @@ html, body {
 }
 @keyframes pulseBanner { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
-/* Төменгі панель ақ түске ауыстырылды */
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--light-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -5px 20px rgba(0,0,0,0.1);pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
-/* Инпуттар ашық сұр түске ауыстырылды */
 .input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--light-input);color:#101114;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:pointer;}
 .input-wrapper input::placeholder{color:#6b7280}
 .input-wrapper input:focus{background:#e5e7eb; box-shadow: 0 0 0 2px var(--blue);}
@@ -111,7 +97,6 @@ html, body {
 #driverRegister h3 {margin-top:20px; font-size:16px;}
 #carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
 
-/* Бүйір мәзір ақ түске ауыстырылды */
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#ffffff;color:#101114;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.1)}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:15px}
@@ -152,7 +137,10 @@ html, body {
     <h2>TULPAR TAXI</h2>
     <button class="close-menu" onclick="toggleMenu()">×</button>
   </div>
-  <button class="menu-item" onclick="menuGo('page1')">🚕 Такси шақыру</button>
+  
+  <!-- ЖАҢА: Профиль батырмасы "Такси шақыру" орнына қосылды -->
+  <button class="menu-item" id="menuProfileBtn" onclick="menuGoProfile()">👤 Профиль</button>
+  
   <button class="menu-item" onclick="menuGo('driverRegister')">👤 Жүргізуші болып тіркелу</button>
   <button class="menu-item" onclick="goToDriver()">🔑 Жүргізуші кабинеті</button>
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
@@ -165,10 +153,6 @@ html, body {
     <img src="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" alt="Tulpar Taxi Car">
     <span>Tulpar Taxi</span>
   </div>
-
-  <button class="profile-btn-floating" onclick="goToProfile()" id="profileBtn" title="Профиль">
-    👤
-  </button>
 
   <div id="centerPin" class="center-pin show" onclick="confirmCenterPoint()">
     <div class="center-pin-label" id="centerPinLabel">Мінетін жер</div>
@@ -328,14 +312,26 @@ let onlineDriverMarkers = [];
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
+// Мәзірден профильге өту функциясы
+function menuGoProfile() {
+    closeMenu();
+    setTimeout(() => {
+        goToProfile();
+    }, 300); // Мәзір жабылғанша күтеді
+}
+
 function goToProfile() {
     window.location.href = 'profile.html';
 }
 
+// Профильді тексеру және мәзірдегі батырманың атын өзгерту
 function checkProfile() {
     const user = JSON.parse(localStorage.getItem('urzhar_user'));
-    if (user) {
-        document.getElementById('profileBtn').innerHTML = `<b style="font-size:16px; color: #3b82f6;">${user.name.charAt(0).toUpperCase()}</b>`;
+    if (user && user.name) {
+        const profileBtn = document.getElementById('menuProfileBtn');
+        if (profileBtn) {
+            profileBtn.innerHTML = `<b style="color:var(--blue)">👤 ${user.name}</b>`;
+        }
         localStorage.setItem('tulpar_passenger_name', user.name);
         localStorage.setItem('tulpar_passenger_phone', user.phone);
     }
