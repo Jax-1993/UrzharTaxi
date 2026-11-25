@@ -19,8 +19,13 @@ html, body {
 
 #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
 
-.top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.95); color: #101114; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.15); backdrop-filter: blur(10px); pointer-events: none; letter-spacing: 0.5px;}
-.top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));}
+/* Картаның оң жағындағы + және - батырмаларын сары түске бояу */
+.mapgl-zoom-control { background-color: var(--yellow) !important; border: none !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
+.mapgl-zoom-control button { color: #101114 !important; font-weight: bold !important; }
+
+/* Жоғарғы бренд сары түске ауыстырылды */
+.top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--yellow); color: #101114; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); pointer-events: none; letter-spacing: 0.5px;}
+.top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));}
 
 .center-pin {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 50; pointer-events: auto; cursor: pointer; display: none; flex-direction: column; align-items: center; transition: transform 0.1s;}
 .center-pin:active {transform: translate(-50%, -100%) scale(0.9);}
@@ -31,11 +36,13 @@ html, body {
 .center-pin.show .center-pin-icon {animation: pulse 2s infinite;}
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
-.top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%)}
-.menu-btn-floating{pointer-events:auto;background:rgba(255,255,255,0.95);border:none;color:#101114;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px)}
+/* Жоғарғы градиент сарышыл түске ауыстырылды */
+.top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:linear-gradient(to bottom, rgba(255, 204, 0, 0.4) 0%, rgba(255, 204, 0, 0) 100%)}
+/* Мәзір батырмасы сары түске ауыстырылды */
+.menu-btn-floating{pointer-events:auto;background:var(--yellow);border:none;color:#101114;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px); font-weight:bold;}
 .address-info{pointer-events:auto;color:#101114;margin-top:45px;} 
-.address-info p{margin:0;font-size:12px;font-weight:600;color:#4b5563}
-.address-info h2{margin:2px 0 0;font-size:18px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.address-info p{margin:0;font-size:12px;font-weight:700;color:#4b5563; text-shadow: 0 1px 2px rgba(255,255,255,0.8);}
+.address-info h2{margin:2px 0 0;font-size:18px;font-weight:800;line-height:1.2;max-width:250px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis; text-shadow: 0 1px 2px rgba(255,255,255,0.8);}
 
 .floating-actions{position:absolute;bottom:180px;left:15px;right:15px;z-index:100;display:flex;justify-content:flex-end;align-items:flex-end;pointer-events:none}
 .right-btns{display:flex;gap:10px;pointer-events:auto}
@@ -138,9 +145,7 @@ html, body {
     <button class="close-menu" onclick="toggleMenu()">×</button>
   </div>
   
-  <!-- ЖАҢА: Профиль батырмасы "Такси шақыру" орнына қосылды -->
   <button class="menu-item" id="menuProfileBtn" onclick="menuGoProfile()">👤 Профиль</button>
-  
   <button class="menu-item" onclick="menuGo('driverRegister')">👤 Жүргізуші болып тіркелу</button>
   <button class="menu-item" onclick="goToDriver()">🔑 Жүргізуші кабинеті</button>
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
@@ -150,7 +155,8 @@ html, body {
   <div id="map"></div>
 
   <div class="top-brand">
-    <img src="https://cdn-icons-png.flaticon.com/512/1048/1048313.png" alt="Tulpar Taxi Car">
+    <!-- ЖАҢА: Қызыл түсті көлік суреті қойылды -->
+    <img src="https://cdn-icons-png.flaticon.com/512/3097/3097180.png" alt="Tulpar Taxi Car">
     <span>Tulpar Taxi</span>
   </div>
 
@@ -312,19 +318,17 @@ let onlineDriverMarkers = [];
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
-// Мәзірден профильге өту функциясы
 function menuGoProfile() {
     closeMenu();
     setTimeout(() => {
         goToProfile();
-    }, 300); // Мәзір жабылғанша күтеді
+    }, 300);
 }
 
 function goToProfile() {
     window.location.href = 'profile.html';
 }
 
-// Профильді тексеру және мәзірдегі батырманың атын өзгерту
 function checkProfile() {
     const user = JSON.parse(localStorage.getItem('urzhar_user'));
     if (user && user.name) {
