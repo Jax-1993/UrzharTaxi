@@ -7,46 +7,68 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #f2f3f5; color: #1a1a1a; display: flex; justify-content: center; }
-        .app-container { width: 100%; max-width: 480px; min-height: 100vh; position: relative; background: #f2f3f5; }
+        body { background-color: #f4f6f9; color: #1a1a1a; display: flex; justify-content: center; }
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; position: relative; background: #f4f6f9; }
 
         /* Кіру экраны */
         #login-screen, #otp-screen { padding: 24px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background: #fff; position: absolute; top: 0; left: 0; width: 100%; z-index: 10; }
         .back-btn { position: absolute; top: 24px; left: 24px; font-size: 24px; cursor: pointer; background: none; border: none; color: #333; }
-        h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; text-align: center; }
+        h2 { font-size: 26px; font-weight: 800; margin-bottom: 10px; text-align: center; color: #111; }
         p.subtitle { color: #888; text-align: center; margin-bottom: 30px; font-size: 15px; }
         .input-group input { width: 100%; padding: 16px; border: 1.5px solid #e1e4e8; border-radius: 14px; font-size: 18px; outline: none; background: #f8f9fa; transition: 0.3s; }
-        .input-group input:focus { border-color: #3b82f6; background: #fff; }
-        .btn-primary { width: 100%; padding: 16px; background: #3b82f6; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 15px; transition: 0.3s; }
+        .input-group input:focus { border-color: #3b82f6; background: #fff; box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
+        .btn-primary { width: 100%; padding: 16px; background: #3b82f6; color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 15px; transition: 0.3s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }
         .btn-primary:active { transform: scale(0.98); }
         .error-text { color: #d00; font-size: 14px; margin-top: 10px; text-align: center; display: none; }
 
         /* Профиль экраны */
-        #profile-screen { display: none; padding-bottom: 40px; }
-        .header-section { background: #fff; padding: 40px 24px 24px 24px; display: flex; flex-direction: column; align-items: center; position: relative; margin-bottom: 16px; }
-        .back-arrow { position: absolute; left: 20px; top: 24px; font-size: 24px; cursor: pointer; }
-        .avatar { width: 80px; height: 80px; background: #f0f4f8; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 800; color: #333; margin-bottom: 16px; position: relative; }
-        .avatar::after { content: '📷'; position: absolute; bottom: 0; right: 0; background: #3b82f6; width: 26px; height: 26px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; border: 2px solid #fff; cursor: pointer; }
-        .user-name { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .user-phone { color: #888; font-size: 15px; margin-top: 4px; }
+        #profile-screen { display: none; padding-bottom: 40px; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .header-section { background: #fff; padding: 40px 24px 24px 24px; display: flex; flex-direction: column; align-items: center; position: relative; margin-bottom: 16px; border-radius: 0 0 24px 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.03); }
+        .back-arrow { position: absolute; left: 20px; top: 24px; font-size: 24px; cursor: pointer; color: #333; transition: 0.2s; }
+        .back-arrow:active { transform: scale(0.9); }
+        .avatar { width: 84px; height: 84px; background: linear-gradient(135deg, #e0e7ff, #dbeafe); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 32px; font-weight: 800; color: #3b82f6; margin-bottom: 16px; position: relative; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); }
+        .avatar::after { content: '📷'; position: absolute; bottom: 0; right: 0; background: #3b82f6; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 12px; border: 3px solid #fff; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .user-name { font-size: 22px; font-weight: 800; display: flex; align-items: center; gap: 8px; cursor: pointer; color: #111; }
+        .user-phone { color: #888; font-size: 15px; margin-top: 6px; font-weight: 500; }
 
         /* Мәзір карточкалары */
-        .menu-card { background: #fff; border-radius: 16px; margin: 0 16px 16px 16px; overflow: hidden; }
-        .menu-item { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; text-decoration: none; color: inherit; }
+        .menu-card { background: #fff; border-radius: 20px; margin: 0 16px 16px 16px; overflow: hidden; box-shadow: 0 2px 12px rgba(0,0,0,0.02); }
+        .menu-item { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid #f4f6f9; cursor: pointer; text-decoration: none; color: inherit; transition: background 0.2s; }
         .menu-item:last-child { border-bottom: none; }
-        .menu-item:active { background: #f9f9f9; }
-        .menu-icon { font-size: 20px; width: 32px; margin-right: 12px; display: flex; justify-content: center; }
+        .menu-item:active { background: #f8fafc; }
+        .menu-icon { font-size: 22px; width: 36px; margin-right: 12px; display: flex; justify-content: center; }
         .menu-content { flex: 1; }
-        .menu-title { font-size: 16px; font-weight: 600; }
-        .menu-subtitle { font-size: 13px; color: #888; margin-top: 2px; }
-        .menu-arrow { color: #ccc; font-size: 20px; }
+        .menu-title { font-size: 16px; font-weight: 600; color: #222; }
+        .menu-subtitle { font-size: 13px; color: #888; margin-top: 3px; font-weight: 500; }
+        .menu-arrow { color: #cbd5e1; font-size: 22px; font-weight: 300; }
 
-        .logout-btn { color: #d00; font-weight: 700; justify-content: center; padding: 16px; background: none; border: none; width: 100%; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .delete-btn { background: #fff; border-radius: 16px; margin: 0 16px 24px 16px; color: #d00; font-weight: 700; justify-content: center; padding: 16px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; border: none; width: calc(100% - 32px); }
-        .version { text-align: center; color: #aaa; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .logout-btn { color: #ef4444; font-weight: 700; justify-content: center; padding: 16px; background: #fff; border-radius: 20px; margin: 0 16px 12px 16px; width: calc(100% - 32px); font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; border: none; box-shadow: 0 2px 12px rgba(0,0,0,0.02); transition: 0.2s; }
+        .logout-btn:active { background: #fef2f2; }
+        .delete-btn { background: transparent; color: #ef4444; font-weight: 600; justify-content: center; padding: 16px; font-size: 15px; cursor: pointer; display: flex; align-items: center; gap: 8px; border: none; width: 100%; }
+        .version { text-align: center; color: #cbd5e1; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 6px; margin-top: 10px; font-weight: 500; }
+        
         .hidden { display: none !important; }
         .spinner { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Bottom Sheet (Төменнен шығатын терезе) */
+        .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(2px); }
+        .bottom-sheet-overlay.active { display: block; opacity: 1; }
+        .bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; border-radius: 28px 28px 0 0; z-index: 101; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px 24px 32px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
+        .bottom-sheet.active { bottom: 0; }
+        .sheet-handle { width: 40px; height: 5px; background: #e2e8f0; border-radius: 10px; margin: 0 auto 20px auto; }
+        .sheet-title { font-size: 20px; font-weight: 800; margin-bottom: 16px; text-align: center; color: #111; }
+        .sheet-item { padding: 16px; font-size: 16px; font-weight: 600; border-radius: 14px; margin-bottom: 8px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; background: #f8fafc; transition: 0.2s; }
+        .sheet-item:active { background: #e2e8f0; }
+        .sheet-item.selected { background: #eff6ff; color: #3b82f6; border: 1.5px solid #bfdbfe; }
+        .check-icon { display: none; font-size: 18px; }
+        .sheet-item.selected .check-icon { display: block; }
+        
+        .sheet-text-content { font-size: 14px; color: #475569; line-height: 1.6; max-height: 50vh; overflow-y: auto; padding-right: 8px; }
+        .sheet-text-content h4 { margin-top: 16px; margin-bottom: 8px; color: #1e293b; font-size: 15px; }
+        .sheet-text-content p { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -87,14 +109,6 @@
         </div>
 
         <div class="menu-card">
-            <a href="driver-login.html" class="menu-item">
-                <div class="menu-icon">🚕</div>
-                <div class="menu-content">
-                    <div class="menu-title">Жүргізуші болу</div>
-                    <div class="menu-subtitle">Құжаттарды жіберіп, тапсырыс қабылдаңыз</div>
-                </div>
-                <div class="menu-arrow">›</div>
-            </a>
             <a href="tel:112" class="menu-item">
                 <div class="menu-icon" style="color: #d00;">🛡️</div>
                 <div class="menu-content">
@@ -103,11 +117,12 @@
                 </div>
                 <div class="menu-arrow">›</div>
             </a>
-            <div class="menu-item" onclick="alert('Төлем әзірге қолма-қол')">
+            <!-- Төлем тәсілдері -->
+            <div class="menu-item" onclick="openSheet('payment')">
                 <div class="menu-icon">💳</div>
                 <div class="menu-content">
                     <div class="menu-title">Төлем тәсілдері</div>
-                    <div class="menu-subtitle">Қолма-қол</div>
+                    <div class="menu-subtitle" id="current-payment">Қолма-қол</div>
                 </div>
                 <div class="menu-arrow">›</div>
             </div>
@@ -122,32 +137,25 @@
                 </div>
                 <div class="menu-arrow">›</div>
             </a>
-            <div class="menu-item" onclick="alert('Тіл өзгерту жақында қосылады')">
+            <!-- Тіл -->
+            <div class="menu-item" onclick="openSheet('language')">
                 <div class="menu-icon">🌐</div>
                 <div class="menu-content">
                     <div class="menu-title">Тіл</div>
-                    <div class="menu-subtitle">Қазақша</div>
-                </div>
-                <div class="menu-arrow">›</div>
-            </div>
-            <div class="menu-item" onclick="alert('Көрініс өзгерту жақында қосылады')">
-                <div class="menu-icon">🌓</div>
-                <div class="menu-content">
-                    <div class="menu-title">Көрініс</div>
-                    <div class="menu-subtitle">Ақ</div>
+                    <div class="menu-subtitle" id="current-language">Қазақша</div>
                 </div>
                 <div class="menu-arrow">›</div>
             </div>
         </div>
 
         <div class="menu-card">
-            <div class="menu-item" onclick="alert('Мәтін жақында қосылады')">
+            <div class="menu-item" onclick="openSheet('terms')">
                 <div class="menu-icon">📄</div>
                 <div class="menu-content"><div class="menu-title">Пайдаланушы келісімі</div></div>
                 <div class="menu-arrow">›</div>
             </div>
-            <div class="menu-item" onclick="alert('Мәтін жақында қосылады')">
-                <div class="menu-icon">📄</div>
+            <div class="menu-item" onclick="openSheet('privacy')">
+                <div class="menu-icon">🛡️</div>
                 <div class="menu-content"><div class="menu-title">Құпиялылық саясаты</div></div>
                 <div class="menu-arrow">›</div>
             </div>
@@ -164,10 +172,20 @@
             <span style="color: #3b82f6;">✔</span> Tulpar Taxi · 1.2.0
         </div>
     </div>
+</div>
 
+<!-- Төменнен шығатын әмбебап терезе (Bottom Sheet) -->
+<div class="bottom-sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+<div class="bottom-sheet" id="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title" id="sheet-title">Таңдаңыз</div>
+    
+    <!-- Ішіндегі контент JS арқылы өзгереді -->
+    <div id="sheet-content"></div>
 </div>
 
 <script>
+    // --- Логин және профиль логикасы ---
     document.addEventListener("DOMContentLoaded", () => {
         const savedUser = localStorage.getItem('urzhar_user');
         if (savedUser) {
@@ -200,7 +218,7 @@
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('otp-screen').classList.remove('hidden');
             document.getElementById('otp-subtitle').innerText = `Код ${phone} нөміріне жіберілді (Тест: 1234)`;
-        }, 1500);
+        }, 1000);
     }
 
     function verifyCode() {
@@ -222,7 +240,7 @@
                 
                 showProfile(user);
                 btn.innerHTML = 'Растау';
-            }, 1000);
+            }, 800);
             
         } else {
             document.getElementById('otp-error').style.display = 'block';
@@ -260,6 +278,89 @@
         localStorage.removeItem('urzhar_user');
         document.getElementById('profile-screen').style.display = 'none';
         document.getElementById('login-screen').classList.remove('hidden');
+    }
+
+    // --- Төменгі терезе (Bottom Sheet) Логикасы ---
+    const overlay = document.getElementById('sheet-overlay');
+    const sheet = document.getElementById('bottom-sheet');
+    const sheetTitle = document.getElementById('sheet-title');
+    const sheetContent = document.getElementById('sheet-content');
+
+    function openSheet(type) {
+        overlay.classList.add('active');
+        sheet.classList.add('active');
+
+        if (type === 'payment') {
+            sheetTitle.innerText = "Төлем тәсілін таңдаңыз";
+            let current = document.getElementById('current-payment').innerText;
+            sheetContent.innerHTML = `
+                <div class="sheet-item ${current === 'Қолма-қол' ? 'selected' : ''}" onclick="selectPayment('Қолма-қол')">
+                    <span>💵 Қолма-қол</span> <span class="check-icon">✔</span>
+                </div>
+                <div class="sheet-item ${current === 'Карта' ? 'selected' : ''}" onclick="selectPayment('Карта')">
+                    <span>💳 Банк картасы</span> <span class="check-icon">✔</span>
+                </div>
+            `;
+        } 
+        else if (type === 'language') {
+            sheetTitle.innerText = "Тілді таңдаңыз";
+            let current = document.getElementById('current-language').innerText;
+            sheetContent.innerHTML = `
+                <div class="sheet-item ${current === 'Қазақша' ? 'selected' : ''}" onclick="selectLanguage('Қазақша')">
+                    <span>🇰🇿 Қазақша</span> <span class="check-icon">✔</span>
+                </div>
+                <div class="sheet-item ${current === 'Орысша' ? 'selected' : ''}" onclick="selectLanguage('Орысша')">
+                    <span>🇷🇺 Орысша</span> <span class="check-icon">✔</span>
+                </div>
+                <div class="sheet-item ${current === 'Ағылшынша' ? 'selected' : ''}" onclick="selectLanguage('Ағылшынша')">
+                    <span>🇬🇧 Ағылшынша</span> <span class="check-icon">✔</span>
+                </div>
+            `;
+        }
+        else if (type === 'terms') {
+            sheetTitle.innerText = "Пайдаланушы келісімі";
+            sheetContent.innerHTML = `
+                <div class="sheet-text-content">
+                    <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
+                    <h4>1. Жалпы ережелер</h4>
+                    <p>Қосымша тек Уржар және Мақаншы аудандары аумағында такси қызметін ұсынуға арналған. Жүргізушілер мен жолаушылар өздерінің жеке басының қауіпсіздігі үшін жауапты.</p>
+                    <h4>2. Қызмет көрсету шарттары</h4>
+                    <p>Тапсырыс қабылданғаннан кейін жүргізуші көрсетілген мекенжайға уақытылы келуі тиіс. Жолаушы кері байланыс жасап, күтуі қажет.</p>
+                    <h4>3. Төлем жасау</h4>
+                    <p>Төлем қолма-қол немесе карта арқылы жүзеге асырылады. Жүргізушіге төлемді жол жүріп болғаннан кейін ғана жасау керек.</p>
+                </div>
+            `;
+        }
+        else if (type === 'privacy') {
+            sheetTitle.innerText = "Құпиялылық саясаты";
+            sheetContent.innerHTML = `
+                <div class="sheet-text-content">
+                    <p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>
+                    <h4>Қандай деректер жиналады?</h4>
+                    <p>Біз сіздің телефон нөміріңізді, атыңызды және тапсырыс кезіндегі геолокацияңызды (мекенжайыңызды) ғана жинаймыз.</p>
+                    <h4>Деректер қалай пайдаланылады?</h4>
+                    <p>Бұл ақпарат тек сізді тану, такси шақыру және жүргізушіге бағытты дұрыс көрсету үшін қолданылады. Деректеріңіз үшінші тұлғаларға сатылмайды.</p>
+                    <h4>Байланыс</h4>
+                    <p>Сұрақтарыңыз болса, қолдау қызметіне (WhatsApp: +7 777 790 60 29) хабарласа аласыз.</p>
+                </div>
+            `;
+        }
+    }
+
+    function closeSheet() {
+        overlay.classList.remove('active');
+        sheet.classList.remove('active');
+    }
+
+    function selectPayment(method) {
+        document.getElementById('current-payment').innerText = method;
+        closeSheet();
+    }
+
+    function selectLanguage(lang) {
+        document.getElementById('current-language').innerText = lang;
+        // Бұл жерде кейін тілді ауыстыратын нақты логика жазылады (мысалы, localStorage-ке сақтау)
+        closeSheet();
     }
 </script>
 </body>
