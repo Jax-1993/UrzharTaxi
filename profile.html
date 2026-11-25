@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Профиль - UrzharTaxi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        body { background-color: #f8f9fa; color: #1a1a1a; display: flex; justify-content: center; }
+        
+        .app-container { width: 100%; max-width: 480px; min-height: 100vh; background-color: #f8f9fa; position: relative; }
+
+        /* Кіру экраны (Login) */
+        #login-screen, #otp-screen { padding: 24px; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; background: #fff; }
+        .back-btn { position: absolute; top: 24px; left: 24px; font-size: 24px; cursor: pointer; background: none; border: none; color: #333; }
+        h2 { font-size: 28px; font-weight: 700; margin-bottom: 12px; text-align: center; }
+        p.subtitle { color: #888; text-align: center; margin-bottom: 32px; font-size: 15px; }
+        
+        .input-group { margin-bottom: 20px; }
+        .input-group input { width: 100%; padding: 16px; border: 1.5px solid #e0e0e0; border-radius: 12px; font-size: 18px; outline: none; transition: 0.3s; background: #f8f9fa;}
+        .input-group input:focus { border-color: #333; background: #fff; }
+        
+        .btn-primary { width: 100%; padding: 16px; background: #333; color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-primary:active { background: #000; transform: scale(0.98); }
+        .error-text { color: #d93025; font-size: 14px; margin-top: 8px; text-align: center; display: none; }
+
+        /* Профиль экраны */
+        #profile-screen { display: none; padding-bottom: 90px; background: #f8f9fa; }
+        
+        /* Жоғарғы бөлім (Аватар, Аты, Нөмір) */
+        .header-section { background: #fff; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; position: relative; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px; margin-bottom: 16px; }
+        .back-arrow { position: absolute; left: 20px; top: 24px; font-size: 24px; cursor: pointer; }
+        .avatar { width: 90px; height: 90px; background: #f0f4f8; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 36px; font-weight: 700; color: #333; margin-bottom: 16px; position: relative; }
+        .avatar::after { content: '📷'; position: absolute; bottom: 0; right: 0; background: #0056b3; width: 28px; height: 28px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 14px; border: 2px solid #fff; cursor: pointer; }
+        .user-name { font-size: 24px; font-weight: 700; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-phone { color: #888; font-size: 16px; margin-top: 4px; }
+
+        /* Мәзір карточкалары */
+        .menu-card { background: #fff; border-radius: 20px; margin: 0 16px 16px 16px; overflow: hidden; }
+        .menu-item { display: flex; align-items: center; padding: 18px 20px; border-bottom: 1px solid #f0f0f0; cursor: pointer; text-decoration: none; color: inherit; }
+        .menu-item:last-child { border-bottom: none; }
+        .menu-item:active { background: #f9f9f9; }
+        .menu-icon { font-size: 20px; width: 32px; margin-right: 12px; display: flex; justify-content: center; }
+        .menu-content { flex: 1; }
+        .menu-title { font-size: 16px; font-weight: 500; }
+        .menu-subtitle { font-size: 14px; color: #888; margin-top: 2px; }
+        .menu-arrow { color: #ccc; font-size: 18px; }
+
+        /* Арнайы батырмалар */
+        .logout-btn { color: #d93025; font-weight: 600; justify-content: center; padding: 20px; background: none; border: none; width: 100%; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .delete-btn { background: #fff; border-radius: 20px; margin: 0 16px 24px 16px; color: #d93025; font-weight: 600; justify-content: center; padding: 20px; font-size: 16px; cursor: pointer; display: flex; align-items: center; gap: 8px; border: none; width: calc(100% - 32px); }
+        
+        .version { text-align: center; color: #888; font-size: 14px; margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+
+        /* Көмекші кластар */
+        .hidden { display: none !important; }
+        .spinner { border: 3px solid #f3f3f3; border-top: 3px solid #333; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- 1. Телефон нөмірін енгізу экраны -->
+    <div id="login-screen">
+        <button class="back-btn" onclick="window.location.href='index.html'">←</button>
+        <h2>Өз номеріңізбен тіркелу</h2>
+        <p class="subtitle">Қызметке кіру үшін телефон нөміріңізді енгізіңіз</p>
+        
+        <div class="input-group">
+            <input type="tel" id="phone-input" placeholder="+7 (___) ___-__-__" value="+7 ">
+        </div>
+        <button class="btn-primary" id="send-code-btn" onclick="sendCode()">Код алу</button>
+        <div class="error-text" id="phone-error">Нөмірді дұрыс енгізіңіз!</div>
+    </div>
+
+    <!-- 2. SMS Кодты енгізу экраны -->
+    <div id="otp-screen" class="hidden">
+        <button class="back-btn" onclick="backToLogin()">←</button>
+        <h2>Кодты енгізіңіз</h2>
+        <p class="subtitle" id="otp-subtitle">Код +7 777 790 60 29 нөміріне жіберілді</p>
+        
+        <div class="input-group">
+            <input type="number" id="otp-input" placeholder="0000" maxlength="4" style="text-align: center; letter-spacing: 8px; font-size: 24px;">
+        </div>
+        <button class="btn-primary" id="verify-btn" onclick="verifyCode()">Растау</button>
+        <div class="error-text" id="otp-error">Код қате! (Тест үшін: 1234)</div>
+    </div>
+
+    <!-- 3. Профиль экраны -->
+    <div id="profile-screen">
+        <!-- Жоғарғы бөлім -->
+        <div class="header-section">
+            <button class="back-arrow" onclick="window.location.href='index.html'">←</button>
+            <div class="avatar" id="user-avatar">Ж</div>
+            <div class="user-name" id="display-name">Жақсылық <span style="font-size: 16px; color:#ccc;">›</span></div>
+            <div class="user-phone" id="display-phone">+7 777 790 60 29</div>
+        </div>
+
+        <!-- Мәзір 1 -->
+        <div class="menu-card">
+            <a href="driver-login.html" class="menu-item">
+                <div class="menu-icon">🚕</div>
+                <div class="menu-content">
+                    <div class="menu-title">Жүргізуші болу</div>
+                    <div class="menu-subtitle">Құжаттарды жіберіп, тапсырыс қабылдаңыз</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </a>
+            <a href="tel:112" class="menu-item">
+                <div class="menu-icon" style="color: #d93025;">🛡️</div>
+                <div class="menu-content">
+                    <div class="menu-title">Қауіпсіздік · SOS</div>
+                    <div class="menu-subtitle">112-ге қоңырау шалу</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </a>
+            <div class="menu-item">
+                <div class="menu-icon">💳</div>
+                <div class="menu-content">
+                    <div class="menu-title">Төлем тәсілдері</div>
+                    <div class="menu-subtitle">Қолма-қол</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- Мәзір 2 -->
+        <div class="menu-card">
+            <a href="https://wa.me/77777906029" target="_blank" class="menu-item">
+                <div class="menu-icon">🎧</div>
+                <div class="menu-content">
+                    <div class="menu-title">Қолдау қызметі</div>
+                    <div class="menu-subtitle">WhatsApp · +7 777 790 60 29</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </a>
+            <div class="menu-item" onclick="alert('Тіл өзгерту жақында қосылады')">
+                <div class="menu-icon">🌐</div>
+                <div class="menu-content">
+                    <div class="menu-title">Тіл</div>
+                    <div class="menu-subtitle">Қазақша</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            <div class="menu-item" onclick="alert('Көрініс өзгерту жақында қосылады')">
+                <div class="menu-icon">🌓</div>
+                <div class="menu-content">
+                    <div class="menu-title">Көрініс</div>
+                    <div class="menu-subtitle">Ақ</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- Мәзір 3 -->
+        <div class="menu-card">
+            <div class="menu-item">
+                <div class="menu-icon">📄</div>
+                <div class="menu-content">
+                    <div class="menu-title">Пайдаланушы келісімі</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            <div class="menu-item">
+                <div class="menu-icon">📄</div>
+                <div class="menu-content">
+                    <div class="menu-title">Құпиялылық саясаты</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+        </div>
+
+        <!-- Шығу және Жою -->
+        <button class="logout-btn" onclick="logout()">
+            <span>🚪</span> Шығу
+        </button>
+        
+        <button class="delete-btn" onclick="if(confirm('Аккаунтты жойғыңыз келе ме?')) logout()">
+            <span>🗑️</span> Аккаунтты жою
+        </button>
+
+        <div class="version">
+            <span style="color: #0056b3;">✔</span> Qajet · 1.2.0 нұсқасы
+        </div>
+    </div>
+
+</div>
+
+<script>
+    // Тесттік нөмір (Сенің нөмірің)
+    const SUPPORT_PHONE = "+7 777 790 60 29";
+    const SUPPORT_PHONE_RAW = "77777906029";
+
+    // Бетті жүктегенде тексеру
+    document.addEventListener("DOMContentLoaded", () => {
+        const savedUser = localStorage.getItem('urzhar_user');
+        if (savedUser) {
+            showProfile(JSON.parse(savedUser));
+        }
+        
+        // Телефон нөмірін форматтау
+        const phoneInput = document.getElementById('phone-input');
+        phoneInput.addEventListener('input', function (e) {
+            let x = e.target.value.replace(/\D/g, '').match(/(\d{0,1})(\d{0,3})(\d{0,3})(\d{0,2})(\d{0,2})/);
+            e.target.value = !x[2] ? '+7 ' : '+7 (' + x[2] + ') ' + (x[3] ? x[3] + '-' : '') + x[4] + (x[5] ? '-' + x[5] : '');
+        });
+    });
+
+    // 1. Код жіберу
+    function sendCode() {
+        const phone = document.getElementById('phone-input').value;
+        if (phone.length < 18) {
+            document.getElementById('phone-error').style.display = 'block';
+            return;
+        }
+        document.getElementById('phone-error').style.display = 'none';
+        
+        // Батырманы жүктелуге ауыстыру
+        const btn = document.getElementById('send-code-btn');
+        btn.innerHTML = '<span class="spinner"></span> Жіберілуде...';
+        btn.disabled = true;
+
+        // API-ға сұраныс имитациясы (Кейін нақты SMS жіберетін API қосамыз)
+        setTimeout(() => {
+            btn.innerHTML = 'Код алу';
+            btn.disabled = false;
+            
+            // Келесі экранға өту
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('otp-screen').classList.remove('hidden');
+            
+            // Хабарлама мәтінін жаңарту
+            document.getElementById('otp-subtitle').innerText = `Код ${phone} нөміріне жіберілді`;
+        }, 1500);
+    }
+
+    // 2. Кодты растау
+    function verifyCode() {
+        const code = document.getElementById('otp-input').value;
+        const btn = document.getElementById('verify-btn');
+        
+        if (code === '1234') { // Тесттік код
+            document.getElementById('otp-error').style.display = 'none';
+            btn.innerHTML = '<span class="spinner"></span> Тексерілуде...';
+            
+            setTimeout(() => {
+                // Пайдаланушы деректерін сақтау
+                const user = {
+                    name: 'Жақсылық', // Кейін енгізілген атқа өзгертеміз
+                    phone: document.getElementById('phone-input').value
+                };
+                localStorage.setItem('urzhar_user', JSON.stringify(user));
+                
+                showProfile(user);
+                btn.innerHTML = 'Растау';
+            }, 1000);
+            
+        } else {
+            document.getElementById('otp-error').style.display = 'block';
+        }
+    }
+
+    // 3. Профильді көрсету
+    function showProfile(user) {
+        document.getElementById('login-screen').classList.add('hidden');
+        document.getElementById('otp-screen').classList.add('hidden');
+        document.getElementById('profile-screen').style.display = 'block';
+        
+        // Деректерді толтыру
+        document.getElementById('display-name').innerHTML = `${user.name} <span style="font-size: 16px; color:#ccc;">›</span>`;
+        document.getElementById('display-phone').innerText = user.phone;
+        document.getElementById('user-avatar').innerText = user.name.charAt(0).toUpperCase();
+    }
+
+    // 4. Кіру экранына қайту
+    function backToLogin() {
+        document.getElementById('otp-screen').classList.add('hidden');
+        document.getElementById('login-screen').classList.remove('hidden');
+        document.getElementById('otp-input').value = '';
+    }
+
+    // 5. Шығу
+    function logout() {
+        localStorage.removeItem('urzhar_user');
+        document.getElementById('profile-screen').style.display = 'none';
+        document.getElementById('login-screen').classList.remove('hidden');
+    }
+</script>
+
+</body>
+</html>
