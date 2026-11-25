@@ -19,7 +19,7 @@ html, body {
 
 #map{position:absolute;top:0;left:0;width:100%;height:100%;z-index:0;background:#dce9e9}
 
-/* Жоғарғы бренд сары түске (қалады) */
+/* Жоғарғы бренд сары түске */
 .top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: var(--yellow); color: #101114; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.2); backdrop-filter: blur(10px); pointer-events: none; letter-spacing: 0.5px;}
 .top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));}
 
@@ -32,10 +32,8 @@ html, body {
 .center-pin.show .center-pin-icon {animation: pulse 2s infinite;}
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(59, 130, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); } }
 
-/* Жоғарғы градиент сары түсі алынып тасталды, енді мөлдір (transparent) */
 .top-overlay{position:absolute;top:0;left:0;width:100%;padding:20px 15px;z-index:100;display:flex;align-items:flex-start;gap:15px;pointer-events:none;background:transparent;}
 
-/* Мәзір батырмасы сары түске (қалады) */
 .menu-btn-floating{pointer-events:auto;background:var(--yellow);border:none;color:#101114;width:45px;height:45px;border-radius:50%;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px); font-weight:bold;}
 .address-info{pointer-events:auto;color:#101114;margin-top:45px;} 
 .address-info p{margin:0;font-size:12px;font-weight:700;color:#4b5563; text-shadow: 0 1px 3px rgba(255,255,255,1);}
@@ -96,11 +94,6 @@ html, body {
 .main-btn{width:100%;background:linear-gradient(135deg,#ffcc00 0%,#ffdb4d 100%);color:#151515;font-weight:800;padding:17px;border-radius:16px;font-size:16px;box-shadow:0 4px 16px rgba(255,204,0,0.35);border:0;cursor:pointer}
 .back-btn{background:#25272d;color:white;width:100%;padding:14px;border-radius:13px;margin-top:10px;font-weight:600;font-size:14px;border:0;cursor:pointer}
 
-#driverRegister .panel {border-radius: 0;}
-#driverRegister input, #driverRegister select {width:100%;padding:15px;margin:6px 0;border:1.5px solid #e1e4e8;border-radius:14px;background:#f8f9fa;font-size:15px}
-#driverRegister h3 {margin-top:20px; font-size:16px;}
-#carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
-
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#ffffff;color:#101114;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.1)}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:15px}
@@ -142,8 +135,8 @@ html, body {
     <button class="close-menu" onclick="toggleMenu()">×</button>
   </div>
   
+  <!-- Жүргізуші болу бөлімі өшірілді -->
   <button class="menu-item" id="menuProfileBtn" onclick="menuGoProfile()">👤 Профиль</button>
-  <button class="menu-item" onclick="menuGo('driverRegister')">👤 Жүргізуші болып тіркелу</button>
   <button class="menu-item" onclick="goToDriver()">🔑 Жүргізуші кабинеті</button>
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
 </nav>
@@ -152,7 +145,6 @@ html, body {
   <div id="map"></div>
 
   <div class="top-brand">
-    <!-- ЖАҢА: Төртбұрыштың (календарьдың) орнына әдемі машинаның суреті қойылды -->
     <img src="https://cdn-icons-png.flaticon.com/512/3202/3202926.png" alt="Tulpar Taxi Car">
     <span>Tulpar Taxi</span>
   </div>
@@ -253,45 +245,6 @@ html, body {
   </div>
 </section>
 
-<section id="driverRegister" class="page">
-  <div class="panel">
-    <div class="title">🚘 Жүргізуші болып тіркелу</div>
-    <p class="small" style="margin-bottom:15px;color:#d00;">Назар аударыңыз: Барлық құжаттар анық көрінуі керек!</p>
-    <input id="regName" placeholder="Аты-жөніңіз">
-    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз">
-    <h3>🚗 Көлік туралы ақпарат</h3>
-    <input id="carBrand" placeholder="Көлік маркасы">
-    <input id="carModel" placeholder="Көлік моделі">
-    <input id="carYear" type="number" placeholder="Шыққан жылы">
-    <input id="carNumber" placeholder="Мемлекеттік нөмірі">
-    <select id="carClass">
-      <option value="economy">Эконом</option>
-      <option value="comfort">Бизнес</option>
-      <option value="comfort_plus">Бизнес+</option>
-    </select>
-    <h3>📸 Көліктің фотосы</h3>
-    <input id="carPhoto" type="file" accept="image/jpeg,image/png,image/webp">
-    <img id="carPhotoPreview">
-    <h3>🪪 Жеке куәлік (алдыңғы беті)</h3>
-    <input id="idCardFront" type="file" accept="image/*">
-    <img id="idCardFrontPreview" class="doc-preview">
-    <h3>🪪 Жеке куәлік (артқы беті)</h3>
-    <input id="idCardBack" type="file" accept="image/*">
-    <img id="idCardBackPreview" class="doc-preview">
-    <h3>📄 Жүргізуші куәлігі</h3>
-    <input id="driverLicense" type="file" accept="image/*">
-    <img id="driverLicensePreview" class="doc-preview">
-    <h3>🤳 Өз суретіңіз (Селфи)</h3>
-    <input id="selfiePhoto" type="file" accept="image/*" capture="user">
-    <img id="selfiePreview" class="doc-preview">
-    <div id="driverRegisterMessage" class="small" style="margin:15px 0;font-weight:bold;"></div>
-  </div>
-  <div class="bottom-action">
-    <button class="main-btn" id="driverRegisterBtn" onclick="registerDriver()">ТІРКЕЛУ</button>
-    <button class="back-btn" onclick="showPage('page1')">← Басты бет</button>
-  </div>
-</section>
-
 <script src="https://mapgl.2gis.com/api/js/v1"></script>
 <script>
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7'; 
@@ -310,7 +263,6 @@ const prices = {
 
 let savedName = localStorage.getItem('tulpar_passenger_name');
 let savedPhone = localStorage.getItem('tulpar_passenger_phone');
-let onlineDriverMarkers = [];
 
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
@@ -752,84 +704,6 @@ async function makeOrder(){
     
     if(result.orderId&&result.trackingToken){setTimeout(()=>{window.location.href='/passenger-tracking.html'},1500)}
   }catch(e){alert(e.message);button.disabled=false;button.textContent='🚕 ТАПСЫРЫС БЕРУ'}
-}
-
-function setupPhotoInput(inputId, previewId) {
-  document.getElementById(inputId).addEventListener('change', function() {
-    const file = this.files[0], preview = document.getElementById(previewId);
-    if (!file) { preview.style.display = 'none'; return; }
-    if (file.size > 5 * 1024 * 1024) { alert('Фото өте үлкен (макс 5МБ).'); this.value = ''; preview.style.display = 'none'; return; }
-    const imageUrl = URL.createObjectURL(file);
-    preview.src = imageUrl; preview.style.display = 'block';
-  });
-}
-setupPhotoInput('carPhoto', 'carPhotoPreview');
-setupPhotoInput('idCardFront', 'idCardFrontPreview');
-setupPhotoInput('idCardBack', 'idCardBackPreview');
-setupPhotoInput('driverLicense', 'driverLicensePreview');
-setupPhotoInput('selfiePhoto', 'selfiePreview');
-
-async function compressImage(file) {
-  const bitmap = await createImageBitmap(file);
-  const maxSize = 800;
-  const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
-  const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale);
-  canvas.height = Math.round(bitmap.height * scale);
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-  bitmap.close();
-  return canvas.toDataURL('image/jpeg', 0.6);
-}
-
-async function registerDriver(){
-  const name=document.getElementById('regName').value.trim();
-  const phone=document.getElementById('regPhone').value.trim();
-  const brand=document.getElementById('carBrand').value.trim();
-  const model=document.getElementById('carModel').value.trim();
-  const year=document.getElementById('carYear').value.trim();
-  const number=document.getElementById('carNumber').value.trim();
-  const carClass=document.getElementById('carClass').value;
-
-  const carPhoto = document.getElementById('carPhoto').files[0];
-  const idFront = document.getElementById('idCardFront').files[0];
-  const idBack = document.getElementById('idCardBack').files[0];
-  const license = document.getElementById('driverLicense').files[0];
-  const selfie = document.getElementById('selfiePhoto').files[0];
-
-  const message=document.getElementById('driverRegisterMessage');
-  const button=document.getElementById('driverRegisterBtn');
-
-  if(!name||!phone||!brand||!model||!number||!carPhoto||!idFront||!idBack||!license||!selfie){
-    message.style.color='#d00'; message.textContent='Барлық мәліметті толтырып, барлық 5 фотоны жүктеңіз.'; return;
-  }
-
-  button.disabled=true; button.textContent='ӨТІНІМ ЖІБЕРІЛУДЕ...'; message.style.color='#555'; message.textContent='Фотолар өңделуде, күте тұрыңыз...';
-
-  try{
-    const [carData, idFrontData, idBackData, licenseData, selfieData] = await Promise.all([
-      compressImage(carPhoto), compressImage(idFront), compressImage(idBack), compressImage(license), compressImage(selfie)
-    ]);
-
-    const response=await fetch('/api/driver-register',{
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        full_name:name, phone, car_brand:brand, car_model:model, car_year:year||null, car_number:number, car_class:carClass,
-        car_photo_base64:carData, id_front_base64:idFrontData, id_back_base64:idBackData, license_base64:licenseData, selfie_base64:selfieData
-      })
-    });
-    
-    const result=await response.json();
-    if(!response.ok)throw new Error(result.error||'Қате');
-    message.style.color='#07864f'; message.textContent='✅ Өтінім қабылданды! Әкімші тексеруін күтіңіз.';
-    
-    ['regName','regPhone','carBrand','carModel','carYear','carNumber','carPhoto','idCardFront','idCardBack','driverLicense','selfiePhoto'].forEach(id=>document.getElementById(id).value='');
-    document.querySelectorAll('.doc-preview, #carPhotoPreview').forEach(img => img.style.display = 'none');
-  }catch(error){
-    message.style.color='#d00'; message.textContent='❌ '+error.message;
-  }finally{
-    button.disabled = false; button.textContent='ТІРКЕЛУ';
-  }
 }
 
 document.addEventListener('DOMContentLoaded',()=>{
