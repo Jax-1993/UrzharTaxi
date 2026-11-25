@@ -22,6 +22,15 @@ html, body {
 .top-brand {position: absolute; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(30,32,38,0.9); color: white; padding: 8px 16px; border-radius: 25px; display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; z-index: 100; box-shadow: 0 4px 15px rgba(0,0,0,0.4); backdrop-filter: blur(5px); pointer-events: none; letter-spacing: 0.5px;}
 .top-brand img { width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));}
 
+/* ЖАҢА: Профиль батырмасы */
+.profile-btn-floating {
+    position: absolute; top: 20px; right: 15px; z-index: 150;
+    background: rgba(30,32,38,0.9); border: none; color: white;
+    width: 45px; height: 45px; border-radius: 50%; font-size: 20px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); backdrop-filter: blur(5px);
+}
+
 .center-pin {position: absolute; top: 50%; left: 50%; transform: translate(-50%, -100%); z-index: 50; pointer-events: auto; cursor: pointer; display: none; flex-direction: column; align-items: center; transition: transform 0.1s;}
 .center-pin:active {transform: translate(-50%, -100%) scale(0.9);}
 .center-pin.show {display: flex;}
@@ -152,6 +161,11 @@ html, body {
     <span>Tulpar Taxi</span>
   </div>
 
+  <!-- ЖАҢА: ПРОФИЛЬ БАТЫРМАСЫ -->
+  <button class="profile-btn-floating" onclick="goToProfile()" id="profileBtn" title="Профиль">
+    👤
+  </button>
+
   <div id="centerPin" class="center-pin show" onclick="confirmCenterPoint()">
     <div class="center-pin-label" id="centerPinLabel">Мінетін жер</div>
     <div class="center-pin-icon" id="centerPinIcon">🚶‍♂️</div>
@@ -173,7 +187,8 @@ html, body {
 
   <div class="floating-actions">
     <div class="right-btns">
-      <button class="dark-pill">☎ Қолдау</button>
+      <!-- Қолдау қызметі WhatsApp-қа бағытталды -->
+      <button class="dark-pill" onclick="window.open('https://wa.me/77777906029', '_blank')">☎ Қолдау</button>
     </div>
   </div>
 
@@ -303,21 +318,36 @@ const prices = {
     plus:    { base: 500, km: 200 }
 };
 
-const savedName = localStorage.getItem('tulpar_passenger_name');
-const savedPhone = localStorage.getItem('tulpar_passenger_phone');
+// Пайдаланушы профилін тексеру
+let savedName = localStorage.getItem('tulpar_passenger_name');
+let savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let onlineDriverMarkers = [];
 
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
-// ЖАҢА ФУНКЦИЯ: Белсенді тапсырысты тексеру (localStorage қолданылады)
+// ЖАҢА: Профильге өту функциясы
+function goToProfile() {
+    window.location.href = 'profile.html';
+}
+
+// ЖАҢА: Профильден келген деректерді тексеру және индекс бетіндегі кнопканы өзгерту
+function checkProfile() {
+    const user = JSON.parse(localStorage.getItem('urzhar_user'));
+    if (user) {
+        document.getElementById('profileBtn').innerHTML = `<b style="font-size:16px;">${user.name.charAt(0).toUpperCase()}</b>`;
+        // Егер профильде аты болса, оны сақтаймыз
+        localStorage.setItem('tulpar_passenger_name', user.name);
+        localStorage.setItem('tulpar_passenger_phone', user.phone);
+    }
+}
+
 function checkActiveOrder() {
     const activeOrderId = localStorage.getItem("urzhar_taxi_order_id");
     const activeToken = localStorage.getItem("urzhar_taxi_tracking_token");
     
     if (activeOrderId && activeToken) {
         document.getElementById('activeOrderBanner').style.display = 'block';
-        // Белсенді тапсырыс кезінде жаңа тапсырыс беру панелін жасырамыз
         document.getElementById('bottomPanel').style.display = 'none';
     } else {
         document.getElementById('activeOrderBanner').style.display = 'none';
@@ -665,12 +695,34 @@ function selectCar(k){
 
 function continueToDetails(){
   document.getElementById('passengerSummary').innerHTML=`🚘 ${selectedCar==='economy'?'Эконом':selectedCar==='comfort'?'Бизнес':'Бизнес+'}<br>📏 ${distanceKm.toFixed(1)} км<br>💰 ${currentPrices[selectedCar].toLocaleString('kk-KZ')} ₸`;
-  if(savedName && savedPhone) {document.getElementById('savedName').textContent = savedName;document.getElementById('savedPhone').textContent = savedPhone;document.getElementById('savedPassenger').style.display = 'flex';document.getElementById('passengerInputs').style.display = 'none';} 
-  else {document.getElementById('savedPassenger').style.display = 'none';document.getElementById('passengerInputs').style.display = 'block';}
+  
+  // ЖАҢА: Профильден деректерді тексеру
+  const profileUser = JSON.parse(localStorage.getItem('urzhar_user'));
+  if (profileUser && profileUser.name && profileUser.phone) {
+      document.getElementById('savedName').textContent = profileUser.name;
+      document.getElementById('savedPhone').textContent = profileUser.phone;
+      document.getElementById('savedPassenger').style.display = 'flex';
+      document.getElementById('passengerInputs').style.display = 'none';
+      savedName = profileUser.name;
+      savedPhone = profileUser.phone;
+  } else if(savedName && savedPhone) {
+      document.getElementById('savedName').textContent = savedName;
+      document.getElementById('savedPhone').textContent = savedPhone;
+      document.getElementById('savedPassenger').style.display = 'flex';
+      document.getElementById('passengerInputs').style.display = 'none';
+  } else {
+      document.getElementById('savedPassenger').style.display = 'none';
+      document.getElementById('passengerInputs').style.display = 'block';
+  }
   showPage('page3');
 }
 
-function editPassenger(){document.getElementById('savedPassenger').style.display = 'none';document.getElementById('passengerInputs').style.display = 'block';document.getElementById('name').value = savedName || '';document.getElementById('phone').value = savedPhone || '';}
+function editPassenger(){
+    document.getElementById('savedPassenger').style.display = 'none';
+    document.getElementById('passengerInputs').style.display = 'block';
+    document.getElementById('name').value = savedName || '';
+    document.getElementById('phone').value = savedPhone || '';
+}
 
 function backToMap(){
     showPage('page1');
@@ -681,8 +733,9 @@ function backToMap(){
 
 async function makeOrder(){
   let name, phone;
-  if(savedName && savedPhone && document.getElementById('passengerInputs').style.display === 'none') {name = savedName; phone = savedPhone;} 
-  else {
+  if(savedName && savedPhone && document.getElementById('passengerInputs').style.display === 'none') {
+      name = savedName; phone = savedPhone;
+  } else {
     name = document.getElementById('name').value.trim(); phone = document.getElementById('phone').value.trim();
     if(!name || !phone) return alert('Аты-жөніңіз бен телефонды енгізіңіз.');
     localStorage.setItem('tulpar_passenger_name', name); localStorage.setItem('tulpar_passenger_phone', phone);
@@ -693,7 +746,6 @@ async function makeOrder(){
     let result={};try{result=await response.json()}catch(e){}
     if(!response.ok)throw new Error(result.error||'Тапсырыс жіберілмеді.');
     
-    // localStorage-ке сақтау (Браузер жабылса да өшпейді)
     if(result.orderId&&result.trackingToken){
         localStorage.setItem("urzhar_taxi_order_id",result.orderId);
         localStorage.setItem("urzhar_taxi_tracking_token",result.trackingToken);
@@ -788,7 +840,8 @@ async function registerDriver(){
 document.addEventListener('DOMContentLoaded',()=>{
     initMap();
     updateButtonState();
-    checkActiveOrder(); // Бет жүктелгенде тексеру
+    checkActiveOrder();
+    checkProfile(); // Профильді тексеру функциясы қосылды
 });
 </script>
 </body>
