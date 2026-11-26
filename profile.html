@@ -78,25 +78,25 @@
     <!-- 1. Телефон нөмірін енгізу -->
     <div id="login-screen">
         <button class="back-btn" onclick="window.location.href='index.html'">←</button>
-        <h2>Өз номеріңізбен тіркелу</h2>
-        <p class="subtitle">Қызметке кіру үшін телефон нөміріңізді енгізіңіз</p>
+        <h2 data-i18n="login_title">Өз номеріңізбен тіркелу</h2>
+        <p class="subtitle" data-i18n="login_subtitle">Қызметке кіру үшін телефон нөміріңізді енгізіңіз</p>
         <div class="input-group">
             <input type="tel" id="phone-input" placeholder="+7 (___) ___-__-__" value="+7 ">
         </div>
-        <button class="btn-primary" id="send-code-btn" onclick="sendCode()">Код алу</button>
-        <div class="error-text" id="phone-error">Нөмірді толық енгізіңіз!</div>
+        <button class="btn-primary" id="send-code-btn" onclick="sendCode()" data-i18n="btn_get_code">Код алу</button>
+        <div class="error-text" id="phone-error" data-i18n="error_phone">Нөмірді толық енгізіңіз!</div>
     </div>
 
     <!-- 2. SMS Кодты енгізу -->
     <div id="otp-screen" class="hidden">
         <button class="back-btn" onclick="backToLogin()">←</button>
-        <h2>Кодты енгізіңіз</h2>
+        <h2 data-i18n="otp_title">Кодты енгізіңіз</h2>
         <p class="subtitle" id="otp-subtitle">Код +7 777 790 60 29 нөміріне жіберілді</p>
         <div class="input-group">
             <input type="number" id="otp-input" placeholder="0000" maxlength="4" style="text-align: center; letter-spacing: 10px; font-size: 26px; font-weight: 800;">
         </div>
-        <button class="btn-primary" id="verify-btn" onclick="verifyCode()">Растау</button>
-        <div class="error-text" id="otp-error">Код қате! (Тесттік код: 1234)</div>
+        <button class="btn-primary" id="verify-btn" onclick="verifyCode()" data-i18n="btn_confirm">Растау</button>
+        <div class="error-text" id="otp-error" data-i18n="error_otp">Код қате! (Тесттік код: 1234)</div>
     </div>
 
     <!-- 3. Профиль экраны -->
@@ -112,8 +112,8 @@
             <a href="tel:112" class="menu-item">
                 <div class="menu-icon" style="color: #d00;">🛡️</div>
                 <div class="menu-content">
-                    <div class="menu-title">Қауіпсіздік · SOS</div>
-                    <div class="menu-subtitle">112-ге қоңырау шалу</div>
+                    <div class="menu-title" data-i18n="menu_sos">Қауіпсіздік · SOS</div>
+                    <div class="menu-subtitle" data-i18n="menu_sos_sub">112-ге қоңырау шалу</div>
                 </div>
                 <div class="menu-arrow">›</div>
             </a>
@@ -121,8 +121,8 @@
             <div class="menu-item" onclick="openSheet('payment')">
                 <div class="menu-icon">💳</div>
                 <div class="menu-content">
-                    <div class="menu-title">Төлем тәсілдері</div>
-                    <div class="menu-subtitle" id="current-payment">Қолма-қол</div>
+                    <div class="menu-title" data-i18n="menu_payment">Төлем тәсілдері</div>
+                    <div class="menu-subtitle" id="current-payment" data-i18n="payment_cash">Қолма-қол</div>
                 </div>
                 <div class="menu-arrow">›</div>
             </div>
@@ -132,40 +132,50 @@
             <a href="https://wa.me/77777906029" target="_blank" class="menu-item">
                 <div class="menu-icon">🎧</div>
                 <div class="menu-content">
-                    <div class="menu-title">Қолдау қызметі</div>
+                    <div class="menu-title" data-i18n="menu_support">Қолдау қызметі</div>
                     <div class="menu-subtitle">WhatsApp · +7 777 790 60 29</div>
                 </div>
                 <div class="menu-arrow">›</div>
             </a>
-            <!-- Тіл -->
-            <div class="menu-item" onclick="openSheet('language')">
-                <div class="menu-icon">🌐</div>
-                <div class="menu-content">
-                    <div class="menu-title">Тіл</div>
-                    <div class="menu-subtitle" id="current-language">Қазақша</div>
-                </div>
-                <div class="menu-arrow">›</div>
-            </div>
         </div>
 
         <div class="menu-card">
             <div class="menu-item" onclick="openSheet('terms')">
                 <div class="menu-icon">📄</div>
-                <div class="menu-content"><div class="menu-title">Пайдаланушы келісімі</div></div>
+                <div class="menu-content"><div class="menu-title" data-i18n="menu_terms">Пайдаланушы келісімі</div></div>
                 <div class="menu-arrow">›</div>
             </div>
             <div class="menu-item" onclick="openSheet('privacy')">
                 <div class="menu-icon">🛡️</div>
-                <div class="menu-content"><div class="menu-title">Құпиялылық саясаты</div></div>
+                <div class="menu-content"><div class="menu-title" data-i18n="menu_privacy">Құпиялылық саясаты</div></div>
                 <div class="menu-arrow">›</div>
             </div>
         </div>
 
+        <!-- ЖАҢА: Тіл таңдау бөлек шығарылды және Әкімшілік үстіне қойылды -->
+        <div class="menu-card">
+            <div class="menu-item" onclick="openSheet('language')">
+                <div class="menu-icon">🌐</div>
+                <div class="menu-content">
+                    <div class="menu-title" data-i18n="menu_language">Тіл</div>
+                    <div class="menu-subtitle" id="current-language">Қазақша</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </div>
+            <a href="admin.html" class="menu-item">
+                <div class="menu-icon">🛡</div>
+                <div class="menu-content">
+                    <div class="menu-title" data-i18n="menu_admin">Әкімшілік</div>
+                </div>
+                <div class="menu-arrow">›</div>
+            </a>
+        </div>
+
         <button class="logout-btn" onclick="logout()">
-            <span>🚪</span> Шығу
+            <span>🚪</span> <span data-i18n="menu_logout">Шығу</span>
         </button>
         <button class="delete-btn" onclick="if(confirm('Аккаунтты жойғыңыз келе ме?')) logout()">
-            <span>🗑️</span> Аккаунтты жою
+            <span>🗑️</span> <span data-i18n="menu_delete">Аккаунтты жою</span>
         </button>
 
         <div class="version">
@@ -178,15 +188,131 @@
 <div class="bottom-sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 <div class="bottom-sheet" id="bottom-sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheet-title">Таңдаңыз</div>
+    <div class="sheet-title" id="sheet-title" data-i18n="sheet_title_default">Таңдаңыз</div>
     
     <!-- Ішіндегі контент JS арқылы өзгереді -->
     <div id="sheet-content"></div>
 </div>
 
 <script>
+    // --- Аудармалар сөздігі (i18n) ---
+    const translations = {
+        kk: {
+            login_title: "Өз номеріңізбен тіркелу",
+            login_subtitle: "Қызметке кіру үшін телефон нөміріңізді енгізіңіз",
+            btn_get_code: "Код алу",
+            error_phone: "Нөмірді толық енгізіңіз!",
+            otp_title: "Кодты енгізіңіз",
+            btn_confirm: "Растау",
+            error_otp: "Код қате! (Тесттік код: 1234)",
+            menu_sos: "Қауіпсіздік · SOS",
+            menu_sos_sub: "112-ге қоңырау шалу",
+            menu_payment: "Төлем тәсілдері",
+            payment_cash: "Қолма-қол",
+            payment_card: "Карта",
+            menu_support: "Қолдау қызметі",
+            menu_terms: "Пайдаланушы келісімі",
+            menu_privacy: "Құпиялылық саясаты",
+            menu_language: "Тіл",
+            menu_admin: "Әкімшілік",
+            menu_logout: "Шығу",
+            menu_delete: "Аккаунтты жою",
+            sheet_title_default: "Таңдаңыз",
+            sheet_payment_title: "Төлем тәсілін таңдаңыз",
+            sheet_lang_title: "Тілді таңдаңыз",
+            lang_kk: "Қазақша",
+            lang_ru: "Орысша",
+            lang_en: "Ағылшынша",
+            terms_title: "Пайдаланушы келісімі",
+            privacy_title: "Құпиялылық саясаты"
+        },
+        ru: {
+            login_title: "Регистрация по номеру",
+            login_subtitle: "Введите номер телефона для входа",
+            btn_get_code: "Получить код",
+            error_phone: "Введите номер полностью!",
+            otp_title: "Введите код",
+            btn_confirm: "Подтвердить",
+            error_otp: "Неверный код! (Тест: 1234)",
+            menu_sos: "Безопасность · SOS",
+            menu_sos_sub: "Позвонить 112",
+            menu_payment: "Способы оплаты",
+            payment_cash: "Наличными",
+            payment_card: "Картой",
+            menu_support: "Служба поддержки",
+            menu_terms: "Пользовательское соглашение",
+            menu_privacy: "Политика конфиденциальности",
+            menu_language: "Язык",
+            menu_admin: "Админ-панель",
+            menu_logout: "Выйти",
+            menu_delete: "Удалить аккаунт",
+            sheet_title_default: "Выберите",
+            sheet_payment_title: "Выберите способ оплаты",
+            sheet_lang_title: "Выберите язык",
+            lang_kk: "Казахский",
+            lang_ru: "Русский",
+            lang_en: "Английский",
+            terms_title: "Пользовательское соглашение",
+            privacy_title: "Политика конфиденциальности"
+        },
+        en: {
+            login_title: "Register with your number",
+            login_subtitle: "Enter your phone number to log in",
+            btn_get_code: "Get code",
+            error_phone: "Enter full number!",
+            otp_title: "Enter code",
+            btn_confirm: "Confirm",
+            error_otp: "Wrong code! (Test: 1234)",
+            menu_sos: "Security · SOS",
+            menu_sos_sub: "Call 112",
+            menu_payment: "Payment methods",
+            payment_cash: "Cash",
+            payment_card: "Card",
+            menu_support: "Support service",
+            menu_terms: "Terms of use",
+            menu_privacy: "Privacy policy",
+            menu_language: "Language",
+            menu_admin: "Admin panel",
+            menu_logout: "Logout",
+            menu_delete: "Delete account",
+            sheet_title_default: "Select",
+            sheet_payment_title: "Select payment method",
+            sheet_lang_title: "Select language",
+            lang_kk: "Kazakh",
+            lang_ru: "Russian",
+            lang_en: "English",
+            terms_title: "Terms of use",
+            privacy_title: "Privacy policy"
+        }
+    };
+
+    let currentLang = localStorage.getItem('tulpar_language') || 'kk';
+
+    function applyLanguage(lang) {
+        currentLang = lang;
+        localStorage.setItem('tulpar_language', lang);
+        
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (translations[lang] && translations[lang][key]) {
+                el.innerText = translations[lang][key];
+            }
+        });
+
+        // Тіл мәзіріндегі ағымдағы тілді жаңарту
+        const langNames = { kk: 'Қазақша', ru: 'Орысша', en: 'Ағылшынша' };
+        document.getElementById('current-language').innerText = langNames[lang];
+        
+        // Егер қателік мәтіні көрініп тұрса, оны да аудару
+        if(document.getElementById('phone-error').style.display === 'block') {
+            document.getElementById('phone-error').innerText = translations[lang].error_phone;
+        }
+    }
+
     // --- Логин және профиль логикасы ---
     document.addEventListener("DOMContentLoaded", () => {
+        applyLanguage(currentLang); // Тілді жүктеу
+
         const savedUser = localStorage.getItem('urzhar_user');
         if (savedUser) {
             showProfile(JSON.parse(savedUser));
@@ -208,16 +334,20 @@
         document.getElementById('phone-error').style.display = 'none';
         
         const btn = document.getElementById('send-code-btn');
-        btn.innerHTML = '<span class="spinner"></span> Жіберілуде...';
+        btn.innerHTML = '<span class="spinner"></span>...';
         btn.disabled = true;
 
         setTimeout(() => {
-            btn.innerHTML = 'Код алу';
+            btn.innerHTML = translations[currentLang].btn_get_code;
             btn.disabled = false;
             
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('otp-screen').classList.remove('hidden');
-            document.getElementById('otp-subtitle').innerText = `Код ${phone} нөміріне жіберілді (Тест: 1234)`;
+            
+            let text = `Код ${phone} нөміріне жіберілді (Тест: 1234)`;
+            if(currentLang === 'ru') text = `Код отправлен на ${phone} (Тест: 1234)`;
+            if(currentLang === 'en') text = `Code sent to ${phone} (Test: 1234)`;
+            document.getElementById('otp-subtitle').innerText = text;
         }, 1000);
     }
 
@@ -227,7 +357,7 @@
         
         if (code === '1234') { 
             document.getElementById('otp-error').style.display = 'none';
-            btn.innerHTML = '<span class="spinner"></span> Тексерілуде...';
+            btn.innerHTML = '<span class="spinner"></span>...';
             
             setTimeout(() => {
                 let user = JSON.parse(localStorage.getItem('urzhar_user'));
@@ -239,7 +369,7 @@
                 localStorage.setItem('urzhar_user', JSON.stringify(user));
                 
                 showProfile(user);
-                btn.innerHTML = 'Растау';
+                btn.innerHTML = translations[currentLang].btn_confirm;
             }, 800);
             
         } else {
@@ -260,7 +390,7 @@
     function editName() {
         let user = JSON.parse(localStorage.getItem('urzhar_user'));
         if(!user) return;
-        let newName = prompt("Атыңызды өзгертіңіз:", user.name);
+        let newName = prompt("Атыңызды өзгертіңіз / Измените имя / Change name:", user.name);
         if (newName && newName.trim() !== "") {
             user.name = newName.trim();
             localStorage.setItem('urzhar_user', JSON.stringify(user));
@@ -291,34 +421,37 @@
         sheet.classList.add('active');
 
         if (type === 'payment') {
-            sheetTitle.innerText = "Төлем тәсілін таңдаңыз";
+            sheetTitle.innerText = translations[currentLang].sheet_payment_title;
             let current = document.getElementById('current-payment').innerText;
+            let cashText = translations[currentLang].payment_cash;
+            let cardText = translations[currentLang].payment_card;
+            
             sheetContent.innerHTML = `
-                <div class="sheet-item ${current === 'Қолма-қол' ? 'selected' : ''}" onclick="selectPayment('Қолма-қол')">
-                    <span>💵 Қолма-қол</span> <span class="check-icon">✔</span>
+                <div class="sheet-item ${current === cashText ? 'selected' : ''}" onclick="selectPayment('cash')">
+                    <span>💵 ${cashText}</span> <span class="check-icon">✔</span>
                 </div>
-                <div class="sheet-item ${current === 'Карта' ? 'selected' : ''}" onclick="selectPayment('Карта')">
-                    <span>💳 Банк картасы</span> <span class="check-icon">✔</span>
+                <div class="sheet-item ${current === cardText ? 'selected' : ''}" onclick="selectPayment('card')">
+                    <span>💳 ${cardText}</span> <span class="check-icon">✔</span>
                 </div>
             `;
         } 
         else if (type === 'language') {
-            sheetTitle.innerText = "Тілді таңдаңыз";
-            let current = document.getElementById('current-language').innerText;
+            sheetTitle.innerText = translations[currentLang].sheet_lang_title;
             sheetContent.innerHTML = `
-                <div class="sheet-item ${current === 'Қазақша' ? 'selected' : ''}" onclick="selectLanguage('Қазақша')">
-                    <span>🇰🇿 Қазақша</span> <span class="check-icon">✔</span>
+                <div class="sheet-item ${currentLang === 'kk' ? 'selected' : ''}" onclick="selectLanguage('kk')">
+                    <span>🇰🇿 ${translations.kk.lang_kk}</span> <span class="check-icon">✔</span>
                 </div>
-                <div class="sheet-item ${current === 'Орысша' ? 'selected' : ''}" onclick="selectLanguage('Орысша')">
-                    <span>🇷🇺 Орысша</span> <span class="check-icon">✔</span>
+                <div class="sheet-item ${currentLang === 'ru' ? 'selected' : ''}" onclick="selectLanguage('ru')">
+                    <span>🇷🇺 ${translations.kk.lang_ru}</span> <span class="check-icon">✔</span>
                 </div>
-                <div class="sheet-item ${current === 'Ағылшынша' ? 'selected' : ''}" onclick="selectLanguage('Ағылшынша')">
-                    <span>🇬🇧 Ағылшынша</span> <span class="check-icon">✔</span>
+                <div class="sheet-item ${currentLang === 'en' ? 'selected' : ''}" onclick="selectLanguage('en')">
+                    <span>🇬🇧 ${translations.kk.lang_en}</span> <span class="check-icon">✔</span>
                 </div>
             `;
         }
         else if (type === 'terms') {
-            sheetTitle.innerText = "Пайдаланушы келісімі";
+            sheetTitle.innerText = translations[currentLang].terms_title;
+            // Мұнда тек қазақша мәтін қалдырылды, керек болса көбейтуге болады
             sheetContent.innerHTML = `
                 <div class="sheet-text-content">
                     <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
@@ -332,7 +465,7 @@
             `;
         }
         else if (type === 'privacy') {
-            sheetTitle.innerText = "Құпиялылық саясаты";
+            sheetTitle.innerText = translations[currentLang].privacy_title;
             sheetContent.innerHTML = `
                 <div class="sheet-text-content">
                     <p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>
@@ -353,12 +486,13 @@
     }
 
     function selectPayment(method) {
-        document.getElementById('current-payment').innerText = method;
+        const text = method === 'cash' ? translations[currentLang].payment_cash : translations[currentLang].payment_card;
+        document.getElementById('current-payment').innerText = text;
         closeSheet();
     }
 
     function selectLanguage(lang) {
-        document.getElementById('current-language').innerText = lang;
+        applyLanguage(lang);
         closeSheet();
     }
 </script>
