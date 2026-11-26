@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>ҮРЖАР TAXI — Жүргізуші кіруі</title>
+<title data-i18n="page_title">ҮРЖАР TAXI — Жүргізуші кіруі</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
@@ -51,42 +51,139 @@ input::placeholder{color:#5a6d85}
 <div class="login-box">
   <div class="login-header">
     <span class="brand-icon">🚕</span>
-    <h1>ҮРЖАР TAXI</h1>
-    <h2>Жүргізуші кабинеті</h2>
-    <p>Жүйеге кіру үшін телефон мен құпиясөзді енгізіңіз</p>
+    <h1 data-i18n="brand_title">ҮРЖАР TAXI</h1>
+    <h2 data-i18n="cabinet_title">Жүргізуші кабинеті</h2>
+    <p data-i18n="login_hint">Жүйеге кіру үшін телефон мен құпиясөзді енгізіңіз</p>
   </div>
 
   <form id="loginForm">
     <div class="form-group">
-      <label class="form-label" for="phone">📞 Телефон нөмірі</label>
-      <input id="phone" type="tel" placeholder="+7 777 123 45 67" autocomplete="tel" inputmode="tel" required>
+      <label class="form-label" for="phone" data-i18n="label_phone">📞 Телефон нөмірі</label>
+      <input id="phone" type="tel" placeholder="+7 777 123 45 67" data-i18n-placeholder="placeholder_phone" autocomplete="tel" inputmode="tel" required>
     </div>
 
     <div class="form-group">
-      <label class="form-label" for="password">🔒 Құпиясөз</label>
+      <label class="form-label" for="password" data-i18n="label_password">🔒 Құпиясөз</label>
       <div class="password-wrap">
-        <input id="password" type="password" placeholder="Уақытша құпиясөз" autocomplete="current-password" required>
+        <input id="password" type="password" placeholder="Уақытша құпиясөз" data-i18n-placeholder="placeholder_password" autocomplete="current-password" required>
         <button type="button" class="toggle-pass" id="togglePassword">👁️</button>
       </div>
     </div>
 
-    <button type="submit" class="submit-btn" id="submitBtn">ЖҮЙЕГЕ КІРУ</button>
+    <button type="submit" class="submit-btn" id="submitBtn" data-i18n="btn_login">ЖҮЙЕГЕ КІРУ</button>
     <div id="message" class="msg"></div>
   </form>
 
   <div class="blocked-panel" id="blockedPanel">
     <span class="blocked-icon">🚫</span>
-    <h3>Аккаунтыңыз бұғатталған</h3>
-    <p>Жүйеге кіру мүмкін емес.</p>
-    <div class="blocked-reason" id="blockedReason">Себебі көрсетілмеген</div>
+    <h3 data-i18n="blocked_title">Аккаунтыңыз бұғатталған</h3>
+    <p data-i18n="blocked_desc">Жүйеге кіру мүмкін емес.</p>
+    <div class="blocked-reason" id="blockedReason" data-i18n="blocked_reason_default">Себебі көрсетілмеген</div>
   </div>
 
   <div class="footer-link">
-    <a href="/index.html">← Басты бетке оралу</a>
+    <a href="/index.html" data-i18n="link_back">← Басты бетке оралу</a>
   </div>
 </div>
 
 <script>
+// --- Аудармалар сөздігі ---
+const translations = {
+    kk: {
+        page_title: "ҮРЖАР TAXI — Жүргізуші кіруі",
+        brand_title: "ҮРЖАР TAXI",
+        cabinet_title: "Жүргізуші кабинеті",
+        login_hint: "Жүйеге кіру үшін телефон мен құпиясөзді енгізіңіз",
+        label_phone: "📞 Телефон нөмірі",
+        placeholder_phone: "+7 777 123 45 67",
+        label_password: "🔒 Құпиясөз",
+        placeholder_password: "Уақытша құпиясөз",
+        btn_login: "ЖҮЙЕГЕ КІРУ",
+        err_phone_empty: "Телефон нөмірін толық енгізіңіз",
+        err_pass_empty: "Құпиясөзді енгізіңіз",
+        msg_checking: "Тексерілуде...",
+        msg_logging_in: "Кіру...",
+        msg_wrong_cred: "Телефон немесе құпиясөз қате",
+        msg_net_err: "Сервермен байланыс қатесі. Қайталап көріңіз.",
+        msg_success: "✅ Сәтті кірдіңіз! Бағытталуда...",
+        blocked_title: "Аккаунтыңыз бұғатталған",
+        blocked_desc: "Жүйеге кіру мүмкін емес.",
+        blocked_reason_default: "Себебі көрсетілмеген",
+        link_back: "← Басты бетке оралу"
+    },
+    ru: {
+        page_title: "УРЖАР TAXI — Вход для водителей",
+        brand_title: "УРЖАР TAXI",
+        cabinet_title: "Кабинет водителя",
+        login_hint: "Введите телефон и пароль для входа в систему",
+        label_phone: "📞 Номер телефона",
+        placeholder_phone: "+7 777 123 45 67",
+        label_password: "🔒 Пароль",
+        placeholder_password: "Временный пароль",
+        btn_login: "ВОЙТИ В СИСТЕМУ",
+        err_phone_empty: "Введите номер телефона полностью",
+        err_pass_empty: "Введите пароль",
+        msg_checking: "Проверка...",
+        msg_logging_in: "Вход...",
+        msg_wrong_cred: "Неверный телефон или пароль",
+        msg_net_err: "Ошибка связи с сервером. Попробуйте еще раз.",
+        msg_success: "✅ Успешный вход! Перенаправление...",
+        blocked_title: "Ваш аккаунт заблокирован",
+        blocked_desc: "Вход в систему невозможен.",
+        blocked_reason_default: "Причина не указана",
+        link_back: "← Вернуться на главную"
+    },
+    en: {
+        page_title: "URZHAR TAXI — Driver Login",
+        brand_title: "URZHAR TAXI",
+        cabinet_title: "Driver Cabinet",
+        login_hint: "Enter your phone and password to log in",
+        label_phone: "📞 Phone number",
+        placeholder_phone: "+7 777 123 45 67",
+        label_password: "🔒 Password",
+        placeholder_password: "Temporary password",
+        btn_login: "LOG IN",
+        err_phone_empty: "Enter your full phone number",
+        err_pass_empty: "Enter your password",
+        msg_checking: "Checking...",
+        msg_logging_in: "Logging in...",
+        msg_wrong_cred: "Incorrect phone or password",
+        msg_net_err: "Server connection error. Please try again.",
+        msg_success: "✅ Successfully logged in! Redirecting...",
+        blocked_title: "Your account is blocked",
+        blocked_desc: "Login is not possible.",
+        blocked_reason_default: "Reason not specified",
+        link_back: "← Return to main page"
+    }
+};
+
+let currentLang = localStorage.getItem('tulpar_language') || 'kk';
+
+function applyLanguage(lang) {
+    currentLang = lang;
+    // Мұнда localStorage-ке сақтамаймыз, өйткені бұл бет тек оқиды.
+    
+    // Title-ды ауыстыру
+    const pageTitleKey = translations[lang].page_title;
+    if (pageTitleKey) document.title = pageTitleKey;
+
+    // Мәтіндерді ауыстыру
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang] && translations[lang][key]) {
+            el.innerText = translations[lang][key];
+        }
+    });
+
+    // Placeholder-лерді ауыстыру
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+        const key = el.getAttribute('data-i18n-placeholder');
+        if (translations[lang] && translations[lang][key]) {
+            el.setAttribute('placeholder', translations[lang][key]);
+        }
+    });
+}
+
 const phoneInput = document.getElementById("phone");
 const passwordInput = document.getElementById("password");
 const togglePassword = document.getElementById("togglePassword");
@@ -123,17 +220,17 @@ loginForm.addEventListener("submit", async (e) => {
   const password = passwordInput.value;
 
   if (!phone || phone.replace(/\D/g, "").length < 11) {
-    message.textContent = "Телефон нөмірін толық енгізіңіз";
+    message.textContent = translations[currentLang].err_phone_empty;
     message.className = "msg show error"; return;
   }
   if (!password) {
-    message.textContent = "Құпиясөзді енгізіңіз";
+    message.textContent = translations[currentLang].err_pass_empty;
     message.className = "msg show error"; return;
   }
 
   blockedPanel.classList.remove("show");
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spinner"></span>Тексерілуде...';
+  submitBtn.innerHTML = `<span class="spinner"></span>${translations[currentLang].msg_checking}`;
   message.className = "msg";
 
   try {
@@ -148,36 +245,38 @@ loginForm.addEventListener("submit", async (e) => {
 
     if (response.status === 403 && result.blocked) {
       message.className = "msg";
-      blockedReason.textContent = result.reason || "Себебі көрсетілмеген";
+      blockedReason.textContent = result.reason || translations[currentLang].blocked_reason_default;
       blockedPanel.classList.add("show");
       submitBtn.disabled = false;
-      submitBtn.textContent = "ЖҮЙЕГЕ КІРУ";
+      submitBtn.textContent = translations[currentLang].btn_login;
       return;
     }
 
     if (!response.ok || !result.success) {
-      message.textContent = result.message || "Телефон немесе құпиясөз қате";
+      message.textContent = result.message || translations[currentLang].msg_wrong_cred;
       message.className = "msg show error";
       submitBtn.disabled = false;
-      submitBtn.textContent = "ЖҮЙЕГЕ КІРУ";
+      submitBtn.textContent = translations[currentLang].btn_login;
       passwordInput.value = "";
       return;
     }
 
-    message.textContent = "✅ Сәтті кірдіңіз! Бағытталуда...";
+    message.textContent = translations[currentLang].msg_success;
     message.className = "msg show success";
-    submitBtn.innerHTML = '<span class="spinner"></span>Кіру...';
+    submitBtn.innerHTML = `<span class="spinner"></span>${translations[currentLang].msg_logging_in}`;
     setTimeout(() => { window.location.href = "/driver.html"; }, 500);
 
   } catch (error) {
-    message.textContent = "Сервермен байланыс қатесі. Қайталап көріңіз.";
+    message.textContent = translations[currentLang].msg_net_err;
     message.className = "msg show error";
     submitBtn.disabled = false;
-    submitBtn.textContent = "ЖҮЙЕГЕ КІРУ";
+    submitBtn.textContent = translations[currentLang].btn_login;
   }
 });
 
+// Бет жүктелгенде тілді қолдану
 window.addEventListener("DOMContentLoaded", () => {
+  applyLanguage(currentLang);
   if (!phoneInput.value) phoneInput.focus();
 });
 </script>
