@@ -706,49 +706,38 @@ function initMap(){
 
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
   setTimeout(() => map.emit('moveend'), 1000);
+  
+  // Егер бұрын GPS анықталған болса, көк домалақты бірден көрсету
+  if (savedLat && savedLng) {
+      updateUserGpsMarker(Number(savedLat), Number(savedLng));
+  }
 }
 
-async function confirmCenterPoint() {
-    if (mapMode === 'route_ready') return;
-    const center = map.getCenter();
-    const p = { lat: center[1], lon: center[0] };
-    const addr = await reverseAddress(p);
-
-    if (mapMode === 'pickup') {
-        startPoint = p;
-        document.getElementById('from').value = addr;
-        document.getElementById('clearFrom').classList.add('show');
-        if(startMarker) startMarker.destroy();
-        startMarker = new mapgl.HtmlMarker(map, {
-            coordinates: [p.lon, p.lat],
-            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
-                <div onclick="clearPoint('A')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
-                <div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div></div>`,
-            anchor: [0.5, 1]
-        });
-        mapMode = 'destination';
-        document.getElementById('centerPinLabel').innerText = translations[currentLang].pin_dest;
-        document.getElementById('centerPinIcon').textContent = '🏁';
-        document.getElementById('centerPinIcon').style.background = '#101114';
-    } else if (mapMode === 'destination') {
-        endPoint = p;
-        document.getElementById('to').value = addr;
-        document.getElementById('clearTo').classList.add('show');
-        if(endMarker) endMarker.destroy();
-        endMarker = new mapgl.HtmlMarker(map, {
-            coordinates: [p.lon, p.lat],
-            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
-                <div onclick="clearPoint('B')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
-                <div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div></div>`,
-            anchor: [0.5, 1]
-        });
-        document.getElementById('centerPin').classList.remove('show');
-        mapMode = 'route_ready';
-        await getRoute();
+// --- ЖАҢА: Көк домалақты (GPS маркерін) басқару функциясы ---
+function updateUserGpsMarker(lat, lng) {
+    if (!map) return;
+    
+    // Ескі маркер болса өшіреміз
+    if (userGpsMarker) { 
+        userGpsMarker.destroy(); 
+        userGpsMarker = null; 
     }
+    
+    // Жаңа көк домалақ жасаймыз
+    userGpsMarker = new mapgl.HtmlMarker(map, {
+        coordinates: [lng, lat],
+        html: `<div style="position:relative; display:flex; align-items:center; justify-content:center; width: 40px; height: 40px;">
+                <!-- Пульсация эффектісі -->
+                <div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div>
+                <!-- Көк домалақтың өзі -->
+                <div style="background-color:#3b82f6; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4); z-index:2;"></div>
+               </div>`,
+        anchor: [0.5, 0.5],
+        zIndex: 9999 // Ең үстіңгі қабатта тұруы үшін
+    });
 }
 
-// --- ЖАҢАРТЫЛҒАН ЖӘНЕ ТҮЗЕТІЛГЕН GPS ФУНКЦИЯСЫ ---
+// --- ЖАҢАРТЫЛҒАН GPS ФУНКЦИЯСЫ ---
 function flyToGPS() {
     const btn = document.getElementById('gpsBtn');
     btn.classList.add('loading');
@@ -761,24 +750,19 @@ function flyToGPS() {
     
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
+            const lat = Number(pos.coords.latitude);
+            const lng = Number(pos.coords.longitude);
             
+            // 1. Көк домалақты шығарамыз
+            updateUserGpsMarker(lat, lng);
+            
+            // 2. Картаны сол жерге центрлейміз
             if (map) {
                 map.setCenter([lng, lat]);
                 map.setZoom(16);
             }
             
-            if(userGpsMarker) userGpsMarker.destroy();
-            userGpsMarker = new mapgl.HtmlMarker(map, {
-                coordinates: [lng, lat],
-                html: `<div style="position:relative; display:flex; align-items:center; justify-content:center;">
-                    <div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div>
-                    <div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); z-index:2;"></div>
-                </div>`,
-                anchor: [0.5, 0.5]
-            });
-            
+            // 3. Координаталарды сақтаймыз
             localStorage.setItem('passenger_last_lat', lat);
             localStorage.setItem('passenger_last_lng', lng);
             
@@ -799,11 +783,19 @@ function enableGPS() {
   if (!navigator.geolocation) { alert(translations[currentLang].gps_not_supported); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; return; }
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      localStorage.setItem('passenger_last_lat', p.lat); localStorage.setItem('passenger_last_lng', p.lng);
-      if(userGpsMarker) userGpsMarker.destroy();
-      userGpsMarker = new mapgl.HtmlMarker(map, { coordinates: [p.lng, p.lat], html: `<div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 0 10px rgba(37,99,235,0.8);"></div>`, anchor: [0.5, 0.5] });
-      map.setCenter([p.lng, p.lat]); map.setZoom(16);
+      const lat = Number(pos.coords.latitude);
+      const lng = Number(pos.coords.longitude);
+      
+      updateUserGpsMarker(lat, lng);
+      
+      if (map) {
+          map.setCenter([lng, lat]); 
+          map.setZoom(16);
+      }
+      
+      localStorage.setItem('passenger_last_lat', lat); 
+      localStorage.setItem('passenger_last_lng', lng);
+      
       closeGeoModal();
       btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false;
     },
