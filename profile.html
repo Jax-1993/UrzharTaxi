@@ -53,7 +53,7 @@
         .spinner { border: 3px solid rgba(255,255,255,0.3); border-top: 3px solid #fff; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Bottom Sheet (Төменнен шығатын терезе) */
+        /* Bottom Sheet */
         .bottom-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 100; display: none; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(2px); }
         .bottom-sheet-overlay.active { display: block; opacity: 1; }
         .bottom-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; border-radius: 28px 28px 0 0; z-index: 101; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px 24px 32px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
@@ -74,8 +74,6 @@
 <body>
 
 <div class="app-container">
-
-    <!-- 1. Телефон нөмірін енгізу -->
     <div id="login-screen">
         <button class="back-btn" onclick="window.location.href='index.html'">←</button>
         <h2 data-i18n="login_title">Өз номеріңізбен тіркелу</h2>
@@ -87,11 +85,10 @@
         <div class="error-text" id="phone-error" data-i18n="error_phone">Нөмірді толық енгізіңіз!</div>
     </div>
 
-    <!-- 2. SMS Кодты енгізу -->
     <div id="otp-screen" class="hidden">
         <button class="back-btn" onclick="backToLogin()">←</button>
         <h2 data-i18n="otp_title">Кодты енгізіңіз</h2>
-        <p class="subtitle" id="otp-subtitle">Код +7 777 790 60 29 нөміріне жіберілді</p>
+        <p class="subtitle" id="otp-subtitle"></p>
         <div class="input-group">
             <input type="number" id="otp-input" placeholder="0000" maxlength="4" style="text-align: center; letter-spacing: 10px; font-size: 26px; font-weight: 800;">
         </div>
@@ -99,7 +96,6 @@
         <div class="error-text" id="otp-error" data-i18n="error_otp">Код қате! (Тесттік код: 1234)</div>
     </div>
 
-    <!-- 3. Профиль экраны -->
     <div id="profile-screen">
         <div class="header-section">
             <button class="back-arrow" onclick="window.location.href='index.html'">←</button>
@@ -117,7 +113,6 @@
                 </div>
                 <div class="menu-arrow">›</div>
             </a>
-            <!-- Төлем тәсілдері -->
             <div class="menu-item" onclick="openSheet('payment')">
                 <div class="menu-icon">💳</div>
                 <div class="menu-content">
@@ -152,24 +147,7 @@
             </div>
         </div>
 
-        <!-- ЖАҢА: Тіл таңдау бөлек шығарылды және Әкімшілік үстіне қойылды -->
-        <div class="menu-card">
-            <div class="menu-item" onclick="openSheet('language')">
-                <div class="menu-icon">🌐</div>
-                <div class="menu-content">
-                    <div class="menu-title" data-i18n="menu_language">Тіл</div>
-                    <div class="menu-subtitle" id="current-language">Қазақша</div>
-                </div>
-                <div class="menu-arrow">›</div>
-            </div>
-            <a href="admin.html" class="menu-item">
-                <div class="menu-icon">🛡</div>
-                <div class="menu-content">
-                    <div class="menu-title" data-i18n="menu_admin">Әкімшілік</div>
-                </div>
-                <div class="menu-arrow">›</div>
-            </a>
-        </div>
+        <!-- Тіл мен Әкімшілік бұл жерден алып тасталды -->
 
         <button class="logout-btn" onclick="logout()">
             <span>🚪</span> <span data-i18n="menu_logout">Шығу</span>
@@ -184,18 +162,14 @@
     </div>
 </div>
 
-<!-- Төменнен шығатын әмбебап терезе (Bottom Sheet) -->
 <div class="bottom-sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 <div class="bottom-sheet" id="bottom-sheet">
     <div class="sheet-handle"></div>
-    <div class="sheet-title" id="sheet-title" data-i18n="sheet_title_default">Таңдаңыз</div>
-    
-    <!-- Ішіндегі контент JS арқылы өзгереді -->
+    <div class="sheet-title" id="sheet-title">Таңдаңыз</div>
     <div id="sheet-content"></div>
 </div>
 
 <script>
-    // --- Аудармалар сөздігі (i18n) ---
     const translations = {
         kk: {
             login_title: "Өз номеріңізбен тіркелу",
@@ -213,16 +187,9 @@
             menu_support: "Қолдау қызметі",
             menu_terms: "Пайдаланушы келісімі",
             menu_privacy: "Құпиялылық саясаты",
-            menu_language: "Тіл",
-            menu_admin: "Әкімшілік",
             menu_logout: "Шығу",
             menu_delete: "Аккаунтты жою",
-            sheet_title_default: "Таңдаңыз",
             sheet_payment_title: "Төлем тәсілін таңдаңыз",
-            sheet_lang_title: "Тілді таңдаңыз",
-            lang_kk: "Қазақша",
-            lang_ru: "Орысша",
-            lang_en: "Ағылшынша",
             terms_title: "Пайдаланушы келісімі",
             privacy_title: "Құпиялылық саясаты"
         },
@@ -242,16 +209,9 @@
             menu_support: "Служба поддержки",
             menu_terms: "Пользовательское соглашение",
             menu_privacy: "Политика конфиденциальности",
-            menu_language: "Язык",
-            menu_admin: "Админ-панель",
             menu_logout: "Выйти",
             menu_delete: "Удалить аккаунт",
-            sheet_title_default: "Выберите",
             sheet_payment_title: "Выберите способ оплаты",
-            sheet_lang_title: "Выберите язык",
-            lang_kk: "Казахский",
-            lang_ru: "Русский",
-            lang_en: "Английский",
             terms_title: "Пользовательское соглашение",
             privacy_title: "Политика конфиденциальности"
         },
@@ -271,16 +231,9 @@
             menu_support: "Support service",
             menu_terms: "Terms of use",
             menu_privacy: "Privacy policy",
-            menu_language: "Language",
-            menu_admin: "Admin panel",
             menu_logout: "Logout",
             menu_delete: "Delete account",
-            sheet_title_default: "Select",
             sheet_payment_title: "Select payment method",
-            sheet_lang_title: "Select language",
-            lang_kk: "Kazakh",
-            lang_ru: "Russian",
-            lang_en: "English",
             terms_title: "Terms of use",
             privacy_title: "Privacy policy"
         }
@@ -298,20 +251,10 @@
                 el.innerText = translations[lang][key];
             }
         });
-
-        // Тіл мәзіріндегі ағымдағы тілді жаңарту
-        const langNames = { kk: 'Қазақша', ru: 'Орысша', en: 'Ағылшынша' };
-        document.getElementById('current-language').innerText = langNames[lang];
-        
-        // Егер қателік мәтіні көрініп тұрса, оны да аудару
-        if(document.getElementById('phone-error').style.display === 'block') {
-            document.getElementById('phone-error').innerText = translations[lang].error_phone;
-        }
     }
 
-    // --- Логин және профиль логикасы ---
     document.addEventListener("DOMContentLoaded", () => {
-        applyLanguage(currentLang); // Тілді жүктеу
+        applyLanguage(currentLang);
 
         const savedUser = localStorage.getItem('urzhar_user');
         if (savedUser) {
@@ -340,14 +283,9 @@
         setTimeout(() => {
             btn.innerHTML = translations[currentLang].btn_get_code;
             btn.disabled = false;
-            
             document.getElementById('login-screen').classList.add('hidden');
             document.getElementById('otp-screen').classList.remove('hidden');
-            
-            let text = `Код ${phone} нөміріне жіберілді (Тест: 1234)`;
-            if(currentLang === 'ru') text = `Код отправлен на ${phone} (Тест: 1234)`;
-            if(currentLang === 'en') text = `Code sent to ${phone} (Test: 1234)`;
-            document.getElementById('otp-subtitle').innerText = text;
+            document.getElementById('otp-subtitle').innerText = `Код ${phone} нөміріне жіберілді (Тест: 1234)`;
         }, 1000);
     }
 
@@ -367,11 +305,9 @@
                     user.phone = document.getElementById('phone-input').value;
                 }
                 localStorage.setItem('urzhar_user', JSON.stringify(user));
-                
                 showProfile(user);
                 btn.innerHTML = translations[currentLang].btn_confirm;
             }, 800);
-            
         } else {
             document.getElementById('otp-error').style.display = 'block';
         }
@@ -390,7 +326,7 @@
     function editName() {
         let user = JSON.parse(localStorage.getItem('urzhar_user'));
         if(!user) return;
-        let newName = prompt("Атыңызды өзгертіңіз / Измените имя / Change name:", user.name);
+        let newName = prompt("Атыңызды өзгертіңіз:", user.name);
         if (newName && newName.trim() !== "") {
             user.name = newName.trim();
             localStorage.setItem('urzhar_user', JSON.stringify(user));
@@ -410,7 +346,6 @@
         document.getElementById('login-screen').classList.remove('hidden');
     }
 
-    // --- Төменгі терезе (Bottom Sheet) Логикасы ---
     const overlay = document.getElementById('sheet-overlay');
     const sheet = document.getElementById('bottom-sheet');
     const sheetTitle = document.getElementById('sheet-title');
@@ -435,32 +370,13 @@
                 </div>
             `;
         } 
-        else if (type === 'language') {
-            sheetTitle.innerText = translations[currentLang].sheet_lang_title;
-            sheetContent.innerHTML = `
-                <div class="sheet-item ${currentLang === 'kk' ? 'selected' : ''}" onclick="selectLanguage('kk')">
-                    <span>🇰🇿 ${translations.kk.lang_kk}</span> <span class="check-icon">✔</span>
-                </div>
-                <div class="sheet-item ${currentLang === 'ru' ? 'selected' : ''}" onclick="selectLanguage('ru')">
-                    <span>🇷🇺 ${translations.kk.lang_ru}</span> <span class="check-icon">✔</span>
-                </div>
-                <div class="sheet-item ${currentLang === 'en' ? 'selected' : ''}" onclick="selectLanguage('en')">
-                    <span>🇬🇧 ${translations.kk.lang_en}</span> <span class="check-icon">✔</span>
-                </div>
-            `;
-        }
         else if (type === 'terms') {
             sheetTitle.innerText = translations[currentLang].terms_title;
-            // Мұнда тек қазақша мәтін қалдырылды, керек болса көбейтуге болады
             sheetContent.innerHTML = `
                 <div class="sheet-text-content">
                     <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
                     <h4>1. Жалпы ережелер</h4>
-                    <p>Бұл қосымша Қазақстан Республикасының барлық өңірлерінде такси қызметін ұсынуға арналған. Жүргізушілер мен жолаушылар өздерінің жеке басының қауіпсіздігі үшін жауапты.</p>
-                    <h4>2. Қызмет көрсету шарттары</h4>
-                    <p>Тапсырыс қабылданғаннан кейін жүргізуші көрсетілген мекенжайға уақытылы келуі тиіс. Жолаушы кері байланыс жасап, күтуі қажет.</p>
-                    <h4>3. Төлем жасау</h4>
-                    <p>Төлем қолма-қол немесе карта арқылы жүзеге асырылады. Жүргізушіге төлемді жол жүріп болғаннан кейін ғана жасау керек.</p>
+                    <p>Бұл қосымша Қазақстан Республикасының барлық өңірлерінде такси қызметін ұсынуға арналған.</p>
                 </div>
             `;
         }
@@ -469,12 +385,6 @@
             sheetContent.innerHTML = `
                 <div class="sheet-text-content">
                     <p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>
-                    <h4>Қандай деректер жиналады?</h4>
-                    <p>Біз сіздің телефон нөміріңізді, атыңызды және тапсырыс кезіндегі геолокацияңызды (мекенжайыңызды) ғана жинаймыз.</p>
-                    <h4>Деректер қалай пайдаланылады?</h4>
-                    <p>Бұл ақпарат тек сізді тану, такси шақыру және жүргізушіге бағытты дұрыс көрсету үшін қолданылады. Деректеріңіз үшінші тұлғаларға сатылмайды.</p>
-                    <h4>Байланыс</h4>
-                    <p>Сұрақтарыңыз болса, қолдау қызметіне (WhatsApp: +7 777 790 60 29) хабарласа аласыз.</p>
                 </div>
             `;
         }
@@ -488,11 +398,6 @@
     function selectPayment(method) {
         const text = method === 'cash' ? translations[currentLang].payment_cash : translations[currentLang].payment_card;
         document.getElementById('current-payment').innerText = text;
-        closeSheet();
-    }
-
-    function selectLanguage(lang) {
-        applyLanguage(lang);
         closeSheet();
     }
 </script>
