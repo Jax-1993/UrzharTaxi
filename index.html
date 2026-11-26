@@ -43,8 +43,26 @@ html, body {
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(255,255,255,0.95);color:#101114;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);cursor:pointer}
 
+/* ЖАҢА: Картаның оң жағындағы батырмалар тобы (Зум + GPS) */
+.map-controls-right {
+    position: absolute; right: 15px; bottom: 180px; z-index: 150;
+    display: flex; flex-direction: column; gap: 12px; align-items: center;
+}
+
+.custom-zoom-controls {
+    display: flex; flex-direction: column; background: white;
+    border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); overflow: hidden;
+}
+.custom-zoom-controls button {
+    width: 50px; height: 50px; background: white; color: #101114; border: none;
+    font-size: 24px; font-weight: 500; cursor: pointer; display: flex;
+    align-items: center; justify-content: center; transition: background 0.2s;
+}
+.custom-zoom-controls button:active { background: #f0f0f0; }
+.custom-zoom-controls button:first-child { border-bottom: 1px solid #eee; }
+
 .gps-floating-btn {
-    position: absolute; right: 15px; bottom: 250px; z-index: 150; background: white; color: #3b82f6;
+    background: white; color: #3b82f6;
     border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px;
     display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     cursor: pointer; transition: transform 0.2s, background 0.2s;
@@ -64,7 +82,7 @@ html, body {
 
 .bottom-panel{position:absolute;bottom:0;left:0;width:100%;background:var(--light-panel);border-radius:24px 24px 0 0;padding:20px 15px calc(20px + env(safe-area-inset-bottom));z-index:100;box-shadow:0 -5px 20px rgba(0,0,0,0.1);pointer-events:auto}
 .input-wrapper{position:relative;margin-bottom:12px}
-.input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--light-input);color:#101114;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:pointer;}
+.input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--light-input);color:#101114;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:text;}
 .input-wrapper input::placeholder{color:#6b7280}
 .input-wrapper input:focus{background:#e5e7eb; box-shadow: 0 0 0 2px var(--blue);}
 .clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#d1d5db;border:0;width:24px;height:24px;border-radius:50%;color:#374151;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
@@ -141,7 +159,6 @@ html, body {
   </div>
   
   <button class="menu-item" id="menuProfileBtn" onclick="menuGoProfile()">👤 Профиль</button>
-  <!-- Жүргізуші болып тіркелу қайта қосылды -->
   <button class="menu-item" onclick="menuGo('driverRegister')">👤 Жүргізуші болып тіркелу</button>
   <button class="menu-item" onclick="goToDriver()">🔑 Жүргізуші кабинеті</button>
   <button class="menu-item" onclick="goToAdmin()">🛡 Әкімшілік</button>
@@ -168,7 +185,14 @@ html, body {
     </div>
   </div>
 
-  <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
+  <!-- ЖАҢА: Зум және GPS батырмаларының блогы (оң жақта, төменде) -->
+  <div class="map-controls-right">
+      <div class="custom-zoom-controls">
+          <button onclick="zoomIn()">+</button>
+          <button onclick="zoomOut()">−</button>
+      </div>
+      <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
+  </div>
 
   <div id="activeOrderBanner" onclick="goToTracking()">
     🚕 Белсенді тапсырысыңыз бар. Бақылауға өту →
@@ -183,11 +207,12 @@ html, body {
   <div class="bottom-panel" id="bottomPanel">
     <div id="inputsContainer">
       <div class="input-wrapper">
-        <input id="from" placeholder="📍 Қай жерден мінесіз?" readonly onclick="focusPickup()">
+        <!-- readonly алынып тасталды, енді қолмен жазуға болады. Enter басқанда іздейді -->
+        <input id="from" placeholder="📍 Қай жерден мінесіз?" onkeydown="handleInputKey(event, 'from')" onfocus="hideCenterPin()">
         <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
       </div>
       <div class="input-wrapper">
-        <input id="to" placeholder="🏁 Қайда барасыз?" readonly onclick="focusDestination()">
+        <input id="to" placeholder="🏁 Қайда барасыз?" onkeydown="handleInputKey(event, 'to')" onfocus="hideCenterPin()">
         <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
       </div>
     </div>
@@ -312,16 +337,110 @@ let savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
-function menuGoProfile() {
-    closeMenu();
-    setTimeout(() => {
-        goToProfile();
-    }, 300);
+// --- ЖАҢА: Зум батырмаларының функциялары ---
+function zoomIn() { if(map) map.setZoom(map.getZoom() + 1); }
+function zoomOut() { if(map) map.setZoom(map.getZoom() - 1); }
+function hideCenterPin() { document.getElementById('centerPin').classList.remove('show'); }
+
+// --- ЖАҢА: Қолмен жазылған мекенжайды іздеу функциясы ---
+async function handleInputKey(event, type) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        const query = event.target.value;
+        if (query.length < 3) return;
+
+        const originalText = query;
+        event.target.value = 'Ізделуде...';
+
+        try {
+            // Қазақстан бойынша іздеу (countrycodes=kz)
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=kz&limit=1`);
+            const data = await res.json();
+            
+            if (data && data.length > 0) {
+                const result = data[0];
+                const lat = parseFloat(result.lat);
+                const lon = parseFloat(result.lon);
+                
+                map.setCenter([lon, lat]);
+                map.setZoom(16);
+
+                setTimeout(() => {
+                    setPointFromSearch(type, lat, lon, result.display_name);
+                }, 500);
+
+            } else {
+                alert("Мекенжай табылмады. Басқаша енгізіп көріңіз.");
+                event.target.value = originalText;
+            }
+        } catch (err) {
+            console.error(err);
+            alert("Іздеу кезінде қате кетті.");
+            event.target.value = originalText;
+        }
+    }
 }
 
-function goToProfile() {
-    window.location.href = 'profile.html';
+function setPointFromSearch(type, lat, lon, address) {
+    const p = { lat: lat, lon: lon };
+    
+    if (type === 'from') {
+        startPoint = p;
+        document.getElementById('from').value = address;
+        document.getElementById('clearFrom').classList.add('show');
+        
+        if(startMarker) startMarker.destroy();
+        startMarker = new mapgl.HtmlMarker(map, {
+            coordinates: [p.lon, p.lat],
+            html: `
+            <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
+                <div onclick="clearPoint('A')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
+                <div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div>
+            </div>`,
+            anchor: [0.5, 1]
+        });
+
+        if (!endPoint) {
+            mapMode = 'destination';
+            document.getElementById('centerPin').classList.add('show');
+            document.getElementById('centerPinLabel').textContent = 'Баратын жер';
+            document.getElementById('centerPinIcon').textContent = '🏁';
+            document.getElementById('centerPinIcon').style.background = '#101114';
+        } else {
+            getRoute(); 
+        }
+    } 
+    else if (type === 'to') {
+        endPoint = p;
+        document.getElementById('to').value = address;
+        document.getElementById('clearTo').classList.add('show');
+
+        if(endMarker) endMarker.destroy();
+        endMarker = new mapgl.HtmlMarker(map, {
+            coordinates: [p.lon, p.lat],
+            html: `
+            <div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
+                <div onclick="clearPoint('B')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
+                <div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div>
+            </div>`,
+            anchor: [0.5, 1]
+        });
+
+        document.getElementById('centerPin').classList.remove('show');
+        mapMode = 'route_ready';
+
+        if (startPoint) {
+            getRoute();
+        } else {
+            alert("Алдымен мінетін жерді таңдаңыз!");
+        }
+    }
+    updateButtonState();
 }
+
+// --- Негізгі логика ---
+function menuGoProfile() { closeMenu(); setTimeout(() => { goToProfile(); }, 300); }
+function goToProfile() { window.location.href = 'profile.html'; }
 
 function checkProfile() {
     const user = JSON.parse(localStorage.getItem('urzhar_user'));
@@ -348,9 +467,7 @@ function checkActiveOrder() {
     }
 }
 
-function goToTracking() {
-    window.location.href = '/passenger-tracking.html';
-}
+function goToTracking() { window.location.href = '/passenger-tracking.html'; }
 
 function toggleMenu(){document.getElementById('drawer').classList.toggle('open');document.getElementById('overlay').classList.toggle('open')}
 function closeMenu(){document.getElementById('drawer').classList.remove('open');document.getElementById('overlay').classList.remove('open')}
@@ -380,7 +497,8 @@ function initMap(){
   map = new mapgl.Map('map', {
       center: initialCoords,
       zoom: initialZoom,
-      key: DG_API_KEY
+      key: DG_API_KEY,
+      disableDefaultControls: true // <-- 2GIS әдепкі батырмаларын өшіреміз
   });
 
   map.setPadding({ top: 100, bottom: 200, left: 0, right: 0 });
@@ -798,7 +916,6 @@ async function registerDriver(){
   const message=document.getElementById('driverRegisterMessage');
   const button=document.getElementById('driverRegisterBtn');
 
-  // Тек негізгі мәліметтерді тексереміз (фото міндетті емес)
   if(!name || !phone){
     message.style.color='#d00'; message.textContent='Кемінде аты-жөні мен телефон нөмірін толтырыңыз.'; return;
   }
@@ -806,7 +923,6 @@ async function registerDriver(){
   button.disabled=true; button.textContent='ӨТІНІМ ЖІБЕРІЛУДЕ...'; message.style.color='#555'; message.textContent='Деректер дайындалуда, күте тұрыңыз...';
 
   try{
-    // Тек бар фотоларды ғана қысамыз
     const [carData, idFrontData, idBackData, licenseData, selfieData] = await Promise.all([
       compressImage(carPhoto), compressImage(idFront), compressImage(idBack), compressImage(license), compressImage(selfie)
     ]);
@@ -824,7 +940,6 @@ async function registerDriver(){
     
     message.style.color='#07864f'; message.innerHTML='✅ Өтінім сәтті қабылданды!<br>Әкімші тексеріп, шешім қабылдайды.';
     
-    // Форманы тазалау
     ['regName','regPhone','carBrand','carModel','carYear','carNumber'].forEach(id=>document.getElementById(id).value='');
     ['carPhoto','idCardFront','idCardBack','driverLicense','selfiePhoto'].forEach(id=>document.getElementById(id).value='');
     document.querySelectorAll('.doc-preview, #carPhotoPreview').forEach(img => img.style.display = 'none');
