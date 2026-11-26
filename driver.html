@@ -46,6 +46,18 @@ body {
 }
 @keyframes pulseBanner { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.02); } }
 
+/* GPS Компас батырмасы */
+.gps-btn-floating {
+    position: absolute; right: 15px; bottom: 80px; z-index: 15;
+    background: white; color: #3b82f6;
+    border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px;
+    display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    cursor: pointer; transition: transform 0.2s, background 0.2s;
+}
+.gps-btn-floating:active { transform: scale(0.9); background: #f0f0f0; }
+.gps-btn-floating.loading { animation: spin 1s linear infinite; pointer-events: none; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
+
 #activeOrderPanel {
     position: absolute; bottom: 70px; left: 10px; right: 10px; z-index: 10;
     background: var(--panel-bg); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
@@ -147,6 +159,9 @@ button:disabled { opacity: 0.6; }
 <body>
 
 <div id="map"></div>
+
+<!-- GPS Компас батырмасы -->
+<button class="gps-btn-floating" onclick="flyToDriverLocation()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
 
 <div class="top-header" id="mapHeader">
     <div class="brand-pill">
@@ -301,7 +316,7 @@ const translations = {
         alert_complete: "Сапарды аяқталды деп белгілейсіз бе?",
         alert_completed: "✅ Сапар аяқталды!\nТабыс: {earning}\nКомиссия: {commission}",
         alert_cancel: "Тапсырыстан бас тартасыз ба?",
-        alert_gps_err: "GPS қолжетімсіз",
+        alert_gps_err: "GPS қолжетімсіз немесе рұқсат берілмеді",
         alert_logout: "Жүйеден шығасыз ба?",
         week_label: "Апта: "
     },
@@ -349,7 +364,7 @@ const translations = {
         alert_complete: "Отметить поездку как завершенную?",
         alert_completed: "✅ Поездка завершена!\nДоход: {earning}\nКомиссия: {commission}",
         alert_cancel: "Отказаться от заказа?",
-        alert_gps_err: "GPS недоступен",
+        alert_gps_err: "GPS недоступен или нет разрешения",
         alert_logout: "Выйти из системы?",
         week_label: "Неделя: "
     },
@@ -397,7 +412,7 @@ const translations = {
         alert_complete: "Mark ride as completed?",
         alert_completed: "✅ Ride completed!\nEarning: {earning}\nCommission: {commission}",
         alert_cancel: "Cancel the order?",
-        alert_gps_err: "GPS unavailable",
+        alert_gps_err: "GPS unavailable or permission denied",
         alert_logout: "Log out of the system?",
         week_label: "Week: "
     }
@@ -408,12 +423,10 @@ let currentLang = localStorage.getItem('tulpar_language') || 'kk';
 function applyLanguage(lang) {
     currentLang = lang;
     
-    // Title ауыстыру
     if (translations[lang] && translations[lang].page_title) {
         document.title = translations[lang].page_title;
     }
 
-    // Барлық data-i18n элементтерін ауыстыру
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang] && translations[lang][key]) {
@@ -421,7 +434,6 @@ function applyLanguage(lang) {
         }
     });
 
-    // Placeholder ауыстыру
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         if (translations[lang] && translations[lang][key]) {
@@ -480,6 +492,41 @@ async function api(url, options = {}) {
 
 function showLoading(show) { document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none'; }
 
+// --- GPS КОМПАС БАТЫРМАСЫНЫҢ ФУНКЦИЯСЫ ---
+function flyToDriverLocation() {
+    const btn = document.getElementById('gpsBtn');
+    btn.classList.add('loading');
+    
+    if (!navigator.geolocation) {
+        alert(translations[currentLang].alert_gps_err);
+        btn.classList.remove('loading');
+        return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+        (pos) => {
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            if (map) {
+                map.setCenter([lng, lat]);
+                map.setZoom(16);
+            }
+            updateDriverMarker(lat, lng);
+            
+            localStorage.setItem('driver_last_lat', lat); 
+            localStorage.setItem('driver_last_lng', lng);
+            
+            btn.classList.remove('loading');
+        },
+        (err) => {
+            alert(translations[currentLang].alert_gps_err);
+            btn.classList.remove('loading');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
 function toggleAddress() {
     isAddrExpanded = !isAddrExpanded;
     const container = document.getElementById('addressesContainer');
@@ -504,6 +551,7 @@ function switchTab(tab) {
 
     if (tab === 'map') {
         document.getElementById('map').style.display = 'block';
+        document.getElementById('gpsBtn').style.display = 'flex'; // GPS батырмасын көрсету
         if (map) setTimeout(() => map.setZoom(map.getZoom()), 100);
         document.querySelectorAll('.page-container').forEach(el => el.classList.remove('active'));
         document.getElementById('mapHeader').style.display = 'flex';
@@ -511,6 +559,7 @@ function switchTab(tab) {
         if (currentActiveOrder) updateActivePanelUI(currentActiveOrder);
     } else {
         document.getElementById('map').style.display = 'none';
+        document.getElementById('gpsBtn').style.display = 'none'; // Басқа беттерде GPS батырмасын жасыру
         document.getElementById('activeOrderPanel').classList.remove('show');
         document.getElementById('mapHeader').style.display = 'none';
         
@@ -910,9 +959,7 @@ async function logout() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Тілді қолдану
     applyLanguage(currentLang);
-
     initMap();
     setDriverOnline().then(() => {
         loadOrdersData();
