@@ -44,6 +44,7 @@ html, body {
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(255,255,255,0.95);color:#101114;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);cursor:pointer}
 
+/* GPS батырмасы */
 .gps-floating-btn {
     position: absolute; right: 15px; bottom: 250px; z-index: 150;
     background: white; color: #3b82f6;
@@ -177,7 +178,6 @@ html, body {
   
   <button class="menu-item" onclick="openLangSheet()">🌐 <span data-i18n="drawer_lang">Тіл таңдау</span></button>
   
-  <!-- ЖАҢА: Келісім мен Құпиялылық осында орналастырылды -->
   <button class="menu-item" onclick="openTextSheet('terms')">📄 <span data-i18n="menu_terms">Пайдаланушы келісімі</span></button>
   <button class="menu-item" onclick="openTextSheet('privacy')">🛡️ <span data-i18n="menu_privacy">Құпиялылық саясаты</span></button>
   
@@ -349,7 +349,6 @@ html, body {
 <script>
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7'; 
 
-// --- Аудармалар сөздігі ---
 const translations = {
     kk: {
         page_title: "TULPAR TAXI",
@@ -369,6 +368,8 @@ const translations = {
         passenger_default: "Жолаушы",
         terms_title: "Пайдаланушы келісімі",
         privacy_title: "Құпиялылық саясаты",
+        gps_not_supported: "Браузеріңіз GPS-ті қолдамайды.",
+        gps_error: "GPS рұқсаты берілмеді немесе қате шықты. Браузер параметрлерінен рұқсат беріңіз.",
         terms_text: `
             <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
             <h4>1. Жалпы ережелер</h4>
@@ -406,6 +407,8 @@ const translations = {
         passenger_default: "Пассажир",
         terms_title: "Пользовательское соглашение",
         privacy_title: "Политика конфиденциальности",
+        gps_not_supported: "Ваш браузер не поддерживает GPS.",
+        gps_error: "Доступ к GPS запрещен или произошла ошибка. Разрешите доступ в настройках браузера.",
         terms_text: `
             <p>Используя это приложение, вы полностью соглашаетесь с правилами сервиса "Tulpar Taxi".</p>
             <h4>1. Общие положения</h4>
@@ -443,6 +446,8 @@ const translations = {
         passenger_default: "Passenger",
         terms_title: "Terms of Use",
         privacy_title: "Privacy Policy",
+        gps_not_supported: "Your browser does not support GPS.",
+        gps_error: "GPS access denied or an error occurred. Please allow access in browser settings.",
         terms_text: `
             <p>By using this application, you fully agree to the rules of the "Tulpar Taxi" service.</p>
             <h4>1. General Provisions</h4>
@@ -470,7 +475,6 @@ function applyLanguage(lang) {
     currentLang = lang;
     localStorage.setItem('tulpar_language', lang);
     
-    // Мәтіндерді ауыстыру
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
         if (translations[lang] && translations[lang][key]) {
@@ -478,7 +482,6 @@ function applyLanguage(lang) {
         }
     });
 
-    // Placeholder-лерді ауыстыру
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
         if (translations[lang] && translations[lang][key]) {
@@ -486,7 +489,6 @@ function applyLanguage(lang) {
         }
     });
 
-    // Мәзірдегі белсенді профиль атын жаңарту
     const user = JSON.parse(localStorage.getItem('urzhar_user'));
     if(user && user.name) {
         let displayName = user.name;
@@ -496,13 +498,11 @@ function applyLanguage(lang) {
         document.getElementById('menuProfileBtn').innerHTML = `👤 <b style="color:var(--blue)">${displayName}</b>`;
     }
 
-    // Егер тіл таңдау терезесі ашық болса, оны жаңарту
     if(document.getElementById('langSheet').classList.contains('active')) {
         openLangSheet();
     }
 }
 
-// --- Тіл таңдау терезесін басқару ---
 function openLangSheet() {
     document.getElementById('langSheetOverlay').classList.add('active');
     document.getElementById('langSheet').classList.add('active');
@@ -529,7 +529,6 @@ function selectLang(lang) {
     closeLangSheet();
 }
 
-// --- Келісім және Құпиялылық терезесін басқару ---
 function openTextSheet(type) {
     document.getElementById('textSheetOverlay').classList.add('active');
     document.getElementById('textSheet').classList.add('active');
@@ -749,23 +748,47 @@ async function confirmCenterPoint() {
     }
 }
 
+// --- ЖАҢАРТЫЛҒАН ЖӘНЕ ТҮЗЕТІЛГЕН GPS ФУНКЦИЯСЫ ---
 function flyToGPS() {
     const btn = document.getElementById('gpsBtn');
     btn.classList.add('loading');
-    if (!navigator.geolocation) { alert("GPS қолжетімсіз"); btn.classList.remove('loading'); return; }
+    
+    if (!navigator.geolocation) {
+        alert(translations[currentLang].gps_not_supported);
+        btn.classList.remove('loading');
+        return;
+    }
+    
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            const lat = pos.coords.latitude; const lng = pos.coords.longitude;
+            const lat = pos.coords.latitude;
+            const lng = pos.coords.longitude;
+            
+            if (map) {
+                map.setCenter([lng, lat]);
+                map.setZoom(16);
+            }
+            
             if(userGpsMarker) userGpsMarker.destroy();
             userGpsMarker = new mapgl.HtmlMarker(map, {
                 coordinates: [lng, lat],
-                html: `<div style="position:relative; display:flex; align-items:center; justify-content:center;"><div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div><div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); z-index:2;"></div></div>`,
+                html: `<div style="position:relative; display:flex; align-items:center; justify-content:center;">
+                    <div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div>
+                    <div style="background-color:#3b82f6; width:16px; height:16px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.3); z-index:2;"></div>
+                </div>`,
                 anchor: [0.5, 0.5]
             });
-            map.setCenter([lng, lat]); map.setZoom(16);
+            
+            localStorage.setItem('passenger_last_lat', lat);
+            localStorage.setItem('passenger_last_lng', lng);
+            
             btn.classList.remove('loading');
         },
-        (err) => { alert("GPS рұқсаты берілмеді."); btn.classList.remove('loading'); },
+        (err) => {
+            console.error("GPS Error:", err);
+            alert(translations[currentLang].gps_error);
+            btn.classList.remove('loading');
+        },
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
 }
@@ -773,7 +796,7 @@ function flyToGPS() {
 function enableGPS() {
   const btn = document.getElementById('enableGpsBtn');
   btn.textContent = "..."; btn.disabled = true;
-  if (!navigator.geolocation) { alert("GPS қолжетімсіз"); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; return; }
+  if (!navigator.geolocation) { alert(translations[currentLang].gps_not_supported); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; return; }
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
       const p = { lat: pos.coords.latitude, lng: pos.coords.longitude };
@@ -784,7 +807,7 @@ function enableGPS() {
       closeGeoModal();
       btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false;
     },
-    (err) => { alert("GPS рұқсаты берілмеді."); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; },
+    (err) => { alert(translations[currentLang].gps_error); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; },
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
   );
 }
