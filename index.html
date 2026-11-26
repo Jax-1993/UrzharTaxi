@@ -44,7 +44,6 @@ html, body {
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(255,255,255,0.95);color:#101114;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);cursor:pointer}
 
-/* GPS батырмасы */
 .gps-floating-btn {
     position: absolute; right: 15px; bottom: 250px; z-index: 150;
     background: white; color: #3b82f6;
@@ -113,7 +112,6 @@ html, body {
 #driverRegister h3 {margin-top:20px; font-size:16px;}
 #carPhotoPreview, .doc-preview {display:none;width:100%;max-height:200px;object-fit:contain;border-radius:12px;margin:10px 0;background:#eee}
 
-/* Мәзір (Drawer) */
 .drawer{position:fixed;top:0;left:-310px;width:290px;height:100%;background:#ffffff;color:#101114;z-index:3000;padding:20px;transition:left 0.3s;box-shadow:5px 0 25px rgba(0,0,0,0.1); overflow-y: auto;}
 .drawer.open{left:0}
 .drawer-top{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #e5e7eb;padding-bottom:15px}
@@ -135,7 +133,6 @@ html, body {
 .btn-enable {background: #5b8aff; color: white; border: 0; width: 100%; padding: 16px; border-radius: 16px; font-size: 16px; font-weight: 700; margin-top: 24px; cursor: pointer; font-family: inherit;}
 .btn-skip {background: transparent; color: #6b7280; border: 0; width: 100%; padding: 16px; font-size: 15px; font-weight: 600; margin-top: 10px; cursor: pointer; font-family: inherit;}
 
-/* Тіл таңдау және Келісім терезесі (Bottom Sheet) */
 .lang-sheet-overlay, .text-sheet-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 4000; display: none; opacity: 0; transition: opacity 0.3s ease; backdrop-filter: blur(2px); }
 .lang-sheet-overlay.active, .text-sheet-overlay.active { display: block; opacity: 1; }
 .lang-sheet, .text-sheet { position: fixed; bottom: -100%; left: 50%; transform: translateX(-50%); width: 100%; max-width: 480px; background: #fff; border-radius: 28px 28px 0 0; z-index: 4001; transition: bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); padding: 24px 24px 32px; box-shadow: 0 -4px 24px rgba(0,0,0,0.1); }
@@ -175,12 +172,9 @@ html, body {
   <button class="menu-item" id="menuProfileBtn" onclick="menuGoProfile()">👤 <span data-i18n="drawer_profile">Профиль</span></button>
   <button class="menu-item" onclick="menuGo('driverRegister')">👤 <span data-i18n="drawer_driver_reg">Жүргізуші болып тіркелу</span></button>
   <button class="menu-item" onclick="goToDriver()">🔑 <span data-i18n="drawer_driver_cab">Жүргізуші кабинеті</span></button>
-  
   <button class="menu-item" onclick="openLangSheet()">🌐 <span data-i18n="drawer_lang">Тіл таңдау</span></button>
-  
   <button class="menu-item" onclick="openTextSheet('terms')">📄 <span data-i18n="menu_terms">Пайдаланушы келісімі</span></button>
   <button class="menu-item" onclick="openTextSheet('privacy')">🛡️ <span data-i18n="menu_privacy">Құпиялылық саясаты</span></button>
-  
   <button class="menu-item" onclick="goToAdmin()">🛡 <span data-i18n="drawer_admin">Әкімшілік</span></button>
 </nav>
 
@@ -329,7 +323,6 @@ html, body {
   </div>
 </section>
 
-<!-- Тіл таңдау терезесі -->
 <div class="lang-sheet-overlay" id="langSheetOverlay" onclick="closeLangSheet()"></div>
 <div class="lang-sheet" id="langSheet">
     <div class="lang-sheet-handle"></div>
@@ -337,7 +330,6 @@ html, body {
     <div id="langSheetContent"></div>
 </div>
 
-<!-- Келісім мен Құпиялылық терезесі -->
 <div class="text-sheet-overlay" id="textSheetOverlay" onclick="closeTextSheet()"></div>
 <div class="text-sheet" id="textSheet">
     <div class="text-sheet-handle"></div>
@@ -364,108 +356,41 @@ const translations = {
         pass_title: "👤 Жолаушы туралы ақпарат", btn_edit: "Өзгерту", input_name: "Аты-жөніңіз", input_phone: "Телефон нөміріңіз", btn_order: "🚕 ТАПСЫРЫС БЕРУ", btn_back_car: "← Көлік таңдауға қайту",
         order_sent: "✅ Тапсырыс жіберілді!", order_wait: "Жүргізушінің тағайындалуы күтілуде...", order_redirect: "⏳ Бақылау бетіне өтуде...",
         reg_title: "🚘 Жүргізуші болып тіркелу", reg_warning: "Назар аударыңыз: Фотосуреттерді жүктеу міндетті емес!", input_name_req: "Аты-жөніңіз *", input_phone_req: "Телефон нөміріңіз *", reg_car_info: "🚗 Көлік туралы ақпарат", input_brand: "Көлік маркасы", input_model: "Көлік моделі", input_year: "Шыққан жылы", input_number: "Мемлекеттік нөмірі", reg_photo_car: "📸 Көліктің фотосы", reg_id_front: "🪪 Жеке куәлік (алдыңғы беті)", reg_id_back: "🪪 Жеке куәлік (артқы беті)", reg_license: "📄 Жүргізуші куәлігі", reg_selfie: "🤳 Өз суретіңіз (Селфи)", btn_send_req: "ӨТІНІМДІ ЖІБЕРУ", btn_home: "← Басты бет",
-        sheet_lang_title: "Тілді таңдаңыз",
-        passenger_default: "Жолаушы",
-        terms_title: "Пайдаланушы келісімі",
-        privacy_title: "Құпиялылық саясаты",
-        gps_not_supported: "Браузеріңіз GPS-ті қолдамайды.",
-        gps_error: "GPS рұқсаты берілмеді немесе қате шықты. Браузер параметрлерінен рұқсат беріңіз.",
-        terms_text: `
-            <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
-            <h4>1. Жалпы ережелер</h4>
-            <p>Бұл қосымша Қазақстан Республикасының барлық өңірлерінде такси қызметін ұсынуға арналған. Жүргізушілер мен жолаушылар өздерінің жеке басының қауіпсіздігі үшін жауапты.</p>
-            <h4>2. Қызмет көрсету шарттары</h4>
-            <p>Тапсырыс қабылданғаннан кейін жүргізуші көрсетілген мекенжайға уақытылы келуі тиіс. Жолаушы кері байланыс жасап, күтуі қажет.</p>
-            <h4>3. Төлем жасау</h4>
-            <p>Төлем қолма-қол немесе карта арқылы жүзеге асырылады. Жүргізушіге төлемді жол жүріп болғаннан кейін ғана жасау керек.</p>
-        `,
-        privacy_text: `
-            <p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>
-            <h4>Қандай деректер жиналады?</h4>
-            <p>Біз сіздің телефон нөміріңізді, атыңызды және тапсырыс кезіндегі геолокацияңызды (мекенжайыңызды) ғана жинаймыз.</p>
-            <h4>Деректер қалай пайдаланылады?</h4>
-            <p>Бұл ақпарат тек сізді тану, такси шақыру және жүргізушіге бағытты дұрыс көрсету үшін қолданылады. Деректеріңіз үшінші тұлғаларға сатылмайды.</p>
-            <h4>Байланыс</h4>
-            <p>Сұрақтарыңыз болса, қолдау қызметіне (WhatsApp: +7 777 790 60 29) хабарласа аласыз.</p>
-        `
+        sheet_lang_title: "Тілді таңдаңыз", passenger_default: "Жолаушы",
+        terms_title: "Пайдаланушы келісімі", privacy_title: "Құпиялылық саясаты",
+        gps_not_supported: "Браузеріңіз GPS-ті қолдамайды.", gps_error: "GPS рұқсаты берілмеді немесе қате шықты.",
+        terms_text: `<p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>`,
+        privacy_text: `<p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>`
     },
     ru: {
-        page_title: "TULPAR TAXI",
-        drawer_profile: "Профиль", drawer_driver_reg: "Регистрация водителя", drawer_driver_cab: "Кабинет водителя", drawer_lang: "Выбрать язык", drawer_admin: "Админ-панель",
-        menu_terms: "Пользовательское соглашение", menu_privacy: "Политика конфиденциальности",
-        pin_pickup: "Место посадки", pin_dest: "Куда едем",
-        map_address_label: "Адрес на карте >", loading: "Определение...",
-        active_order_banner: "🚕 У вас есть активный заказ. Перейти к отслеживанию →",
-        btn_support: "Поддержка", btn_continue: "Продолжить",
-        input_from: "📍 Откуда поедете?", input_to: "🏁 Куда едем?",
+        page_title: "TULPAR TAXI", drawer_profile: "Профиль", drawer_driver_reg: "Регистрация водителя", drawer_driver_cab: "Кабинет водителя", drawer_lang: "Выбрать язык", drawer_admin: "Админ-панель",
+        menu_terms: "Пользовательское соглашение", menu_privacy: "Политика конфиденциальности", pin_pickup: "Место посадки", pin_dest: "Куда едем",
+        map_address_label: "Адрес на карте >", loading: "Определение...", active_order_banner: "🚕 У вас есть активный заказ. Перейти к отслеживанию →",
+        btn_support: "Поддержка", btn_continue: "Продолжить", input_from: "📍 Откуда поедете?", input_to: "🏁 Куда едем?",
         geo_title: "Включите геолокацию для использования Tulpar Taxi", geo_loc_title: "Местоположение устройства", geo_loc_sub: "Для поиска машин поблизости", geo_acc_title: "Точная геолокация", geo_acc_sub: "Для точного определения места посадки", btn_enable_gps: "Включить", btn_manual: "Выбрать вручную",
         car_select_title: "🚘 Выберите автомобиль", car_eco: "Эконом", car_eco_sub: "Для ежедневных поездок", car_bus: "Бизнес", car_bus_sub: "Просторный и комфортный", car_bus_plus: "Бизнес+", car_bus_plus_sub: "Авто высшего класса", btn_continue_main: "ПРОДОЛЖИТЬ →", btn_back_map: "← Вернуться к карте",
         pass_title: "👤 Информация о пассажире", btn_edit: "Изменить", input_name: "Ваше имя", input_phone: "Номер телефона", btn_order: "🚕 ЗАКАЗАТЬ", btn_back_car: "← Назад к выбору авто",
         order_sent: "✅ Заказ отправлен!", order_wait: "Ожидание назначения водителя...", order_redirect: "⏳ Переход на страницу отслеживания...",
         reg_title: "🚘 Регистрация водителя", reg_warning: "Внимание: Загрузка фото необязательна!", input_name_req: "Ваше имя *", input_phone_req: "Номер телефона *", reg_car_info: "🚗 Информация об авто", input_brand: "Марка авто", input_model: "Модель авто", input_year: "Год выпуска", input_number: "Гос. номер", reg_photo_car: "📸 Фото авто", reg_id_front: "🪪 Удостоверение (перед)", reg_id_back: "🪪 Удостоверение (зад)", reg_license: "📄 Водительские права", reg_selfie: "🤳 Ваше селфи", btn_send_req: "ОТПРАВИТЬ ЗАЯВКУ", btn_home: "← На главную",
-        sheet_lang_title: "Выберите язык",
-        passenger_default: "Пассажир",
-        terms_title: "Пользовательское соглашение",
-        privacy_title: "Политика конфиденциальности",
-        gps_not_supported: "Ваш браузер не поддерживает GPS.",
-        gps_error: "Доступ к GPS запрещен или произошла ошибка. Разрешите доступ в настройках браузера.",
-        terms_text: `
-            <p>Используя это приложение, вы полностью соглашаетесь с правилами сервиса "Tulpar Taxi".</p>
-            <h4>1. Общие положения</h4>
-            <p>Приложение предназначено для предоставления услуг такси на всей территории Республики Казахстан. Водители и пассажиры несут ответственность за свою личную безопасность.</p>
-            <h4>2. Условия обслуживания</h4>
-            <p>После принятия заказа водитель должен своевременно прибыть по указанному адресу. Пассажир должен выйти на связь и ожидать.</p>
-            <h4>3. Оплата</h4>
-            <p>Оплата производится наличными или картой. Оплату водителю следует производить только после завершения поездки.</p>
-        `,
-        privacy_text: `
-            <p>Мы придаем большое значение безопасности ваших личных данных.</p>
-            <h4>Какие данные собираются?</h4>
-            <p>Мы собираем только ваш номер телефона, имя и геолокацию во время заказа (ваш адрес).</p>
-            <h4>Как используются данные?</h4>
-            <p>Эта информация используется исключительно для вашей идентификации, вызова такси и правильного указания маршрута водителю. Ваши данные не продаются третьим лицам.</p>
-            <h4>Контакты</h4>
-            <p>По любым вопросам обращайтесь в службу поддержки (WhatsApp: +7 777 790 60 29).</p>
-        `
+        sheet_lang_title: "Выберите язык", passenger_default: "Пассажир", terms_title: "Пользовательское соглашение", privacy_title: "Политика конфиденциальности",
+        gps_not_supported: "Ваш браузер не поддерживает GPS.", gps_error: "Доступ к GPS запрещен или произошла ошибка.",
+        terms_text: `<p>Используя это приложение, вы полностью соглашаетесь с правилами сервиса "Tulpar Taxi".</p>`,
+        privacy_text: `<p>Мы придаем большое значение безопасности ваших личных данных.</p>`
     },
     en: {
-        page_title: "TULPAR TAXI",
-        drawer_profile: "Profile", drawer_driver_reg: "Driver Registration", drawer_driver_cab: "Driver Cabinet", drawer_lang: "Select Language", drawer_admin: "Admin Panel",
-        menu_terms: "Terms of Use", menu_privacy: "Privacy Policy",
-        pin_pickup: "Pickup location", pin_dest: "Destination",
-        map_address_label: "Address on map >", loading: "Detecting...",
-        active_order_banner: "🚕 You have an active order. Go to tracking →",
-        btn_support: "Support", btn_continue: "Continue",
-        input_from: "📍 Where from?", input_to: "🏁 Where to?",
+        page_title: "TULPAR TAXI", drawer_profile: "Profile", drawer_driver_reg: "Driver Registration", drawer_driver_cab: "Driver Cabinet", drawer_lang: "Select Language", drawer_admin: "Admin Panel",
+        menu_terms: "Terms of Use", menu_privacy: "Privacy Policy", pin_pickup: "Pickup location", pin_dest: "Destination",
+        map_address_label: "Address on map >", loading: "Detecting...", active_order_banner: "🚕 You have an active order. Go to tracking →",
+        btn_support: "Support", btn_continue: "Continue", input_from: "📍 Where from?", input_to: "🏁 Where to?",
         geo_title: "Enable location to use Tulpar Taxi", geo_loc_title: "Device location", geo_loc_sub: "To find nearby cars", geo_acc_title: "Precise location", geo_acc_sub: "To pinpoint your pickup spot", btn_enable_gps: "Enable", btn_manual: "Select manually",
         car_select_title: "🚘 Choose a vehicle", car_eco: "Economy", car_eco_sub: "For daily rides", car_bus: "Business", car_bus_sub: "Spacious and comfortable", car_bus_plus: "Business+", car_bus_plus_sub: "Premium class vehicle", btn_continue_main: "CONTINUE →", btn_back_map: "← Back to map",
         pass_title: "👤 Passenger info", btn_edit: "Edit", input_name: "Your name", input_phone: "Phone number", btn_order: "🚕 ORDER NOW", btn_back_car: "← Back to car selection",
         order_sent: "✅ Order sent!", order_wait: "Waiting for driver assignment...", order_redirect: "⏳ Redirecting to tracking...",
         reg_title: "🚘 Driver Registration", reg_warning: "Note: Photo upload is optional!", input_name_req: "Your name *", input_phone_req: "Phone number *", reg_car_info: "🚗 Car information", input_brand: "Car brand", input_model: "Car model", input_year: "Year", input_number: "License plate", reg_photo_car: "📸 Car photo", reg_id_front: "🪪 ID Card (front)", reg_id_back: "🪪 ID Card (back)", reg_license: "📄 Driver's license", reg_selfie: "🤳 Selfie", btn_send_req: "SEND REQUEST", btn_home: "← Home",
-        sheet_lang_title: "Select Language",
-        passenger_default: "Passenger",
-        terms_title: "Terms of Use",
-        privacy_title: "Privacy Policy",
-        gps_not_supported: "Your browser does not support GPS.",
-        gps_error: "GPS access denied or an error occurred. Please allow access in browser settings.",
-        terms_text: `
-            <p>By using this application, you fully agree to the rules of the "Tulpar Taxi" service.</p>
-            <h4>1. General Provisions</h4>
-            <p>The application is designed to provide taxi services throughout the Republic of Kazakhstan. Drivers and passengers are responsible for their own personal safety.</p>
-            <h4>2. Terms of Service</h4>
-            <p>After accepting the order, the driver must arrive at the specified address in a timely manner. The passenger must contact and wait.</p>
-            <h4>3. Payment</h4>
-            <p>Payment is made in cash or by card. Payment to the driver should be made only after the ride is completed.</p>
-        `,
-        privacy_text: `
-            <p>We attach great importance to the security of your personal data.</p>
-            <h4>What data is collected?</h4>
-            <p>We collect only your phone number, name, and geolocation during the order (your address).</p>
-            <h4>How is the data used?</h4>
-            <p>This information is used solely to identify you, call a taxi, and correctly indicate the route to the driver. Your data is not sold to third parties.</p>
-            <h4>Contacts</h4>
-            <p>If you have any questions, please contact support (WhatsApp: +7 777 790 60 29).</p>
-        `
+        sheet_lang_title: "Select Language", passenger_default: "Passenger", terms_title: "Terms of Use", privacy_title: "Privacy Policy",
+        gps_not_supported: "Your browser does not support GPS.", gps_error: "GPS access denied or an error occurred.",
+        terms_text: `<p>By using this application, you fully agree to the rules of the "Tulpar Taxi" service.</p>`,
+        privacy_text: `<p>We attach great importance to the security of your personal data.</p>`
     }
 };
 
@@ -477,16 +402,12 @@ function applyLanguage(lang) {
     
     document.querySelectorAll('[data-i18n]').forEach(el => {
         const key = el.getAttribute('data-i18n');
-        if (translations[lang] && translations[lang][key]) {
-            el.innerText = translations[lang][key];
-        }
+        if (translations[lang] && translations[lang][key]) el.innerText = translations[lang][key];
     });
 
     document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
         const key = el.getAttribute('data-i18n-placeholder');
-        if (translations[lang] && translations[lang][key]) {
-            el.setAttribute('placeholder', translations[lang][key]);
-        }
+        if (translations[lang] && translations[lang][key]) el.setAttribute('placeholder', translations[lang][key]);
     });
 
     const user = JSON.parse(localStorage.getItem('urzhar_user'));
@@ -498,9 +419,7 @@ function applyLanguage(lang) {
         document.getElementById('menuProfileBtn').innerHTML = `👤 <b style="color:var(--blue)">${displayName}</b>`;
     }
 
-    if(document.getElementById('langSheet').classList.contains('active')) {
-        openLangSheet();
-    }
+    if(document.getElementById('langSheet').classList.contains('active')) openLangSheet();
 }
 
 function openLangSheet() {
@@ -509,33 +428,22 @@ function openLangSheet() {
     const content = document.getElementById('langSheetContent');
     
     content.innerHTML = `
-        <div class="lang-sheet-item ${currentLang === 'kk' ? 'selected' : ''}" onclick="selectLang('kk')">
-            <span>🇰🇿 Қазақша</span> <span class="lang-check-icon">✔</span>
-        </div>
-        <div class="lang-sheet-item ${currentLang === 'ru' ? 'selected' : ''}" onclick="selectLang('ru')">
-            <span>🇷🇺 Орысша</span> <span class="lang-check-icon">✔</span>
-        </div>
-        <div class="lang-sheet-item ${currentLang === 'en' ? 'selected' : ''}" onclick="selectLang('en')">
-            <span>🇬🇧 Ағылшынша</span> <span class="lang-check-icon">✔</span>
-        </div>
+        <div class="lang-sheet-item ${currentLang === 'kk' ? 'selected' : ''}" onclick="selectLang('kk')"><span>🇰🇿 Қазақша</span> <span class="lang-check-icon">✔</span></div>
+        <div class="lang-sheet-item ${currentLang === 'ru' ? 'selected' : ''}" onclick="selectLang('ru')"><span>🇷🇺 Орысша</span> <span class="lang-check-icon">✔</span></div>
+        <div class="lang-sheet-item ${currentLang === 'en' ? 'selected' : ''}" onclick="selectLang('en')"><span>🇬🇧 Ағылшынша</span> <span class="lang-check-icon">✔</span></div>
     `;
 }
 function closeLangSheet() {
     document.getElementById('langSheetOverlay').classList.remove('active');
     document.getElementById('langSheet').classList.remove('active');
 }
-function selectLang(lang) {
-    applyLanguage(lang);
-    closeLangSheet();
-}
+function selectLang(lang) { applyLanguage(lang); closeLangSheet(); }
 
 function openTextSheet(type) {
     document.getElementById('textSheetOverlay').classList.add('active');
     document.getElementById('textSheet').classList.add('active');
-    
     const titleEl = document.getElementById('textSheetTitle');
     const contentEl = document.getElementById('textSheetContent');
-    
     if (type === 'terms') {
         titleEl.innerText = translations[currentLang].terms_title;
         contentEl.innerHTML = translations[currentLang].terms_text;
@@ -544,7 +452,6 @@ function openTextSheet(type) {
         contentEl.innerHTML = translations[currentLang].privacy_text;
     }
 }
-
 function closeTextSheet() {
     document.getElementById('textSheetOverlay').classList.remove('active');
     document.getElementById('textSheet').classList.remove('active');
@@ -580,10 +487,8 @@ async function fetchSuggestions(query, type) {
                 div.onclick = () => {
                     box.classList.remove('active');
                     document.getElementById(type).value = item.display_name;
-                    const lat = parseFloat(item.lat);
-                    const lon = parseFloat(item.lon);
-                    map.setCenter([lon, lat]);
-                    map.setZoom(16);
+                    const lat = parseFloat(item.lat); const lon = parseFloat(item.lon);
+                    map.setCenter([lon, lat]); map.setZoom(16);
                     setTimeout(() => { setPointFromSearch(type, lat, lon, item.display_name); }, 300);
                 };
                 box.appendChild(div);
@@ -598,6 +503,17 @@ document.addEventListener('click', function(e) {
     }
 });
 
+let map;
+let startPoint=null, endPoint=null;
+let startMarker=null, endMarker=null, routeLine=null;
+let userGpsMarker = null;
+let distanceKm=0, durationMin=0, routeReady=false, selectedCar='economy', currentPrices={};
+const prices = { economy: { base: 0, km: 100 }, comfort: { base: 200, km: 150 }, plus: { base: 500, km: 200 } };
+let savedName = localStorage.getItem('tulpar_passenger_name');
+let savedPhone = localStorage.getItem('tulpar_passenger_phone');
+let mapMode = 'pickup'; 
+let moveDebounceTimer;
+
 function setPointFromSearch(type, lat, lon, address) {
     const p = { lat: lat, lon: lon };
     if (type === 'from') {
@@ -607,9 +523,7 @@ function setPointFromSearch(type, lat, lon, address) {
         if(startMarker) startMarker.destroy();
         startMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
-            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
-                <div onclick="clearPoint('A')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
-                <div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div></div>`,
+            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);"><div onclick="clearPoint('A')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div><div style="background-color:#3b82f6; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🚶‍♂️</div></div>`,
             anchor: [0.5, 1]
         });
         if (!endPoint) {
@@ -626,9 +540,7 @@ function setPointFromSearch(type, lat, lon, address) {
         if(endMarker) endMarker.destroy();
         endMarker = new mapgl.HtmlMarker(map, {
             coordinates: [p.lon, p.lat],
-            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);">
-                <div onclick="clearPoint('B')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div>
-                <div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div></div>`,
+            html: `<div style="display:flex; flex-direction:column; align-items:center; transform: translateY(-10px);"><div onclick="clearPoint('B')" style="background:white; color:#ef4444; border-radius:50%; width:26px; height:26px; display:flex; align-items:center; justify-content:center; cursor:pointer; margin-bottom:6px; box-shadow:0 3px 6px rgba(0,0,0,0.4); font-weight:900; font-size:14px;">✕</div><div style="background-color:#101114; width:38px; height:38px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:20px; border:3px solid #fff; box-shadow:0 3px 10px rgba(0,0,0,0.4);">🏁</div></div>`,
             anchor: [0.5, 1]
         });
         document.getElementById('centerPin').classList.remove('show');
@@ -646,9 +558,7 @@ function checkProfile() {
             displayName = translations[currentLang].passenger_default;
         }
         const profileBtn = document.getElementById('menuProfileBtn');
-        if (profileBtn) {
-            profileBtn.innerHTML = `👤 <b style="color:var(--blue)">${displayName}</b>`;
-        }
+        if (profileBtn) profileBtn.innerHTML = `👤 <b style="color:var(--blue)">${displayName}</b>`;
         localStorage.setItem('tulpar_passenger_name', user.name);
         localStorage.setItem('tulpar_passenger_phone', user.phone);
     }
@@ -707,73 +617,37 @@ function initMap(){
   setTimeout(()=>{document.getElementById('geoModal').classList.add('show');}, 500);
   setTimeout(() => map.emit('moveend'), 1000);
   
-  // Егер бұрын GPS анықталған болса, көк домалақты бірден көрсету
-  if (savedLat && savedLng) {
-      updateUserGpsMarker(Number(savedLat), Number(savedLng));
-  }
+  if (savedLat && savedLng) updateUserGpsMarker(Number(savedLat), Number(savedLng));
 }
 
-// --- ЖАҢА: Көк домалақты (GPS маркерін) басқару функциясы ---
 function updateUserGpsMarker(lat, lng) {
     if (!map) return;
-    
-    // Ескі маркер болса өшіреміз
-    if (userGpsMarker) { 
-        userGpsMarker.destroy(); 
-        userGpsMarker = null; 
-    }
-    
-    // Жаңа көк домалақ жасаймыз
+    if (userGpsMarker) userGpsMarker.destroy();
     userGpsMarker = new mapgl.HtmlMarker(map, {
         coordinates: [lng, lat],
         html: `<div style="position:relative; display:flex; align-items:center; justify-content:center; width: 40px; height: 40px;">
-                <!-- Пульсация эффектісі -->
                 <div style="position:absolute; width:40px; height:40px; background:rgba(59,130,246,0.3); border-radius:50%; animation:pulse 2s infinite;"></div>
-                <!-- Көк домалақтың өзі -->
                 <div style="background-color:#3b82f6; width:20px; height:20px; border-radius:50%; border:3px solid white; box-shadow:0 2px 6px rgba(0,0,0,0.4); z-index:2;"></div>
                </div>`,
-        anchor: [0.5, 0.5],
-        zIndex: 9999 // Ең үстіңгі қабатта тұруы үшін
+        anchor: [0.5, 0.5], zIndex: 9999
     });
 }
 
-// --- ЖАҢАРТЫЛҒАН GPS ФУНКЦИЯСЫ ---
 function flyToGPS() {
     const btn = document.getElementById('gpsBtn');
     btn.classList.add('loading');
-    
-    if (!navigator.geolocation) {
-        alert(translations[currentLang].gps_not_supported);
-        btn.classList.remove('loading');
-        return;
-    }
+    if (!navigator.geolocation) { alert(translations[currentLang].gps_not_supported); btn.classList.remove('loading'); return; }
     
     navigator.geolocation.getCurrentPosition(
         (pos) => {
-            const lat = Number(pos.coords.latitude);
-            const lng = Number(pos.coords.longitude);
-            
-            // 1. Көк домалақты шығарамыз
+            const lat = Number(pos.coords.latitude); const lng = Number(pos.coords.longitude);
             updateUserGpsMarker(lat, lng);
-            
-            // 2. Картаны сол жерге центрлейміз
-            if (map) {
-                map.setCenter([lng, lat]);
-                map.setZoom(16);
-            }
-            
-            // 3. Координаталарды сақтаймыз
-            localStorage.setItem('passenger_last_lat', lat);
-            localStorage.setItem('passenger_last_lng', lng);
-            
+            if (map) { map.setCenter([lng, lat]); map.setZoom(16); }
+            localStorage.setItem('passenger_last_lat', lat); localStorage.setItem('passenger_last_lng', lng);
             btn.classList.remove('loading');
         },
-        (err) => {
-            console.error("GPS Error:", err);
-            alert(translations[currentLang].gps_error);
-            btn.classList.remove('loading');
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        (err) => { alert(translations[currentLang].gps_error); btn.classList.remove('loading'); },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
     );
 }
 
@@ -781,26 +655,21 @@ function enableGPS() {
   const btn = document.getElementById('enableGpsBtn');
   btn.textContent = "..."; btn.disabled = true;
   if (!navigator.geolocation) { alert(translations[currentLang].gps_not_supported); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; return; }
+  
   navigator.geolocation.getCurrentPosition(
     async (pos) => {
-      const lat = Number(pos.coords.latitude);
-      const lng = Number(pos.coords.longitude);
-      
+      const lat = Number(pos.coords.latitude); const lng = Number(pos.coords.longitude);
       updateUserGpsMarker(lat, lng);
-      
-      if (map) {
-          map.setCenter([lng, lat]); 
-          map.setZoom(16);
-      }
-      
-      localStorage.setItem('passenger_last_lat', lat); 
-      localStorage.setItem('passenger_last_lng', lng);
-      
+      if (map) { map.setCenter([lng, lat]); map.setZoom(16); }
+      localStorage.setItem('passenger_last_lat', lat); localStorage.setItem('passenger_last_lng', lng);
       closeGeoModal();
       btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false;
     },
-    (err) => { alert(translations[currentLang].gps_error); btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; },
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    (err) => { 
+        alert(translations[currentLang].gps_error); 
+        btn.textContent = translations[currentLang].btn_enable_gps; btn.disabled = false; 
+    },
+    { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
   );
 }
 function closeGeoModal() { document.getElementById('geoModal').classList.remove('show'); }
@@ -851,12 +720,9 @@ function updateButtonState() {
     const btn = document.getElementById('continueBtn');
     const inputs = document.getElementById('inputsContainer');
     if(startPoint && endPoint && routeReady){
-        inputs.style.display = 'none';
-        btn.style.display = 'flex';
-        btn.disabled = false;
+        inputs.style.display = 'none'; btn.style.display = 'flex'; btn.disabled = false;
     } else {
-        inputs.style.display = 'block';
-        btn.style.display = 'none';
+        inputs.style.display = 'block'; btn.style.display = 'none';
     }
 }
 
