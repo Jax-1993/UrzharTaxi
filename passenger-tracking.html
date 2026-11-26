@@ -119,11 +119,18 @@ button:active { opacity: 0.8; }
 <script>
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7';
 
-// localStorage қолданылады (жаңартылды)
 const orderId = localStorage.getItem("urzhar_taxi_order_id");
 const token = localStorage.getItem("urzhar_taxi_tracking_token");
 
-let map, driverMarker, pickupMarker, destinationMarker, routeLine;
+let map;
+let driverMarker = null;
+let pickupMarker = null;
+let destinationMarker = null;
+
+// Екі бағытты сақтау үшін екі айнымалы
+let routeToPickupLine = null;  // Таксиден жолаушыға (Сұрғылт)
+let routeToDestLine = null;    // Жолаушыдан баратын жерге (Көк)
+
 let pollTimer;
 let waitInterval = null;
 let arrivedTime = null;
@@ -132,6 +139,10 @@ let rideStartedAnnounced = false;
 let selectedRating = 0;
 let currentOrderStatus = "searching";
 let orderCoords = { pickup: null, destination: null };
+
+// Маршруттарды кэштеу (қайта-қайта сұрамас үшін)
+let lastDriverPos = null;
+let lastPickupRouteTime = 0;
 
 function notifyArrival() {
   if (notificationPlayed) return;
@@ -174,7 +185,12 @@ function initMap() {
   const initialCoords = (savedLat && savedLng) ? [Number(savedLng), Number(savedLat)] : [66.9237, 48.0196];
   const initialZoom = (savedLat && savedLng) ? 15 : 12;
 
-  map = new mapgl.Map("map", { center: initialCoords, zoom: initialZoom, key: DG_API_KEY });
+  map = new mapgl.Map("map", { 
+      center: initialCoords, 
+      zoom: initialZoom, 
+      key: DG_API_KEY,
+      disableDefaultControls: true // Артық батырмаларды өшіру
+  });
 }
 
 async function checkStatus() {
@@ -197,6 +213,7 @@ async function checkStatus() {
     const timerBox = document.getElementById("waitTimerBox");
     const feeBadge = document.getElementById("waitFeeBadge");
 
+    // 1. Координаталарды алу (Мінетін жер және Баратын жер)
     if (d.order.pickup_latitude && !orderCoords.pickup) {
       orderCoords.pickup = [Number(d.order.pickup_longitude), Number(d.order.pickup_latitude)];
       pickupMarker = new mapgl.HtmlMarker(map, {
@@ -204,7 +221,6 @@ async function checkStatus() {
           html: '<div style="font-size:32px;filter:drop-shadow(0 3px 3px rgba(0,0,0,0.5))">📍</div>',
           anchor: [0.5, 1]
       });
-      map.setCenter(orderCoords.pickup);
     }
     if (d.order.destination_latitude && !orderCoords.destination) {
       orderCoords.destination = [Number(d.order.destination_longitude), Number(d.order.destination_latitude)];
@@ -226,7 +242,7 @@ async function checkStatus() {
       st.innerHTML = "🔍 Жүргізуші ізделуде...";
       timerBox.style.display = "none";
       feeBadge.style.display = "none";
-      if (routeLine) { routeLine.destroy(); routeLine = null; }
+      clearAllRoutes();
       
     } else if (d.order.status === "accepted") {
       st.className = "status accepted";
@@ -237,7 +253,7 @@ async function checkStatus() {
         st.innerHTML = "✅ Жүргізуші тағайындалды! Келе жатыр...";
         timerBox.style.display = "none";
       }
-      loadLocation();
+      loadLocation(); // Таксидің қозғалысын алу
       
     } else if (d.order.status === "in_progress") {
       st.className = "status in_progress";
@@ -253,7 +269,7 @@ async function checkStatus() {
         document.getElementById("waitFeeAmount").textContent = `${wf} ₸`;
         document.getElementById("waitFeeNote").textContent = `(${wm} мин ақылы күту — сапар құнына қосылды)`;
       }
-      loadLocation();
+      loadLocation(); // Таксидің қозғалысын алу
       
     } else if (d.order.status === "completed") {
       st.className = "status accepted";
@@ -267,7 +283,7 @@ async function checkStatus() {
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
-      if (routeLine) routeLine.destroy();
+      clearAllRoutes();
 
       if (!d.order.rating && localStorage.getItem('rated_' + orderId) !== 'true') {
         document.getElementById("ratingModal").style.display = "flex";
@@ -283,8 +299,8 @@ async function checkStatus() {
       timerBox.style.display = "none";
       if (waitInterval) clearInterval(waitInterval);
       clearInterval(pollTimer);
+      clearAllRoutes();
       
-      // Тоқтатылған кезде өшіреміз
       localStorage.removeItem("urzhar_taxi_order_id");
       localStorage.removeItem("urzhar_taxi_tracking_token");
     }
@@ -303,6 +319,7 @@ async function loadLocation() {
 
     const driverPos = [Number(d.driverLocation.longitude), Number(d.driverLocation.latitude)];
     
+    // 2. Такси маркерін жасау немесе жылжыту
     if (!driverMarker) {
       driverMarker = new mapgl.HtmlMarker(map, {
           coordinates: driverPos,
@@ -313,43 +330,95 @@ async function loadLocation() {
       driverMarker.setCoordinates(driverPos);
     }
 
-    drawRoute(driverPos);
+    // 3. Маршруттарды сызу
+    updateRoutes(driverPos);
+
   } catch (e) { console.error("Location API қатесі:", e); }
 }
 
-async function drawRoute(driverPos) {
-  let start = null; let end = null;
-
-  if (currentOrderStatus === 'accepted' && orderCoords.pickup) {
-    start = driverPos; end = orderCoords.pickup;
-  } else if (currentOrderStatus === 'in_progress' && orderCoords.destination) {
-    start = orderCoords.pickup || driverPos; end = orderCoords.destination;
-  }
-
-  if (!start || !end) return;
-
-  try {
-    const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`);
-    const data = await res.json();
-
-    if (data.code === 'Ok' && data.routes.length > 0) {
-      if (routeLine) routeLine.destroy();
-      
-      routeLine = new mapgl.Polyline(map, {
-          coordinates: data.routes[0].geometry.coordinates, width: 7, color: '#60a5fa', opacity: 0.9
-      });
-
-      const coords = data.routes[0].geometry.coordinates;
-      const lats = coords.map(c => c[1]);
-      const lngs = coords.map(c => c[0]);
-      
-      map.fitBounds({
-          southWest: [Math.min(...lngs), Math.min(...lats)],
-          northEast: [Math.max(...lngs), Math.max(...lats)],
-          padding: { top: 160, bottom: 250, left: 50, right: 50 }
-      });
+// --- ЖАҢА: Екі бағытты бірге сызу функциясы (Яндекс стилі) ---
+async function updateRoutes(driverPos) {
+    // 1. Жолаушыдан баратын жерге дейінгі көк сызық (Әрқашан көрінеді)
+    if (orderCoords.pickup && orderCoords.destination) {
+        if (!routeToDestLine) {
+            const coords = await fetchOSRMRoute(orderCoords.pickup, orderCoords.destination);
+            if (coords) {
+                routeToDestLine = new mapgl.Polyline(map, {
+                    coordinates: coords, width: 6, color: '#3b82f6', zIndex: 10 // Көк түс
+                });
+            }
+        }
     }
-  } catch (e) { console.error("Маршрутты сызу қатесі:", e); }
+
+    // 2. Таксиден мінетін жерге дейінгі сұрғылт сызық (Тек тапсырыс қабылданғанда)
+    if (currentOrderStatus === 'accepted' && driverPos && orderCoords.pickup) {
+        // Такси қозғалса ғана маршрутты жаңартамыз (жүктемені азайту үшін)
+        if (!lastDriverPos || lastDriverPos[0] !== driverPos[0] || lastDriverPos[1] !== driverPos[1]) {
+            const coords = await fetchOSRMRoute(driverPos, orderCoords.pickup);
+            if (coords) {
+                if (routeToPickupLine) routeToPickupLine.destroy();
+                routeToPickupLine = new mapgl.Polyline(map, {
+                    coordinates: coords, width: 6, color: '#9ca3af', zIndex: 9 // Сұрғылт (ақшыл) түс
+                });
+                lastDriverPos = driverPos;
+                
+                // Картаны үш нүктені де қамтитындай етіп реттеу
+                fitMapToAllPoints(driverPos, orderCoords.pickup, orderCoords.destination);
+            }
+        }
+    }
+
+    // Егер сапар басталса, таксидің жолаушыға келе жатқан сызығын өшіреміз
+    if (currentOrderStatus === 'in_progress') {
+        if (routeToPickupLine) { routeToPickupLine.destroy(); routeToPickupLine = null; }
+        
+        // Картаны тек баратын жерге қарай центрлейміз
+        if (orderCoords.destination) {
+            fitMapToAllPoints(driverPos, orderCoords.pickup, orderCoords.destination);
+        }
+    }
+}
+
+// OSRM-нен маршрут алу көмекші функциясы
+async function fetchOSRMRoute(start, end) {
+    try {
+        const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${start[0]},${start[1]};${end[0]},${end[1]}?overview=full&geometries=geojson`);
+        const data = await res.json();
+        if (data.code === 'Ok' && data.routes.length > 0) {
+            return data.routes[0].geometry.coordinates;
+        }
+        return null;
+    } catch (e) { 
+        console.error("OSRM қатесі:", e); 
+        return null; 
+    }
+}
+
+// Барлық нүктелерді экранға сыю функциясы
+function fitMapToAllPoints(driverPos, pickupPos, destPos) {
+    if (!driverPos || !pickupPos) return;
+    
+    let lngs = [driverPos[0], pickupPos[0]];
+    let lats = [driverPos[1], pickupPos[1]];
+    
+    if (destPos && currentOrderStatus === 'in_progress') {
+        lngs.push(destPos[0]);
+        lats.push(destPos[1]);
+    }
+
+    map.fitBounds({
+        southWest: [Math.min(...lngs), Math.min(...lats)],
+        northEast: [Math.max(...lngs), Math.max(...lats)],
+        padding: { top: 180, bottom: 280, left: 50, right: 50 }
+    });
+}
+
+// Барлық сызықтарды өшіру
+function clearAllRoutes() {
+    if (routeToPickupLine) { routeToPickupLine.destroy(); routeToPickupLine = null; }
+    if (routeToDestLine) { routeToDestLine.destroy(); routeToDestLine = null; }
+    if (driverMarker) { driverMarker.destroy(); driverMarker = null; }
+    lastDriverPos = null;
 }
 
 function startWaitTimer(order) {
