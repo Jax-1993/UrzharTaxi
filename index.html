@@ -43,13 +43,9 @@ html, body {
 .right-btns{display:flex;gap:10px;pointer-events:auto}
 .dark-pill{background:rgba(255,255,255,0.95);color:#101114;border:none;padding:12px 18px;border-radius:25px;font-weight:600;font-size:14px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,0.15);backdrop-filter:blur(10px);cursor:pointer}
 
-/* ЖАҢА: Картаның оң жағындағы батырмалар тобы (Зум + GPS) */
-.map-controls-right {
-    position: absolute; right: 15px; bottom: 180px; z-index: 150;
-    display: flex; flex-direction: column; gap: 12px; align-items: center;
-}
-
+/* Зум батырмалары жоғарғы оң жақта */
 .custom-zoom-controls {
+    position: absolute; right: 15px; top: 120px; z-index: 150;
     display: flex; flex-direction: column; background: white;
     border-radius: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); overflow: hidden;
 }
@@ -61,7 +57,9 @@ html, body {
 .custom-zoom-controls button:active { background: #f0f0f0; }
 .custom-zoom-controls button:first-child { border-bottom: 1px solid #eee; }
 
+/* GPS батырмасы "Қолдау" батырмасының дәл үстінде */
 .gps-floating-btn {
+    position: absolute; right: 15px; bottom: 250px; z-index: 150; /* <-- Орны ауыстырылды */
     background: white; color: #3b82f6;
     border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 24px;
     display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
@@ -85,8 +83,20 @@ html, body {
 .input-wrapper input{width:100%;padding:16px 45px 16px 16px;border:none;border-radius:16px;background:var(--light-input);color:#101114;font-size:15px;font-family:inherit;outline:none;transition:background 0.2s;cursor:text;}
 .input-wrapper input::placeholder{color:#6b7280}
 .input-wrapper input:focus{background:#e5e7eb; box-shadow: 0 0 0 2px var(--blue);}
-.clear-btn{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:#d1d5db;border:0;width:24px;height:24px;border-radius:50%;color:#374151;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center}
+.clear-btn{position:absolute;right:12px;top:20px;background:#d1d5db;border:0;width:24px;height:24px;border-radius:50%;color:#374151;font-size:12px;font-weight:bold;cursor:pointer;display:none;align-items:center;justify-content:center;z-index:10}
 .clear-btn.show{display:flex}
+
+/* ЖАҢА: Іздеу нәтижелері шығатын терезеше (Dropdown) */
+.suggestions-box {
+    position: absolute; top: 100%; left: 0; right: 0; margin-top: 5px;
+    background: #fff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 300; max-height: 200px; overflow-y: auto; display: none;
+    border: 1px solid #e5e7eb;
+}
+.suggestions-box.active { display: block; }
+.suggestion-item { padding: 14px 16px; border-bottom: 1px solid #f2f3f5; cursor: pointer; font-size: 14px; color: #333; line-height: 1.3; }
+.suggestion-item:last-child { border-bottom: none; }
+.suggestion-item:active { background: #f2f3f5; }
 
 .main-dark-btn{width:100%;background:var(--blue);color:white;font-weight:700;padding:18px 20px;border-radius:16px;font-size:18px;border:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:transform 0.1s; min-height: 60px; box-shadow: 0 4px 15px rgba(59,130,246,0.4);}
 .main-dark-btn:active {transform: scale(0.98);}
@@ -185,14 +195,14 @@ html, body {
     </div>
   </div>
 
-  <!-- ЖАҢА: Зум және GPS батырмаларының блогы (оң жақта, төменде) -->
-  <div class="map-controls-right">
-      <div class="custom-zoom-controls">
-          <button onclick="zoomIn()">+</button>
-          <button onclick="zoomOut()">−</button>
-      </div>
-      <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
+  <!-- Зум батырмалары жоғарғы оң жақта -->
+  <div class="custom-zoom-controls">
+      <button onclick="zoomIn()">+</button>
+      <button onclick="zoomOut()">−</button>
   </div>
+
+  <!-- GPS батырмасы "Қолдау" батырмасының үстінде -->
+  <button class="gps-floating-btn" onclick="flyToGPS()" id="gpsBtn" title="Менің орнымды табу">🧭</button>
 
   <div id="activeOrderBanner" onclick="goToTracking()">
     🚕 Белсенді тапсырысыңыз бар. Бақылауға өту →
@@ -207,13 +217,14 @@ html, body {
   <div class="bottom-panel" id="bottomPanel">
     <div id="inputsContainer">
       <div class="input-wrapper">
-        <!-- readonly алынып тасталды, енді қолмен жазуға болады. Enter басқанда іздейді -->
-        <input id="from" placeholder="📍 Қай жерден мінесіз?" onkeydown="handleInputKey(event, 'from')" onfocus="hideCenterPin()">
+        <input id="from" placeholder="📍 Қай жерден мінесіз?" autocomplete="off" oninput="debounceSearch('from')" onfocus="hideCenterPin()">
         <button class="clear-btn" id="clearFrom" onclick="clearPoint('A')">✕</button>
+        <div id="from-suggestions" class="suggestions-box"></div>
       </div>
       <div class="input-wrapper">
-        <input id="to" placeholder="🏁 Қайда барасыз?" onkeydown="handleInputKey(event, 'to')" onfocus="hideCenterPin()">
+        <input id="to" placeholder="🏁 Қайда барасыз?" autocomplete="off" oninput="debounceSearch('to')" onfocus="hideCenterPin()">
         <button class="clear-btn" id="clearTo" onclick="clearPoint('B')">✕</button>
+        <div id="to-suggestions" class="suggestions-box"></div>
       </div>
     </div>
     
@@ -337,49 +348,76 @@ let savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
 
-// --- ЖАҢА: Зум батырмаларының функциялары ---
+// --- Зум батырмалары ---
 function zoomIn() { if(map) map.setZoom(map.getZoom() + 1); }
 function zoomOut() { if(map) map.setZoom(map.getZoom() - 1); }
 function hideCenterPin() { document.getElementById('centerPin').classList.remove('show'); }
 
-// --- ЖАҢА: Қолмен жазылған мекенжайды іздеу функциясы ---
-async function handleInputKey(event, type) {
-    if (event.key === 'Enter') {
-        event.preventDefault();
-        const query = event.target.value;
-        if (query.length < 3) return;
+// --- ЖАҢА: Автотолықтыру (Іздеу) логикасы ---
+let searchTimeout;
 
-        const originalText = query;
-        event.target.value = 'Ізделуде...';
+function debounceSearch(type) {
+    clearTimeout(searchTimeout);
+    const query = document.getElementById(type).value.trim();
+    const boxId = type + '-suggestions';
+    const box = document.getElementById(boxId);
 
-        try {
-            // Қазақстан бойынша іздеу (countrycodes=kz)
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=kz&limit=1`);
-            const data = await res.json();
-            
-            if (data && data.length > 0) {
-                const result = data[0];
-                const lat = parseFloat(result.lat);
-                const lon = parseFloat(result.lon);
-                
-                map.setCenter([lon, lat]);
-                map.setZoom(16);
+    if (query.length < 3) {
+        box.classList.remove('active');
+        return;
+    }
 
-                setTimeout(() => {
-                    setPointFromSearch(type, lat, lon, result.display_name);
-                }, 500);
+    searchTimeout = setTimeout(() => {
+        fetchSuggestions(query, type);
+    }, 600); // 600ms күтеміз, спам болмас үшін
+}
 
-            } else {
-                alert("Мекенжай табылмады. Басқаша енгізіп көріңіз.");
-                event.target.value = originalText;
-            }
-        } catch (err) {
-            console.error(err);
-            alert("Іздеу кезінде қате кетті.");
-            event.target.value = originalText;
+async function fetchSuggestions(query, type) {
+    const boxId = type + '-suggestions';
+    const box = document.getElementById(boxId);
+    box.innerHTML = '<div class="suggestion-item">Ізделуде...</div>';
+    box.classList.add('active');
+
+    try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=kz&limit=5&accept-language=kk`);
+        const data = await res.json();
+
+        if (data && data.length > 0) {
+            box.innerHTML = '';
+            data.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'suggestion-item';
+                div.textContent = item.display_name;
+                // Тізімнен таңдағанда не болады:
+                div.onclick = () => {
+                    box.classList.remove('active');
+                    document.getElementById(type).value = item.display_name;
+                    const lat = parseFloat(item.lat);
+                    const lon = parseFloat(item.lon);
+                    
+                    map.setCenter([lon, lat]);
+                    map.setZoom(16);
+                    
+                    setTimeout(() => {
+                        setPointFromSearch(type, lat, lon, item.display_name);
+                    }, 300);
+                };
+                box.appendChild(div);
+            });
+        } else {
+            box.innerHTML = '<div class="suggestion-item">Мекенжай табылмады</div>';
         }
+    } catch (e) {
+        box.innerHTML = '<div class="suggestion-item">Қате шықты. Қайталап көріңіз.</div>';
     }
 }
+
+// Басқа жерді басқанда іздеу терезесін жабу
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.input-wrapper')) {
+        document.querySelectorAll('.suggestions-box').forEach(b => b.classList.remove('active'));
+    }
+});
 
 function setPointFromSearch(type, lat, lon, address) {
     const p = { lat: lat, lon: lon };
@@ -437,6 +475,7 @@ function setPointFromSearch(type, lat, lon, address) {
     }
     updateButtonState();
 }
+
 
 // --- Негізгі логика ---
 function menuGoProfile() { closeMenu(); setTimeout(() => { goToProfile(); }, 300); }
@@ -498,7 +537,7 @@ function initMap(){
       center: initialCoords,
       zoom: initialZoom,
       key: DG_API_KEY,
-      disableDefaultControls: true // <-- 2GIS әдепкі батырмаларын өшіреміз
+      disableDefaultControls: true 
   });
 
   map.setPadding({ top: 100, bottom: 200, left: 0, right: 0 });
@@ -643,7 +682,7 @@ function closeGeoModal() { document.getElementById('geoModal').classList.remove(
 
 async function reverseAddress(p){
     try{
-        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18`);
+        const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${p.lat}&lon=${p.lon}&zoom=18&accept-language=kk`);
         const d=await r.json();
         return d.display_name||`${p.lat.toFixed(5)}, ${p.lon.toFixed(5)}`;
     }catch(e){
@@ -704,24 +743,6 @@ function updateButtonState() {
         inputs.style.display = 'block';
         btn.style.display = 'none';
     }
-}
-
-function focusPickup() {
-    mapMode = 'pickup';
-    document.getElementById('centerPin').classList.add('show');
-    document.getElementById('centerPinLabel').textContent = 'Мінетін жер';
-    document.getElementById('centerPinIcon').textContent = '🚶‍♂️';
-    document.getElementById('centerPinIcon').style.background = 'var(--blue)';
-    if(startPoint) map.setCenter([startPoint.lon, startPoint.lat]);
-}
-
-function focusDestination() {
-    if(!startPoint) return alert('Алдымен мінетін жерді таңдаңыз!');
-    mapMode = 'destination';
-    document.getElementById('centerPin').classList.add('show');
-    document.getElementById('centerPinLabel').textContent = 'Баратын жер';
-    document.getElementById('centerPinIcon').textContent = '🏁';
-    document.getElementById('centerPinIcon').style.background = '#101114';
 }
 
 async function getRoute(){
