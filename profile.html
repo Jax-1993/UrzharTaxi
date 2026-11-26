@@ -65,10 +65,6 @@
         .sheet-item.selected { background: #eff6ff; color: #3b82f6; border: 1.5px solid #bfdbfe; }
         .check-icon { display: none; font-size: 18px; }
         .sheet-item.selected .check-icon { display: block; }
-        
-        .sheet-text-content { font-size: 14px; color: #475569; line-height: 1.6; max-height: 50vh; overflow-y: auto; padding-right: 8px; }
-        .sheet-text-content h4 { margin-top: 16px; margin-bottom: 8px; color: #1e293b; font-size: 15px; }
-        .sheet-text-content p { margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -134,20 +130,7 @@
             </a>
         </div>
 
-        <div class="menu-card">
-            <div class="menu-item" onclick="openSheet('terms')">
-                <div class="menu-icon">📄</div>
-                <div class="menu-content"><div class="menu-title" data-i18n="menu_terms">Пайдаланушы келісімі</div></div>
-                <div class="menu-arrow">›</div>
-            </div>
-            <div class="menu-item" onclick="openSheet('privacy')">
-                <div class="menu-icon">🛡️</div>
-                <div class="menu-content"><div class="menu-title" data-i18n="menu_privacy">Құпиялылық саясаты</div></div>
-                <div class="menu-arrow">›</div>
-            </div>
-        </div>
-
-        <!-- Тіл мен Әкімшілік бұл жерден алып тасталды -->
+        <!-- Келісім мен Құпиялылық бұл жерден өшірілді -->
 
         <button class="logout-btn" onclick="logout()">
             <span>🚪</span> <span data-i18n="menu_logout">Шығу</span>
@@ -185,13 +168,9 @@
             payment_cash: "Қолма-қол",
             payment_card: "Карта",
             menu_support: "Қолдау қызметі",
-            menu_terms: "Пайдаланушы келісімі",
-            menu_privacy: "Құпиялылық саясаты",
             menu_logout: "Шығу",
             menu_delete: "Аккаунтты жою",
-            sheet_payment_title: "Төлем тәсілін таңдаңыз",
-            terms_title: "Пайдаланушы келісімі",
-            privacy_title: "Құпиялылық саясаты"
+            sheet_payment_title: "Төлем тәсілін таңдаңыз"
         },
         ru: {
             login_title: "Регистрация по номеру",
@@ -207,13 +186,9 @@
             payment_cash: "Наличными",
             payment_card: "Картой",
             menu_support: "Служба поддержки",
-            menu_terms: "Пользовательское соглашение",
-            menu_privacy: "Политика конфиденциальности",
             menu_logout: "Выйти",
             menu_delete: "Удалить аккаунт",
-            sheet_payment_title: "Выберите способ оплаты",
-            terms_title: "Пользовательское соглашение",
-            privacy_title: "Политика конфиденциальности"
+            sheet_payment_title: "Выберите способ оплаты"
         },
         en: {
             login_title: "Register with your number",
@@ -229,13 +204,9 @@
             payment_cash: "Cash",
             payment_card: "Card",
             menu_support: "Support service",
-            menu_terms: "Terms of use",
-            menu_privacy: "Privacy policy",
             menu_logout: "Logout",
             menu_delete: "Delete account",
-            sheet_payment_title: "Select payment method",
-            terms_title: "Terms of use",
-            privacy_title: "Privacy policy"
+            sheet_payment_title: "Select payment method"
         }
     };
 
@@ -367,24 +338,6 @@
                 </div>
                 <div class="sheet-item ${current === cardText ? 'selected' : ''}" onclick="selectPayment('card')">
                     <span>💳 ${cardText}</span> <span class="check-icon">✔</span>
-                </div>
-            `;
-        } 
-        else if (type === 'terms') {
-            sheetTitle.innerText = translations[currentLang].terms_title;
-            sheetContent.innerHTML = `
-                <div class="sheet-text-content">
-                    <p>Осы қосымшаны пайдалану арқылы сіз "Тұлпар Такси" қызметінің ережелерімен толық келісесіз.</p>
-                    <h4>1. Жалпы ережелер</h4>
-                    <p>Бұл қосымша Қазақстан Республикасының барлық өңірлерінде такси қызметін ұсынуға арналған.</p>
-                </div>
-            `;
-        }
-        else if (type === 'privacy') {
-            sheetTitle.innerText = translations[currentLang].privacy_title;
-            sheetContent.innerHTML = `
-                <div class="sheet-text-content">
-                    <p>Біз сіздің жеке деректеріңіздің қауіпсіздігіне үлкен мән береміз.</p>
                 </div>
             `;
         }
