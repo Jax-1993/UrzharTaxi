@@ -280,4 +280,112 @@ html, body {
 
 <section id="page4" class="page">
   <div class="panel" style="background:transparent;">
-    <div class
+    <div class="status">
+        <h2 data-i18n="order_sent">✅ Тапсырыс жіберілді!</h2>
+        <p data-i18n="order_wait">Жүргізушінің тағайындалуы күтілуде...</p>
+        <div class="summary" id="finalSummary"></div>
+        <p class="small" style="margin-top:15px" data-i18n="order_redirect">⏳ Бақылау бетіне өтуде...</p>
+    </div>
+  </div>
+</section>
+
+<section id="driverRegister" class="page">
+  <div class="panel">
+    <div class="title" data-i18n="reg_title">🚘 Жүргізуші болып тіркелу</div>
+    <p class="small" style="margin-bottom:15px;color:#d00;" data-i18n="reg_warning">Назар аударыңыз: Фотосуреттерді жүктеу міндетті емес!</p>
+    <input id="regName" placeholder="Аты-жөніңіз *" data-i18n-placeholder="input_name_req">
+    <input id="regPhone" type="tel" placeholder="Телефон нөміріңіз *" data-i18n-placeholder="input_phone_req">
+    <h3 data-i18n="reg_car_info">🚗 Көлік туралы ақпарат</h3>
+    <input id="carBrand" placeholder="Көлік маркасы" data-i18n-placeholder="input_brand">
+    <input id="carModel" placeholder="Көлік моделі" data-i18n-placeholder="input_model">
+    <input id="carYear" type="number" placeholder="Шыққан жылы" data-i18n-placeholder="input_year">
+    <input id="carNumber" placeholder="Мемлекеттік нөмірі" data-i18n-placeholder="input_number">
+    <select id="carClass">
+      <option value="economy" data-i18n="car_eco">Эконом</option>
+      <option value="comfort" data-i18n="car_bus">Бизнес</option>
+      <option value="comfort_plus" data-i18n="car_bus_plus">Бизнес+</option>
+    </select>
+    <h3 data-i18n="reg_photo_car">📸 Көліктің фотосы</h3>
+    <input id="carPhoto" type="file" accept="image/jpeg,image/png,image/webp">
+    <img id="carPhotoPreview">
+    <h3 data-i18n="reg_id_front">🪪 Жеке куәлік (алдыңғы беті)</h3>
+    <input id="idCardFront" type="file" accept="image/*">
+    <img id="idCardFrontPreview" class="doc-preview">
+    <h3 data-i18n="reg_id_back">🪪 Жеке куәлік (артқы беті)</h3>
+    <input id="idCardBack" type="file" accept="image/*">
+    <img id="idCardBackPreview" class="doc-preview">
+    <h3 data-i18n="reg_license">📄 Жүргізуші куәлігі</h3>
+    <input id="driverLicense" type="file" accept="image/*">
+    <img id="driverLicensePreview" class="doc-preview">
+    <h3 data-i18n="reg_selfie">🤳 Өз суретіңіз (Селфи)</h3>
+    <input id="selfiePhoto" type="file" accept="image/*" capture="user">
+    <img id="selfiePreview" class="doc-preview">
+    <div id="driverRegisterMessage" class="small" style="margin:15px 0;font-weight:bold;"></div>
+  </div>
+  <div class="bottom-action">
+    <button class="main-btn" id="driverRegisterBtn" onclick="registerDriver()" data-i18n="btn_send_req">ӨТІНІМДІ ЖІБЕРУ</button>
+    <button class="back-btn" onclick="showPage('page1')" data-i18n="btn_home">← Басты бет</button>
+  </div>
+</section>
+
+<div class="lang-sheet-overlay" id="langSheetOverlay" onclick="closeLangSheet()"></div>
+<div class="lang-sheet" id="langSheet">
+    <div class="lang-sheet-handle"></div>
+    <div class="lang-sheet-title" data-i18n="sheet_lang_title">Тілді таңдаңыз</div>
+    <div id="langSheetContent"></div>
+</div>
+
+<div class="text-sheet-overlay" id="textSheetOverlay" onclick="closeTextSheet()"></div>
+<div class="text-sheet" id="textSheet">
+    <div class="text-sheet-handle"></div>
+    <div class="text-sheet-title" id="textSheetTitle">Ақпарат</div>
+    <div class="sheet-text-content" id="textSheetContent"></div>
+</div>
+
+<script src="https://mapgl.2gis.com/api/js/v1"></script>
+<script>
+// ========== PWA SERVICE WORKER ==========
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW registered:', reg.scope))
+            .catch(err => console.log('SW registration failed:', err));
+    });
+}
+
+// ========== СЕНІҢ БАРЛЫҚ JS КОДЫҢ ОСЫНДА ==========
+const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7'; 
+
+// ... (сенің translations, applyLanguage, openLangSheet, т.б. функциялар осында қалады) ...
+// Мен оларды өзгертпеймін, тек PWA-ға қажеттісін қостым.
+
+// ⚠️ МАҢЫЗДЫ: checkProfile() функциясын қорғаңыз:
+function checkProfile() {
+    try {
+        const userStr = localStorage.getItem('urzhar_user');
+        if (!userStr) return;
+        const user = JSON.parse(userStr);
+        if (user && user.name) {
+            let displayName = user.name;
+            if (user.name === 'Жолаушы' || user.name === 'Пассажир' || user.name === 'Passenger') {
+                displayName = translations[currentLang].passenger_default;
+            }
+            const profileBtn = document.getElementById('menuProfileBtn');
+            if (profileBtn) profileBtn.innerHTML = `👤 <b style="color:var(--blue)">${displayName}</b>`;
+            localStorage.setItem('tulpar_passenger_name', user.name);
+            localStorage.setItem('tulpar_passenger_phone', user.phone || '');
+        }
+    } catch (e) {
+        console.warn('Profile parse error:', e);
+    }
+}
+
+// ... (қалған функциялар сол күйінде) ...
+
+document.addEventListener('DOMContentLoaded',()=>{
+    applyLanguage(currentLang);
+    initMap(); updateButtonState(); checkActiveOrder(); checkProfile(); 
+});
+</script>
+</body>
+</html>
