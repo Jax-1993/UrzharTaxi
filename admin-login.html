@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>TULPAR TAXI — Әкімші кіру</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin: 0; background: #101522; color: white; font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100dvh; }
+  .login-box { background: #1c2536; padding: 30px 20px; border-radius: 20px; width: 90%; max-width: 400px; border: 1px solid #2e3a52; box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; }
+  .login-box h1 { color: #ffcc00; font-size: 24px; margin-bottom: 5px; }
+  .login-box p { color: #94a3b8; font-size: 14px; margin-bottom: 25px; }
+  input { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #2e3a52; background: rgba(255,255,255,0.05); color: white; font-size: 16px; font-family: inherit; outline: none; }
+  input:focus { border-color: #ffcc00; }
+  button { width: 100%; padding: 16px; background: #ffcc00; color: #111; border: none; border-radius: 12px; font-size: 16px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  button:active { transform: scale(0.98); }
+  .error-msg { color: #e34b59; font-size: 13px; margin-top: 15px; font-weight: 600; display: none; }
+</style>
+</head>
+<body>
+
+<div class="login-box">
+  <h1>TULPAR TAXI</h1>
+  <p>Әкімшілік панеліне кіру</p>
+  
+  <input type="password" id="passwordInput" placeholder="Құпия сөзді енгізіңіз">
+  
+  <button onclick="doLogin()">Кіру</button>
+  <div class="error-msg" id="errorMsg"></div>
+</div>
+
+<script>
+async function doLogin() {
+  const password = document.getElementById('passwordInput').value.trim();
+  const errBox = document.getElementById('errorMsg');
+  
+  if (!password) {
+    errBox.textContent = "Құпия сөзді енгізіңіз!";
+    errBox.style.display = 'block';
+    return;
+  }
+
+  errBox.style.display = 'none';
+  
+  try {
+    const res = await fetch('/api/admin?action=login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    
+    const data = await res.json();
+    
+    if (res.ok && data.success) {
+      window.location.href = '/admin.html';
+    } else {
+      errBox.textContent = data.message || "Құпия сөз қате!";
+      errBox.style.display = 'block';
+    }
+  } catch (e) {
+    errBox.textContent = "Сервермен байланыс жоқ.";
+    errBox.style.display = 'block';
+  }
+}
+</script>
+</body>
+</html>
