@@ -12,7 +12,6 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-/* ... (сенің барлық CSS кодың осында қалады, өзгертпеймін) ... */
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--yellow:#ffcc00;--black:#101114;--green:#16bd79;--light-panel:#ffffff;--light-input:#f2f3f5;--blue:#3b82f6}
 
@@ -353,7 +352,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// ========== СЕНІҢ БАРЛЫҚ JS КОДЫҢ ОСЫНДА ==========
+// ========== НЕГІЗГІ JS КОДЫ ==========
 const DG_API_KEY = '348a23e4-d087-41b8-9262-f9848e3571e7'; 
 
 const translations = {
@@ -529,6 +528,25 @@ let savedName = localStorage.getItem('tulpar_passenger_name');
 let savedPhone = localStorage.getItem('tulpar_passenger_phone');
 let mapMode = 'pickup'; 
 let moveDebounceTimer;
+
+// ★★★ ОСЫ ЖЕРДЕ ЖАҢА ФУНКЦИЯ ҚОСЫЛДЫ ★★★
+function confirmCenterPoint() {
+    if(!map) return;
+    const center = map.getCenter();
+    const lat = center[1];
+    const lon = center[0];
+    
+    if (mapMode === 'pickup' || mapMode === 'destination') {
+        reverseAddress({lat, lon}).then(addr => {
+            if (mapMode === 'pickup') {
+                setPointFromSearch('from', lat, lon, addr);
+            } else if (mapMode === 'destination') {
+                setPointFromSearch('to', lat, lon, addr);
+            }
+        });
+    }
+}
+// ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 
 function setPointFromSearch(type, lat, lon, address) {
     const p = { lat: lat, lon: lon };
